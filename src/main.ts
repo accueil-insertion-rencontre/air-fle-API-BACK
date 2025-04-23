@@ -3,12 +3,23 @@ import { ValidationPipe } from '@nestjs/common';
 import { AppModule } from './app.module';
 import { TransformInterceptor } from './common/interceptors/transform.interceptor';
 import { AllExceptionsFilter } from './common/filters/http-exception.filter';
+import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   
-  // Préfixe global pour l'API
-  app.setGlobalPrefix('api');
+  // Préfixe global pour l'API v1
+  app.setGlobalPrefix('api/v1');
+  
+  // Configuration Swagger
+  const config = new DocumentBuilder()
+    .setTitle('Air-FLE API')
+    .setDescription('API de gestion pour l\'école Air-FLE')
+    .setVersion('1.0.0')
+    .addBearerAuth()
+    .build();
+  const document = SwaggerModule.createDocument(app, config);
+  SwaggerModule.setup('api/docs', app, document);
   
   // Activation du CORS
   app.enableCors();
