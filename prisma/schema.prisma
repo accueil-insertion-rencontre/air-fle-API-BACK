@@ -1,0 +1,285 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Référentiels de base
+model Role {
+  id               String             @id @default(uuid())
+  rolename         String             @unique
+  users            User[]
+}
+
+model Nationality {
+  id               String             @id @default(uuid())
+  label            String
+  students         Student[]
+}
+
+model FrenchLevel {
+  id               String             @id @default(uuid())
+  code             String?
+  description      String?
+  students         Student[]          @relation("CurrentLevel")
+  studentsInitial  Student[]          @relation("InitialLevel")
+}
+
+model Gender {
+  id               String             @id @default(uuid())
+  label            String
+  students         Student[]
+}
+
+model Address {
+  id               String             @id @default(uuid())
+  street           String
+  complement       String?
+  zipcode          String
+  city             String
+  qpv              String?
+  country          String             @default("France")
+  students         StudentAddress[]
+}
+
+model ExitReason {
+  id               String             @id @default(uuid())
+  reason           String
+  students         Student[]
+}
+
+model Orientation {
+  id               String             @id @default(uuid())
+  type             String
+  description      String?
+  students         Student[]
+}
+
+model Period {
+  id               String             @id @default(uuid())
+  label            String
+  startedAt        DateTime
+  endedAt          DateTime
+  actual_period    Boolean            @default(false)
+  groups           GroupPeriod[]
+}
+
+model Session {
+  id               String             @id @default(uuid())
+  label            String?
+  startedAt        DateTime
+  finishedAt       DateTime
+  groups           Group[]
+}
+
+model WorkingHour {
+  id               String             @id @default(uuid())
+  startTime        DateTime
+  endTime          DateTime
+  date             DateTime
+  users            UserWorkingHour[]
+}
+
+model Status {
+  id               String             @id @default(uuid())
+  label            String
+  students         Student[]
+}
+
+model Financing {
+  id               String             @id @default(uuid())
+  type             String
+  students         Student[]
+}
+
+// Entités principales
+model User {
+  id               String             @id @default(uuid())
+  firstname        String
+  lastname         String
+  email            String             @unique
+  birthdate        DateTime?
+  password         String
+  role             Role               @relation(fields: [role_id], references: [id])
+  role_id          String
+  todoLists        Todolist[]
+  workingHours     UserWorkingHour[]
+  courses          UserCourse[]
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime           @updatedAt
+}
+
+model Student {
+  id                String             @id @default(uuid())
+  firstname         String
+  lastname          String
+  birthdate         DateTime
+  placeOfBirth      String?
+  email             String?
+  phone             String?
+  date_test_initial DateTime?
+  commentaire       String?
+  date_entree_france DateTime?
+  
+  // Relations
+  gender            Gender             @relation(fields: [gender_id], references: [id])
+  gender_id         String
+  
+  currentLevel      FrenchLevel?       @relation("CurrentLevel", fields: [current_level_id], references: [id])
+  current_level_id  String?
+  
+  initialLevel      FrenchLevel        @relation("InitialLevel", fields: [initial_level_id], references: [id])
+  initial_level_id  String
+  
+  nationality       Nationality        @relation(fields: [nationality_id], references: [id])
+  nationality_id    String
+  
+  addresses         StudentAddress[]
+  
+  orientation       Orientation?       @relation(fields: [orientation_id], references: [id])
+  orientation_id    String?
+  
+  exitReason        ExitReason?        @relation(fields: [exit_reason_id], references: [id])
+  exit_reason_id    String?
+  
+  financing         Financing          @relation(fields: [financing_id], references: [id])
+  financing_id      String
+  
+  status            Status             @relation(fields: [status_id], references: [id])
+  status_id         String
+  
+  exams             Exam[]
+  absences          Absence[]
+  continuation      Continuation?
+  groups            StudentGroup[]
+  
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+}
+
+model Todolist {
+  id                 String           @id @default(uuid())
+  title              String
+  description        String?
+  completed          Boolean          @default(false)
+  password           String?
+  share              Boolean          @default(false)
+  completionPercentage Int            @default(0)
+  createdAt          DateTime         @default(now())
+  updatedAt          DateTime         @updatedAt
+  dueAt              DateTime?
+  user               User             @relation(fields: [user_id], references: [id])
+  user_id            String
+}
+
+model Group {
+  id                String             @id @default(uuid())
+  label             String
+  session           Session            @relation(fields: [session_id], references: [id])
+  session_id        String
+  students          StudentGroup[]
+  courses           Course[]
+  periods           GroupPeriod[]
+}
+
+model Course {
+  id                String             @id @default(uuid())
+  day               DateTime?
+  start_hour        DateTime?
+  end_hour          DateTime?
+  intitule          String?
+  group             Group              @relation(fields: [group_id], references: [id])
+  group_id          String
+  users             UserCourse[]
+  absences          Absence[]
+  
+  @@index([group_id])
+}
+
+model Exam {
+  id                String             @id @default(uuid())
+  label             String
+  taked_at          DateTime
+  note              String?
+  student           Student            @relation(fields: [student_id], references: [id])
+  student_id        String
+}
+
+model Continuation {
+  id                String             @id @default(uuid())
+  temporality       String?
+  commentary        String?
+  student           Student            @relation(fields: [student_id], references: [id])
+  student_id        String             @unique
+}
+
+model Absence {
+  id                String             @id @default(uuid())
+  reason            String?
+  student           Student            @relation(fields: [student_id], references: [id])
+  student_id        String
+  course            Course             @relation(fields: [course_id], references: [id])
+  course_id         String
+  
+  @@unique([student_id, course_id])
+}
+
+// Tables de jointure
+model StudentAddress {
+  id                String             @id @default(uuid())
+  student           Student            @relation(fields: [student_id], references: [id])
+  student_id        String
+  address           Address            @relation(fields: [address_id], references: [id])
+  address_id        String
+  
+  @@unique([student_id, address_id])
+}
+
+model StudentGroup {
+  id                String             @id @default(uuid())
+  student           Student            @relation(fields: [student_id], references: [id])
+  student_id        String
+  group             Group              @relation(fields: [group_id], references: [id])
+  group_id          String
+  
+  @@unique([student_id, group_id])
+}
+
+model UserCourse {
+  id                String             @id @default(uuid())
+  user              User               @relation(fields: [user_id], references: [id])
+  user_id           String
+  course            Course             @relation(fields: [course_id], references: [id])
+  course_id         String
+  
+  @@unique([user_id, course_id])
+}
+
+model GroupPeriod {
+  id                String             @id @default(uuid())
+  group             Group              @relation(fields: [group_id], references: [id])
+  group_id          String
+  period            Period             @relation(fields: [period_id], references: [id])
+  period_id         String
+  
+  @@unique([group_id, period_id])
+}
+
+model UserWorkingHour {
+  id                String             @id @default(uuid())
+  user              User               @relation(fields: [user_id], references: [id])
+  user_id           String
+  workingHour       WorkingHour        @relation(fields: [working_hour_id], references: [id])
+  working_hour_id   String
+  
+  @@unique([user_id, working_hour_id])
+}
