@@ -6,6 +6,7 @@
 
 generator client {
   provider = "prisma-client-js"
+  binaryTargets = ["native", "linux-musl-openssl-3.0.x"]
 }
 
 datasource db {
@@ -81,14 +82,6 @@ model Session {
   groups           Group[]
 }
 
-model WorkingHour {
-  id               String             @id @default(uuid())
-  startTime        DateTime
-  endTime          DateTime
-  date             DateTime
-  users            UserWorkingHour[]
-}
-
 model Status {
   id               String             @id @default(uuid())
   label            String
@@ -112,7 +105,6 @@ model User {
   role             Role               @relation(fields: [role_id], references: [id])
   role_id          String
   todoLists        Todolist[]
-  workingHours     UserWorkingHour[]
   courses          UserCourse[]
   createdAt        DateTime           @default(now())
   updatedAt        DateTime           @updatedAt
@@ -269,14 +261,4 @@ model GroupPeriod {
   period_id         String
   
   @@unique([group_id, period_id])
-}
-
-model UserWorkingHour {
-  id                String             @id @default(uuid())
-  user              User               @relation(fields: [user_id], references: [id])
-  user_id           String
-  workingHour       WorkingHour        @relation(fields: [working_hour_id], references: [id])
-  working_hour_id   String
-  
-  @@unique([user_id, working_hour_id])
 }
