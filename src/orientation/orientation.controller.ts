@@ -2,7 +2,10 @@ import { Controller, Get, Post, Put, Delete, Body, Param, UseGuards } from '@nes
 import { OrientationService } from './orientation.service';
 import { Orientation, Prisma } from '@prisma/client';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 
+@ApiTags('orientations')
+@ApiBearerAuth()
 @Controller('orientations')
 @UseGuards(JwtAuthGuard)
 export class OrientationController {
