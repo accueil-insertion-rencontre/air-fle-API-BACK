@@ -1,6 +1,6 @@
 # Air-FLE API
 
-API de gestion pour l'école de français Air-FLE, développée avec NestJS par une équipe de 3 stagiaires.
+API de gestion pour Air-FLE
 
 ## Description
 
@@ -38,7 +38,6 @@ npm install
 # Configurer la base de données
 # Créer un fichier .env à la racine du projet avec :
 # DATABASE_URL="postgresql://user:password@localhost:5432/airfle?schema=public"
-# JWT_SECRET="your-secret-key"
 
 # Démarrer l'application
 npm run start:dev
@@ -64,11 +63,3 @@ npm run start:dev
 - PostgreSQL
 - Prisma ORM
 - Docker
-
-## Équipe de développement
-
-Projet développé par une équipe de 3 stagiaires en 2024.
-
-## Licence
-
-Ce projet est sous licence MIT.
