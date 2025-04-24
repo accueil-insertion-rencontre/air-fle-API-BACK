@@ -1,10 +1,13 @@
-import { Controller, Post, Body, HttpCode, HttpStatus, Get, Ip } from '@nestjs/common';
+import { Controller, Post, Body, HttpCode, HttpStatus, Get, Ip, UseGuards } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { JwtService } from '@nestjs/jwt';
 import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
 import * as argon2 from 'argon2';
 import { ApiTags, ApiOperation, ApiResponse, ApiBody, ApiBearerAuth } from '@nestjs/swagger';
+import { JwtAuthGuard } from './guards/jwt-auth.guard';
+import { RolesGuard } from './guards/roles.guard';
+import { Roles } from './decorators/roles.decorator';
 
 // Stockage en mémoire des tentatives de connexion
 // En production, cela devrait être dans une base de données ou un cache Redis
@@ -41,6 +44,9 @@ export class AuthController {
     }
   })
   @Get('roles')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('ADMIN')
+  @ApiBearerAuth()
   @HttpCode(HttpStatus.OK)
   async getRoles() {
     const roles = await this.prisma.role.findMany();
