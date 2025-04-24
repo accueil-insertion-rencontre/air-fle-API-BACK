@@ -44,7 +44,7 @@ model Address {
   id               String             @id @default(uuid())
   street           String
   complement       String?
-  zipcode          String
+  zipcode          Int
   city             String
   qpv              String?
   country          String             @default("France")
@@ -126,9 +126,9 @@ model Student {
   placeOfBirth      String?
   email             String?
   phone             String?
-  date_test_initial DateTime?
+  date_test_initial String?
   commentaire       String?
-  date_entree_france DateTime?
+  date_entree_france String?
   
   // Relations
   gender            Gender             @relation(fields: [gender_id], references: [id])
@@ -189,7 +189,7 @@ model Group {
 }
 
 model Course {
-  session_id         String             @id @default(uuid())
+  course_id          String             @id @default(uuid())
   day               DateTime?
   start_hour        DateTime?
   end_hour          DateTime?
@@ -224,10 +224,10 @@ model Absence {
   reason            String?
   student           Student            @relation(fields: [student_id], references: [id])
   student_id        String
-  course            Course             @relation(fields: [session_id], references: [session_id])
-  session_id        String
+  course            Course             @relation(fields: [course_id], references: [course_id])
+  course_id        String
   
-  @@unique([student_id, session_id])
+  @@unique([student_id, course_id])
 }
 
 // Tables de jointure
@@ -255,10 +255,10 @@ model UserCourse {
   id                String             @id @default(uuid())
   user              User               @relation(fields: [user_id], references: [id])
   user_id           String
-  course            Course             @relation(fields: [session_id], references: [session_id])
-  session_id        String
+  course            Course             @relation(fields: [course_id], references: [course_id])
+  course_id         String
   
-  @@unique([user_id, session_id])
+  @@unique([user_id, course_id])
 }
 
 model GroupPeriod {
