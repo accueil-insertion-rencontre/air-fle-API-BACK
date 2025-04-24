@@ -41,7 +41,6 @@ export class UserService {
         include: {
           role: true,
           courses: true,
-          workingHours: true,
         },
       }),
       this.prisma.user.count({ where }),
