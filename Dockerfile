@@ -8,6 +8,9 @@ RUN npm install
 
 COPY . .
 
+# Générer les fichiers Prisma avec la cible musl
+RUN npx prisma generate
+
 RUN npm run build
 
 EXPOSE 3000
