@@ -2,7 +2,10 @@ import { Controller, Get, Post, Put, Delete, Body, Param, UseGuards } from '@nes
 import { StatusService } from './status.service';
 import { Status, Prisma } from '@prisma/client';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 
+@ApiTags('statuses')
+@ApiBearerAuth()
 @Controller('statuses')
 @UseGuards(JwtAuthGuard)
 export class StatusController {
