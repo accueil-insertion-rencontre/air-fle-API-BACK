@@ -2,7 +2,10 @@ import { Controller, Get, Post, Put, Delete, Body, Param, UseGuards } from '@nes
 import { PeriodService } from './period.service';
 import { Period, Prisma } from '@prisma/client';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 
+@ApiTags('periods')
+@ApiBearerAuth()
 @Controller('periods')
 @UseGuards(JwtAuthGuard)
 export class PeriodController {
