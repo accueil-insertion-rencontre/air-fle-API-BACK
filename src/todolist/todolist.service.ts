@@ -51,11 +51,10 @@ export class TodolistService {
     });
   }
 
-  async updateCompletionStatus(id: string, completed: boolean, percentage: number): Promise<Todolist> {
+  async updateCompletionStatus(id: string, percentage: number): Promise<Todolist> {
     return this.prisma.todolist.update({
       where: { id },
       data: {
-        completed,
         completionPercentage: percentage
       }
     });
