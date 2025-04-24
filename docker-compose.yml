@@ -22,7 +22,6 @@ services:
     container_name: nest-api
     ports:
       - "3000:3000"
-      - "9229:9229" # Port de débogage
     environment:
       - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/airfle?schema=public
       - NODE_ENV=development
