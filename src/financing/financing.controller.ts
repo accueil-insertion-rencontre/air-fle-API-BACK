@@ -2,7 +2,10 @@ import { Controller, Get, Post, Put, Delete, Body, Param, UseGuards } from '@nes
 import { FinancingService } from './financing.service';
 import { Financing, Prisma } from '@prisma/client';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 
+@ApiTags('financings')
+@ApiBearerAuth()
 @Controller('financings')
 @UseGuards(JwtAuthGuard)
 export class FinancingController {
