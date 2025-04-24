@@ -2,7 +2,10 @@ import { Controller, Get, Post, Put, Delete, Body, Param, UseGuards } from '@nes
 import { ContinuationService } from './continuation.service';
 import { Continuation, Prisma } from '@prisma/client';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 
+@ApiTags('continuations')
+@ApiBearerAuth()
 @Controller('continuations')
 @UseGuards(JwtAuthGuard)
 export class ContinuationController {
