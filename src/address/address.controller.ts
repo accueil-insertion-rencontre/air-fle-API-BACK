@@ -133,7 +133,7 @@ export class AddressController {
     @Param('id') id: string,
     @Body() data: AddressUpdateDto,
   ): Promise<Address> {
-    // Les données sont déjà du bon type (number)
+
     return this.addressService.update(id, data);
   }
 
