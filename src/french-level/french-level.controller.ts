@@ -2,7 +2,10 @@ import { Controller, Get, Post, Put, Delete, Body, Param, UseGuards } from '@nes
 import { FrenchLevelService } from './french-level.service';
 import { FrenchLevel, Prisma } from '@prisma/client';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 
+@ApiTags('french-levels')
+@ApiBearerAuth()
 @Controller('french-levels')
 @UseGuards(JwtAuthGuard)
 export class FrenchLevelController {
