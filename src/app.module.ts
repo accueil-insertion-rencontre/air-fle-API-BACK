@@ -17,7 +17,6 @@ import { ExitReasonModule } from './exit-reason/exit-reason.module';
 import { OrientationModule } from './orientation/orientation.module';
 import { PeriodModule } from './period/period.module';
 import { StatusModule } from './status/status.module';
-import { WorkingHourModule } from './working-hour/working-hour.module';
 import { FinancingModule } from './financing/financing.module';
 import { ExamModule } from './exam/exam.module';
 import { ContinuationModule } from './continuation/continuation.module';
@@ -41,7 +40,6 @@ import { TodolistModule } from './todolist/todolist.module';
     OrientationModule,
     PeriodModule,
     StatusModule,
-    WorkingHourModule,
     FinancingModule,
     ExamModule,
     ContinuationModule,
