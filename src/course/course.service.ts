@@ -47,9 +47,9 @@ export class CourseService {
     });
   }
 
-  async findOne(id: string): Promise<Course | null> {
+  async findOne(sessionId: string): Promise<Course | null> {
     const course = await this.prisma.course.findUnique({
-      where: { id },
+      where: { session_id: sessionId },
       include: {
         users: true,
         absences: {
@@ -61,16 +61,16 @@ export class CourseService {
     });
 
     if (!course) {
-      throw new NotFoundException(`Cours avec l'ID ${id} non trouvé`);
+      throw new NotFoundException(`Cours avec l'ID ${sessionId} non trouvé`);
     }
 
     return course;
   }
 
-  async update(id: string, data: any): Promise<Course> {
+  async update(sessionId: string, data: any): Promise<Course> {
     try {
       return await this.prisma.course.update({
-        where: { id },
+        where: { session_id: sessionId },
         data,
         include: {
           users: true,
@@ -79,20 +79,20 @@ export class CourseService {
       });
     } catch (error) {
       if (error.code === 'P2025') {
-        throw new NotFoundException(`Cours avec l'ID ${id} non trouvé`);
+        throw new NotFoundException(`Cours avec l'ID ${sessionId} non trouvé`);
       }
       throw error;
     }
   }
 
-  async remove(id: string): Promise<Course> {
+  async remove(sessionId: string): Promise<Course> {
     try {
       return await this.prisma.course.delete({
-        where: { id },
+        where: { session_id: sessionId },
       });
     } catch (error) {
       if (error.code === 'P2025') {
-        throw new NotFoundException(`Cours avec l'ID ${id} non trouvé`);
+        throw new NotFoundException(`Cours avec l'ID ${sessionId} non trouvé`);
       }
       throw error;
     }
