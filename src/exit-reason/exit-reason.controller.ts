@@ -2,7 +2,10 @@ import { Controller, Get, Post, Put, Delete, Body, Param, UseGuards } from '@nes
 import { ExitReasonService } from './exit-reason.service';
 import { ExitReason, Prisma } from '@prisma/client';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 
+@ApiTags('exit-reasons')
+@ApiBearerAuth()
 @Controller('exit-reasons')
 @UseGuards(JwtAuthGuard)
 export class ExitReasonController {
