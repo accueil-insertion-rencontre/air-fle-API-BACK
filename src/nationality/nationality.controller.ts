@@ -2,7 +2,10 @@ import { Controller, Get, Post, Put, Delete, Body, Param, UseGuards } from '@nes
 import { NationalityService } from './nationality.service';
 import { Nationality, Prisma } from '@prisma/client';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 
+@ApiTags('nationalities')
+@ApiBearerAuth()
 @Controller('nationalities')
 @UseGuards(JwtAuthGuard)
 export class NationalityController {
