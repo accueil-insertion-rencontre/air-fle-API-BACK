@@ -3,6 +3,7 @@ import {
   NestInterceptor,
   ExecutionContext,
   CallHandler,
+  HttpStatus,
 } from '@nestjs/common';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
@@ -21,8 +22,26 @@ export class TransformInterceptor<T>
     return next.handle().pipe(
       map((data) => {
         const statusCode = response.statusCode;
-        const message = this.getDefaultMessageForStatusCode(statusCode);
         
+        // Vérifier si la réponse contient un champ success à false
+        // indiquant une erreur métier
+        if (data && typeof data === 'object' && 'success' in data && data.success === false) {
+          // Changer le code de statut en 400 (Bad Request) pour les erreurs métier
+          response.status(HttpStatus.BAD_REQUEST);
+          
+          // Extraire seulement les données pertinentes sans dupliquer success/message
+          const { success, message, ...restData } = data;
+          const additionalData = Object.keys(restData).length > 0 ? restData : null;
+          
+          return ApiResponse.error(
+            message || 'Une erreur est survenue', 
+            HttpStatus.BAD_REQUEST, 
+            additionalData
+          );
+        }
+        
+        // Si c'est un succès
+        const message = this.getDefaultMessageForStatusCode(statusCode);
         return ApiResponse.success(data, message, statusCode);
       }),
     );
