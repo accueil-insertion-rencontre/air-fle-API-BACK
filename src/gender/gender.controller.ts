@@ -2,7 +2,10 @@ import { Controller, Get, Post, Put, Delete, Body, Param, UseGuards } from '@nes
 import { GenderService } from './gender.service';
 import { Gender, Prisma } from '@prisma/client';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 
+@ApiTags('genders')
+@ApiBearerAuth()
 @Controller('genders')
 @UseGuards(JwtAuthGuard)
 export class GenderController {
