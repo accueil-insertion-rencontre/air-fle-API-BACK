@@ -11,8 +11,9 @@ COPY . .
 # Générer les fichiers Prisma avec la cible musl
 RUN npx prisma generate
 
+# Build l'application
 RUN npm run build
 
 EXPOSE 3000
 
-CMD ["npm", "run", "start:dev"] 
+# La commande de démarrage est maintenant définie dans docker-compose.yml 
