@@ -7,12 +7,14 @@ import { UserModule } from '../user/user.module';
 import { JwtStrategy } from './strategies/jwt.strategy';
 import { jwtConstants } from './constants';
 import { PrismaModule } from '../prisma/prisma.module';
+import { RedisModule } from '../redis/redis.module';
 
 @Module({
   imports: [
     UserModule,
     PassportModule,
     PrismaModule,
+    RedisModule,
     JwtModule.register({
       secret: jwtConstants.secret,
       signOptions: { expiresIn: jwtConstants.expiresIn },
