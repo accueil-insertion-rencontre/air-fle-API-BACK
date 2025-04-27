@@ -1,10 +1,12 @@
 export const jwtConstants = {
-  secret: process.env.JWT_SECRET || 'airFleSecretKey2025',
+  secret: process.env.JWT_SECRET,
   expiresIn: process.env.JWT_EXPIRES_IN || '1d',
 };
 
-// Avertissement de sécurité 
+// Vérification de sécurité obligatoire
 if (!process.env.JWT_SECRET) {
-  console.warn('⚠️ AVERTISSEMENT: JWT_SECRET non défini dans les variables d\'environnement. Utilisation de la clé par défaut en développement uniquement.');
-  console.warn('⚠️ NE PAS utiliser la clé par défaut en production!');
+  console.error('❌ ERREUR: JWT_SECRET n\'est pas défini dans les variables d\'environnement.');
+  console.error('❌ L\'application ne peut pas démarrer sans une clé JWT secrète.');
+  console.error('❌ Créez un fichier .env à la racine du projet avec JWT_SECRET=votre_clé_secrète');
+  process.exit(1); // Arrête l'application si JWT_SECRET n'est pas défini
 } 
