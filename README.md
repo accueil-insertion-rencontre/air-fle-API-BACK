@@ -35,9 +35,10 @@ cd air-fle-API
 # Installer les dépendances
 npm install
 
-# Configurer la base de données
+# Configurer la base de données et Redis
 # Créer un fichier .env à la racine du projet avec :
 # DATABASE_URL="postgresql://user:password@localhost:5432/airfle?schema=public"
+# REDIS_URL="redis://localhost:6379"
 
 # Démarrer l'application
 npm run start:dev
@@ -48,6 +49,7 @@ npm run start:dev
 - **Authentification**
   - Connexion des utilisateurs
   - Gestion des rôles (admin, professeur)
+  - Sécurité contre les attaques de force brute
 
 - **Gestion des étudiants**
   - Ajout, modification et suppression d'étudiants
@@ -62,4 +64,5 @@ npm run start:dev
 - NestJS
 - PostgreSQL
 - Prisma ORM
+- Redis
 - Docker
