@@ -47,7 +47,6 @@ model Address {
   complement       String?
   zipcode          Int
   city             String
-  qpv              String?
   country          String             @default("France")
   students         StudentAddress[]
 }
