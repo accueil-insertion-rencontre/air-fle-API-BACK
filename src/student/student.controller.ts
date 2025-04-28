@@ -13,30 +13,42 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { StudentService } from './student.service';
-import { PrismaClient } from '@prisma/client';
+import { Prisma, Student } from '@prisma/client';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
-
-// Type par défaut pour corriger les problèmes de linter
-type Student = any;
-type PrismaTypes = typeof PrismaClient.prototype;
+import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiParam, ApiQuery, ApiBody } from '@nestjs/swagger';
+import { CreateStudentDto } from './dto/create-student.dto';
+import { UpdateStudentDto } from './dto/update-student.dto';
 
 @Controller('students')
 @UseGuards(JwtAuthGuard, RolesGuard)
+@ApiTags('students')
+@ApiBearerAuth()
 export class StudentController {
   constructor(private readonly studentService: StudentService) {}
 
   @Post()
   @HttpCode(HttpStatus.CREATED)
   @Roles('admin', 'teacher')
-  async create(@Body() data: any) {
-    return this.studentService.create(data);
+  @ApiOperation({ summary: 'Créer un étudiant' })
+  @ApiResponse({ status: HttpStatus.CREATED, description: 'Étudiant créé avec succès' })
+  @ApiBody({ type: CreateStudentDto })
+  async create(@Body() createStudentDto: CreateStudentDto): Promise<Student> {
+    return this.studentService.create(createStudentDto);
   }
 
   @Get()
   @HttpCode(HttpStatus.OK)
   @Roles('admin', 'teacher')
+  @ApiOperation({ summary: 'Récupérer tous les étudiants' })
+  @ApiResponse({ status: HttpStatus.OK, description: 'Liste des étudiants récupérée avec succès' })
+  @ApiQuery({ name: 'skip', required: false, description: 'Nombre d\'éléments à sauter' })
+  @ApiQuery({ name: 'take', required: false, description: 'Nombre d\'éléments à prendre' })
+  @ApiQuery({ name: 'orderBy', required: false, description: 'Tri des résultats (JSON)' })
+  @ApiQuery({ name: 'firstname', required: false, description: 'Filtre sur le prénom' })
+  @ApiQuery({ name: 'lastname', required: false, description: 'Filtre sur le nom' })
+  @ApiQuery({ name: 'email', required: false, description: 'Filtre sur l\'email' })
   async findAll(
     @Query('skip') skip?: string,
     @Query('take') take?: string,
@@ -44,8 +56,8 @@ export class StudentController {
     @Query('firstname') firstname?: string,
     @Query('lastname') lastname?: string,
     @Query('email') email?: string,
-  ) {
-    const where: any = {};
+  ): Promise<Student[]> {
+    const where: Prisma.StudentWhereInput = {};
 
     if (firstname) {
       where.firstname = { contains: firstname, mode: 'insensitive' };
@@ -72,7 +84,11 @@ export class StudentController {
   @Get(':id')
   @HttpCode(HttpStatus.OK)
   @Roles('admin', 'teacher')
-  async findOne(@Param('id') id: string) {
+  @ApiOperation({ summary: 'Récupérer un étudiant par ID' })
+  @ApiResponse({ status: HttpStatus.OK, description: 'Étudiant récupéré avec succès' })
+  @ApiResponse({ status: HttpStatus.NOT_FOUND, description: 'Étudiant non trouvé' })
+  @ApiParam({ name: 'id', description: 'ID de l\'étudiant' })
+  async findOne(@Param('id') id: string): Promise<Student> {
     const student = await this.studentService.findOne({ id });
     
     if (!student) {
@@ -84,15 +100,20 @@ export class StudentController {
 
   @Patch(':id')
   @HttpCode(HttpStatus.OK)
-  @Roles('admin')
+  @Roles('admin', 'teacher')
+  @ApiOperation({ summary: 'Mettre à jour un étudiant' })
+  @ApiResponse({ status: HttpStatus.OK, description: 'Étudiant mis à jour avec succès' })
+  @ApiResponse({ status: HttpStatus.NOT_FOUND, description: 'Étudiant non trouvé' })
+  @ApiParam({ name: 'id', description: 'ID de l\'étudiant' })
+  @ApiBody({ type: UpdateStudentDto })
   async update(
     @Param('id') id: string,
-    @Body() data: any,
-  ) {
+    @Body() updateStudentDto: UpdateStudentDto,
+  ): Promise<Student> {
     try {
       return await this.studentService.update({
         where: { id },
-        data,
+        data: updateStudentDto,
       });
     } catch (error) {
       if (error.code === 'P2025') {
@@ -104,8 +125,12 @@ export class StudentController {
 
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
-  @Roles('admin')
-  async remove(@Param('id') id: string) {
+  @Roles('admin', 'teacher')
+  @ApiOperation({ summary: 'Supprimer un étudiant' })
+  @ApiResponse({ status: HttpStatus.NO_CONTENT, description: 'Étudiant supprimé avec succès' })
+  @ApiResponse({ status: HttpStatus.NOT_FOUND, description: 'Étudiant non trouvé' })
+  @ApiParam({ name: 'id', description: 'ID de l\'étudiant' })
+  async remove(@Param('id') id: string): Promise<void> {
     try {
       await this.studentService.remove({ id });
       return;
