@@ -5,8 +5,8 @@ export default defineConfig({
   test: {
     globals: true,
     environment: 'node',
-    include: ['**/*.e2e-vitest.ts'],
-    root: './test',
+    include: ['**/*.e2e-vitest.ts', '**/*.spec.ts'],
+    root: './',
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json', 'html'],
