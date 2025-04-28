@@ -1,8 +1,11 @@
 import { Controller, Get, Post, Put, Delete, Body, Param, UseGuards } from '@nestjs/common';
 import { ContinuationService } from './continuation.service';
-import { Continuation, Prisma } from '@prisma/client';
+import { Continuation } from '@prisma/client';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
+import { CreateContinuationDto } from './dto/create-continuation.dto';
+import { UpdateContinuationDto } from './dto/update-continuation.dto';
+import { IdParamDto } from './dto/id-param.dto';
 
 @ApiTags('continuations')
 @ApiBearerAuth()
@@ -17,8 +20,8 @@ export class ContinuationController {
   }
 
   @Get(':id')
-  async findOne(@Param('id') id: string): Promise<Continuation | null> {
-    return this.continuationService.findOne(id);
+  async findOne(@Param() params: IdParamDto): Promise<Continuation | null> {
+    return this.continuationService.findOne(params.id);
   }
 
   @Get('student/:studentId')
@@ -27,20 +30,35 @@ export class ContinuationController {
   }
 
   @Post()
-  async create(@Body() data: Prisma.ContinuationCreateInput): Promise<Continuation> {
-    return this.continuationService.create(data);
+  async create(@Body() createContinuationDto: CreateContinuationDto): Promise<Continuation> {
+    const { studentId, ...rest } = createContinuationDto;
+    return this.continuationService.create({
+      ...rest,
+      student: {
+        connect: { id: studentId }
+      }
+    });
   }
 
   @Put(':id')
   async update(
-    @Param('id') id: string,
-    @Body() data: Prisma.ContinuationUpdateInput,
+    @Param() params: IdParamDto,
+    @Body() updateContinuationDto: UpdateContinuationDto,
   ): Promise<Continuation> {
-    return this.continuationService.update(id, data);
+    const { studentId, ...rest } = updateContinuationDto;
+    const data: any = { ...rest };
+    
+    if (studentId) {
+      data.student = {
+        connect: { id: studentId }
+      };
+    }
+    
+    return this.continuationService.update(params.id, data);
   }
 
   @Delete(':id')
-  async delete(@Param('id') id: string): Promise<Continuation> {
-    return this.continuationService.delete(id);
+  async delete(@Param() params: IdParamDto): Promise<Continuation> {
+    return this.continuationService.delete(params.id);
   }
 } 
