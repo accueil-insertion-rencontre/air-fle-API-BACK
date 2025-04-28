@@ -5,10 +5,10 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiParam, ApiQuery, ApiBody, ApiProperty } from '@nestjs/swagger';
-import { Type } from 'class-transformer';
-import { IsString, IsOptional, IsUUID } from 'class-validator';
+import { CreateAbsenceDto } from './dto/create-absence.dto';
+import { UpdateAbsenceDto } from './dto/update-absence.dto';
 
-// DTOs pour la documentation Swagger
+// DTO pour la réponse Swagger
 class AbsenceDto {
   @ApiProperty({ description: 'Identifiant unique', example: 'abc123' })
   id: string;
@@ -23,28 +23,6 @@ class AbsenceDto {
   reason?: string;
 }
 
-class CreateAbsenceDto {
-  @ApiProperty({ description: 'Identifiant de l\'étudiant', example: 'def456' })
-  @IsUUID()
-  student_id: string;
-
-  @ApiProperty({ description: 'Identifiant du cours', example: 'ghi789' })
-  @IsUUID()
-  course_id: string;
-
-  @ApiProperty({ description: 'Raison de l\'absence', required: false, example: 'Maladie' })
-  @IsString()
-  @IsOptional()
-  reason?: string;
-}
-
-class UpdateAbsenceDto {
-  @ApiProperty({ description: 'Raison de l\'absence', required: false, example: 'Maladie' })
-  @IsString()
-  @IsOptional()
-  reason?: string;
-}
-
 @ApiTags('absences')
 @ApiBearerAuth()
 @Controller('absences')
@@ -56,7 +34,6 @@ export class AbsenceController {
   @Roles('ADMIN', 'TEACHER')
   @ApiOperation({ summary: 'Créer une nouvelle absence' })
   @ApiResponse({ status: 201, description: 'Absence créée avec succès', type: AbsenceDto })
-  @ApiBody({ type: CreateAbsenceDto })
   create(@Body() createAbsenceDto: CreateAbsenceDto) {
     // Transformer le DTO d'API en Input pour Prisma
     const createAbsenceData: Prisma.AbsenceCreateInput = {
@@ -142,15 +119,24 @@ export class AbsenceController {
   @ApiResponse({ status: 200, description: 'Absence mise à jour avec succès', type: AbsenceDto })
   @ApiResponse({ status: 404, description: 'Absence introuvable' })
   @ApiParam({ name: 'id', description: 'Identifiant de l\'absence', example: 'abc123' })
-  @ApiBody({ type: UpdateAbsenceDto })
   update(
     @Param('id') id: string,
     @Body() updateAbsenceDto: UpdateAbsenceDto,
   ) {
     // Transformer le DTO d'API en Input pour Prisma
-    const updateAbsenceData: Prisma.AbsenceUpdateInput = {
-      reason: updateAbsenceDto.reason
-    };
+    const updateAbsenceData: Prisma.AbsenceUpdateInput = {};
+    
+    if (updateAbsenceDto.reason !== undefined) {
+      updateAbsenceData.reason = updateAbsenceDto.reason;
+    }
+    
+    if (updateAbsenceDto.student_id) {
+      updateAbsenceData.student = { connect: { id: updateAbsenceDto.student_id } };
+    }
+    
+    if (updateAbsenceDto.course_id) {
+      updateAbsenceData.course = { connect: { course_id: updateAbsenceDto.course_id } };
+    }
     
     return this.absenceService.update(id, updateAbsenceData).then(absence => {
       // Transformer le résultat pour l'API
