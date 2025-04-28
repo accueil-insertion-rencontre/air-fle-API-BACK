@@ -3,8 +3,8 @@ import { AddressService } from './address.service';
 import { Address, Prisma } from '@prisma/client';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiProperty } from '@nestjs/swagger';
-import { Type } from 'class-transformer';
-import { IsInt, IsOptional, IsString } from 'class-validator';
+import { CreateAddressDto } from './dto/create-address.dto';
+import { UpdateAddressDto } from './dto/update-address.dto';
 
 // DTO pour Swagger
 class AddressDto {
@@ -18,81 +18,13 @@ class AddressDto {
   complement: string | null;
 
   @ApiProperty({ description: 'Code postal', example: 75001, type: Number })
-  @IsInt()
-  @Type(() => Number)
   zipcode: number;
 
   @ApiProperty({ description: 'Ville', example: 'Paris' })
   city: string;
-
-  @ApiProperty({ description: 'Quartier prioritaire de la ville', required: false, nullable: true, example: 'Centre' })
-  qpv: string | null;
 
   @ApiProperty({ description: 'Pays', default: 'France', example: 'France' })
   country: string;
-}
-
-class AddressCreateDto {
-  @ApiProperty({ description: 'Rue', example: '12 rue de Paris' })
-  @IsString()
-  street: string;
-
-  @ApiProperty({ description: 'Complément d\'adresse', required: false, nullable: true, example: 'Appartement 4B' })
-  @IsString()
-  @IsOptional()
-  complement?: string | null;
-
-  @ApiProperty({ description: 'Code postal', example: 75001, type: Number })
-  @IsInt()
-  @Type(() => Number)
-  zipcode: number;
-
-  @ApiProperty({ description: 'Ville', example: 'Paris' })
-  @IsString()
-  city: string;
-
-  @ApiProperty({ description: 'Quartier prioritaire de la ville', required: false, nullable: true, example: 'Centre' })
-  @IsString()
-  @IsOptional()
-  qpv?: string | null;
-
-  @ApiProperty({ description: 'Pays', default: 'France', example: 'France' })
-  @IsString()
-  @IsOptional()
-  country?: string;
-}
-
-class AddressUpdateDto {
-  @ApiProperty({ description: 'Rue', required: false, example: '12 rue de Paris' })
-  @IsString()
-  @IsOptional()
-  street?: string;
-
-  @ApiProperty({ description: 'Complément d\'adresse', required: false, nullable: true, example: 'Appartement 4B' })
-  @IsString()
-  @IsOptional()
-  complement?: string | null;
-
-  @ApiProperty({ description: 'Code postal', required: false, example: 75001, type: Number })
-  @IsInt()
-  @Type(() => Number)
-  @IsOptional()
-  zipcode?: number;
-
-  @ApiProperty({ description: 'Ville', required: false, example: 'Paris' })
-  @IsString()
-  @IsOptional()
-  city?: string;
-
-  @ApiProperty({ description: 'Quartier prioritaire de la ville', required: false, nullable: true, example: 'Centre' })
-  @IsString()
-  @IsOptional()
-  qpv?: string | null;
-
-  @ApiProperty({ description: 'Pays', required: false, default: 'France', example: 'France' })
-  @IsString()
-  @IsOptional()
-  country?: string;
 }
 
 @ApiTags('addresses')
@@ -120,8 +52,7 @@ export class AddressController {
   @Post()
   @ApiOperation({ summary: 'Créer une nouvelle adresse' })
   @ApiResponse({ status: 201, description: 'Adresse créée avec succès', type: AddressDto })
-  async create(@Body() data: AddressCreateDto): Promise<Address> {
-
+  async create(@Body() data: CreateAddressDto): Promise<Address> {
     return this.addressService.create(data);
   }
 
@@ -131,9 +62,8 @@ export class AddressController {
   @ApiResponse({ status: 404, description: 'Adresse introuvable' })
   async update(
     @Param('id') id: string,
-    @Body() data: AddressUpdateDto,
+    @Body() data: UpdateAddressDto,
   ): Promise<Address> {
-
     return this.addressService.update(id, data);
   }
 
