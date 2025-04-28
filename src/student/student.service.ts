@@ -34,6 +34,11 @@ export class StudentService {
         nationality: true,
         addresses: true,
         orientation: true,
+        disabilities: {
+          include: {
+            disability: true
+          }
+        },
       },
     });
   }
@@ -50,6 +55,11 @@ export class StudentService {
         nationality: true,
         addresses: true,
         orientation: true,
+        disabilities: {
+          include: {
+            disability: true
+          }
+        },
       },
     });
   }
@@ -69,5 +79,30 @@ export class StudentService {
     return this.prisma.student.delete({
       where,
     });
+  }
+
+  async updateStudentDisabilities(studentId: string, disabilityIds: string[]): Promise<void> {
+    await this.prisma.studentDisability.deleteMany({
+      where: {
+        student_id: studentId
+      }
+    });
+
+    if (disabilityIds.length > 0) {
+      await this.prisma.student.update({
+        where: {
+          id: studentId
+        },
+        data: {
+          disabilities: {
+            create: disabilityIds.map(disabilityId => ({
+              disability: {
+                connect: { id: disabilityId }
+              }
+            }))
+          }
+        }
+      });
+    }
   }
 }

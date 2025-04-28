@@ -93,6 +93,13 @@ model Financing {
   students         Student[]
 }
 
+model Disability {
+  id               String             @id @default(uuid())
+  label            String
+  description      String?
+  students         StudentDisability[]
+}
+
 // Entités principales
 model User {
   id               String             @id @default(uuid())
@@ -120,6 +127,8 @@ model Student {
   date_test_initial String?
   commentaire       String?
   date_entree_france String?
+  date_titre_sejour DateTime?
+  date_cir          DateTime?
   
   // Relations
   gender            Gender             @relation(fields: [gender_id], references: [id])
@@ -148,6 +157,8 @@ model Student {
   status            Status             @relation(fields: [status_id], references: [id])
   status_id         String
   
+  disabilities      StudentDisability[]
+  
   exams             Exam[]
   absences          Absence[]
   continuation      Continuation?
@@ -155,6 +166,20 @@ model Student {
   
   createdAt         DateTime           @default(now())
   updatedAt         DateTime           @updatedAt
+}
+
+// Table de jointure pour la relation many-to-many entre Student et Disability
+model StudentDisability {
+  id             String     @id @default(uuid())
+  student        Student    @relation(fields: [student_id], references: [id])
+  student_id     String
+  disability     Disability @relation(fields: [disability_id], references: [id])
+  disability_id  String
+  
+  createdAt      DateTime   @default(now())
+  updatedAt      DateTime   @updatedAt
+  
+  @@unique([student_id, disability_id])
 }
 
 model Todolist {

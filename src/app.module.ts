@@ -21,6 +21,7 @@ import { FinancingModule } from './financing/financing.module';
 import { ExamModule } from './exam/exam.module';
 import { ContinuationModule } from './continuation/continuation.module';
 import { TodolistModule } from './todolist/todolist.module';
+import { DisabilityModule } from './disability/disability.module';
 
 @Module({
   imports: [
@@ -43,7 +44,8 @@ import { TodolistModule } from './todolist/todolist.module';
     FinancingModule,
     ExamModule,
     ContinuationModule,
-    TodolistModule
+    TodolistModule,
+    DisabilityModule
   ],
   controllers: [AppController],
   providers: [AppService],
