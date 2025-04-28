@@ -2,10 +2,10 @@ import {
   Controller,
   Get,
   Post,
-  Body,
   Patch,
-  Param,
   Delete,
+  Body,
+  Param,
   Query,
   HttpStatus,
   HttpCode,
@@ -15,36 +15,43 @@ import { SessionService } from './session.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
-import { Prisma } from '@prisma/client';
-import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
+import { Session } from '@prisma/client';
+import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiParam, ApiQuery } from '@nestjs/swagger';
+import { CreateSessionDto } from './dto/create-session.dto';
+import { UpdateSessionDto } from './dto/update-session.dto';
 
 // Pour éviter l'erreur d'import de UserRole
-enum UserRole {
-  ADMIN = 'ADMIN',
-  TEACHER = 'TEACHER',
-  STUDENT = 'STUDENT'
-}
+type UserRole = 'admin' | 'teacher';
+const UserRole: Record<string, UserRole> = {
+  ADMIN: 'admin',
+  TEACHER: 'teacher',
+};
 
 @ApiTags('sessions')
 @ApiBearerAuth()
-@UseGuards(JwtAuthGuard, RolesGuard)
 @Controller('sessions')
+@UseGuards(JwtAuthGuard, RolesGuard)
 export class SessionController {
   constructor(private readonly sessionService: SessionService) {}
 
   @Post()
   @Roles(UserRole.ADMIN, UserRole.TEACHER)
   @HttpCode(HttpStatus.CREATED)
-  @ApiOperation({ summary: 'Create a new session' })
-  @ApiResponse({ status: HttpStatus.CREATED, description: 'Session successfully created' })
-  create(@Body() createSessionDto: Prisma.SessionCreateInput) {
+  @ApiOperation({ summary: 'Créer une session' })
+  @ApiResponse({ status: HttpStatus.CREATED, description: 'Session créée avec succès' })
+  create(@Body() createSessionDto: CreateSessionDto) {
     return this.sessionService.create(createSessionDto);
   }
 
   @Get()
   @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Find all sessions with optional filtering' })
-  @ApiResponse({ status: HttpStatus.OK, description: 'Return all sessions' })
+  @ApiOperation({ summary: 'Récupérer toutes les sessions' })
+  @ApiResponse({ status: HttpStatus.OK, description: 'Liste des sessions récupérée avec succès' })
+  @ApiQuery({ name: 'skip', required: false, description: 'Nombre d\'éléments à sauter' })
+  @ApiQuery({ name: 'take', required: false, description: 'Nombre d\'éléments à prendre' })
+  @ApiQuery({ name: 'date', required: false, description: 'Filtrer par date' })
+  @ApiQuery({ name: 'groupId', required: false, description: 'Filtrer par groupe' })
+  @ApiQuery({ name: 'periodId', required: false, description: 'Filtrer par période' })
   findAll(
     @Query('skip') skip?: string,
     @Query('take') take?: string,
@@ -52,11 +59,10 @@ export class SessionController {
     @Query('groupId') groupId?: string,
     @Query('periodId') periodId?: string,
   ) {
-    const where: Prisma.SessionWhereInput = {};
+    const where: any = {};
     
     if (date) {
       const searchDate = new Date(date);
-      // Utilisons le bon champ selon le schema
       where.startedAt = {
         gte: searchDate,
         lt: new Date(searchDate.getTime() + 24 * 60 * 60 * 1000), // Next day
@@ -64,7 +70,6 @@ export class SessionController {
     }
     
     if (groupId) {
-      // Relation correcte selon le schéma Prisma
       where.groups = {
         some: {
           id: groupId
@@ -73,8 +78,6 @@ export class SessionController {
     }
     
     if (periodId) {
-      // Puisque Session n'est pas directement lié à Period dans le schéma,
-      // on peut filtrer sur les sessions qui ont des groupes associés à la période
       where.groups = {
         some: {
           periods: {
@@ -96,9 +99,10 @@ export class SessionController {
 
   @Get(':id')
   @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Find a session by id' })
-  @ApiResponse({ status: HttpStatus.OK, description: 'Return the session' })
-  @ApiResponse({ status: HttpStatus.NOT_FOUND, description: 'Session not found' })
+  @ApiOperation({ summary: 'Récupérer une session par ID' })
+  @ApiResponse({ status: HttpStatus.OK, description: 'Session récupérée avec succès' })
+  @ApiResponse({ status: HttpStatus.NOT_FOUND, description: 'Session non trouvée' })
+  @ApiParam({ name: 'id', description: 'ID de la session' })
   findOne(@Param('id') id: string) {
     return this.sessionService.findOne(id);
   }
@@ -106,12 +110,13 @@ export class SessionController {
   @Patch(':id')
   @Roles(UserRole.ADMIN, UserRole.TEACHER)
   @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Update a session' })
-  @ApiResponse({ status: HttpStatus.OK, description: 'Session successfully updated' })
-  @ApiResponse({ status: HttpStatus.NOT_FOUND, description: 'Session not found' })
+  @ApiOperation({ summary: 'Mettre à jour une session' })
+  @ApiResponse({ status: HttpStatus.OK, description: 'Session mise à jour avec succès' })
+  @ApiResponse({ status: HttpStatus.NOT_FOUND, description: 'Session non trouvée' })
+  @ApiParam({ name: 'id', description: 'ID de la session' })
   update(
     @Param('id') id: string,
-    @Body() updateSessionDto: Prisma.SessionUpdateInput,
+    @Body() updateSessionDto: UpdateSessionDto,
   ) {
     return this.sessionService.update(id, updateSessionDto);
   }
@@ -119,9 +124,10 @@ export class SessionController {
   @Delete(':id')
   @Roles(UserRole.ADMIN)
   @HttpCode(HttpStatus.NO_CONTENT)
-  @ApiOperation({ summary: 'Delete a session' })
-  @ApiResponse({ status: HttpStatus.NO_CONTENT, description: 'Session successfully deleted' })
-  @ApiResponse({ status: HttpStatus.NOT_FOUND, description: 'Session not found' })
+  @ApiOperation({ summary: 'Supprimer une session' })
+  @ApiResponse({ status: HttpStatus.NO_CONTENT, description: 'Session supprimée avec succès' })
+  @ApiResponse({ status: HttpStatus.NOT_FOUND, description: 'Session non trouvée' })
+  @ApiParam({ name: 'id', description: 'ID de la session' })
   remove(@Param('id') id: string) {
     return this.sessionService.remove(id);
   }
