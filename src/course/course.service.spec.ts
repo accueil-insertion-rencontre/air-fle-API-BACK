@@ -30,7 +30,7 @@ describe('CourseService', () => {
 
   beforeEach(async () => {
     service = new CourseService(prismaMock as unknown as PrismaService);
-    
+
     // Réinitialisation des mocks à chaque test
     vi.clearAllMocks();
   });

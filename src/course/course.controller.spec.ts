@@ -29,7 +29,7 @@ describe('CourseController', () => {
 
   beforeEach(async () => {
     controller = new CourseController(courseServiceMock as unknown as CourseService);
-    
+
     // Reset les mocks après chaque test
     vi.clearAllMocks();
   });
