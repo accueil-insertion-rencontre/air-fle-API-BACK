@@ -101,8 +101,8 @@ export class CreateStudentDto {
   })
   commentaire?: string;
 
-  @ApiProperty({
-    description: 'Date d\'entrée en France',
+  @ApiProperty({ 
+    description: 'Date d\'entrée en France', 
     example: '2022-01-15',
     required: false,
     type: Date
