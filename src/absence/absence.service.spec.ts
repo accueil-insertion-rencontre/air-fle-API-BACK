@@ -30,7 +30,7 @@ describe('AbsenceService', () => {
 
   beforeEach(async () => {
     service = new AbsenceService(prismaMock as unknown as PrismaService);
-    
+
     // Réinitialisation des mocks à chaque test
     vi.clearAllMocks();
   });

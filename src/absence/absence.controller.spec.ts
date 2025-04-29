@@ -30,7 +30,7 @@ describe('AbsenceController', () => {
   beforeEach(async () => {
     controller = new AbsenceController(absenceServiceMock as unknown as AbsenceService);
     absenceService = absenceServiceMock as unknown as AbsenceService;
-    
+
     // Reset les mocks après chaque test
     vi.clearAllMocks();
   });
