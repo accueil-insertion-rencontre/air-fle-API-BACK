@@ -1,0 +1,51 @@
+# Fichiers Git
+.git
+.gitignore
+.github
+
+# Fichiers Docker
+Dockerfile
+Dockerfile.prod
+docker-compose.yml
+docker-compose.prod.yml
+.dockerignore
+
+# Dossiers Node.js
+node_modules
+npm-debug.log
+dist
+coverage
+.nyc_output
+.npm
+
+# Fichiers de développement
+.env
+.env.*
+!.env.example
+.vscode
+.idea
+*.log
+*~
+.DS_Store
+
+# Fichiers de documentation
+README.md
+LICENSE
+CHANGELOG.md
+docs
+
+# Fichiers de test
+test
+**/*.spec.ts
+**/*.test.ts
+vitest.config.ts
+jest.config.js
+
+# Fichiers temporaires
+tmp
+temp
+*.tmp
+*.bak
+
+# Nginx config
+nginx 

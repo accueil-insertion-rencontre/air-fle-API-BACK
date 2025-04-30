@@ -1,0 +1,75 @@
+version: '3.8'
+
+services:
+  api-prod:
+    build:
+      context: .
+      dockerfile: Dockerfile.prod
+    container_name: api-prod
+    restart: always
+    ports:
+      - "3000:3000"
+    env_file:
+      - .env.production
+    environment:
+      - DATABASE_URL=postgresql://user:password@postgres-prod:5432/air_fle_prod?schema=public
+      - REDIS_URL=redis://redis-prod:6379
+      - NODE_ENV=production
+    depends_on:
+      postgres-prod:
+        condition: service_healthy
+      redis-prod:
+        condition: service_healthy
+    networks:
+      - air-fle-network-prod
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/api/v1/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+
+  postgres-prod:
+    image: postgres:15-alpine
+    container_name: postgres-prod
+    restart: always
+    environment:
+      - POSTGRES_USER=user
+      - POSTGRES_PASSWORD=password
+      - POSTGRES_DB=air_fle_prod
+    volumes:
+      - postgres-data-prod:/var/lib/postgresql/data
+    networks:
+      - air-fle-network-prod
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U user -d air_fle_prod"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+      start_period: 10s
+
+  redis-prod:
+    image: redis:7-alpine
+    container_name: redis-prod
+    restart: always
+    volumes:
+      - redis-data-prod:/data
+    networks:
+      - air-fle-network-prod
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+      start_period: 5s
+
+networks:
+  air-fle-network-prod:
+    name: air-fle-network-prod
+    driver: bridge
+
+volumes:
+  postgres-data-prod:
+    name: postgres-data-prod
+  redis-data-prod:
+    name: redis-data-prod 

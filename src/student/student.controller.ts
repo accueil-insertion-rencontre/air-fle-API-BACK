@@ -20,6 +20,7 @@ import { Roles } from '../auth/decorators/roles.decorator';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiParam, ApiQuery, ApiBody } from '@nestjs/swagger';
 import { CreateStudentDto } from './dto/create-student.dto';
 import { UpdateStudentDto } from './dto/update-student.dto';
+import { StudentDisabilityDto } from './dto/student-disability.dto';
 
 @Controller('students')
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -140,5 +141,26 @@ export class StudentController {
       }
       throw error;
     }
+  }
+
+  @Post(':id/disabilities')
+  @HttpCode(HttpStatus.OK)
+  @Roles('ADMIN')
+  @ApiOperation({ summary: 'Associer des handicaps à un étudiant' })
+  @ApiResponse({ status: 200, description: 'Handicaps associés avec succès' })
+  @ApiResponse({ status: 404, description: 'Étudiant introuvable' })
+  @ApiParam({ name: 'id', description: 'Identifiant de l\'étudiant', example: 'abc123' })
+  @ApiBody({ type: StudentDisabilityDto })
+  async updateStudentDisabilities(
+    @Param('id') id: string,
+    @Body() studentDisabilityDto: StudentDisabilityDto
+  ) {
+    const student = await this.studentService.findOne(id);
+    if (!student) {
+      throw new NotFoundException(`Étudiant avec l'ID ${id} non trouvé`);
+    }
+    
+    await this.studentService.updateStudentDisabilities(id, studentDisabilityDto.disability_ids);
+    return { success: true, message: 'Handicaps associés avec succès' };
   }
 } 

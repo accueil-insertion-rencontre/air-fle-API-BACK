@@ -4,9 +4,10 @@ import { Group } from '@prisma/client';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
-import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse, ApiQuery, ApiParam } from '@nestjs/swagger';
+import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse, ApiQuery, ApiParam, ApiBody } from '@nestjs/swagger';
 import { CreateGroupDto } from './dto/create-group.dto';
 import { UpdateGroupDto } from './dto/update-group.dto';
+import { Prisma } from '@prisma/client';
 
 // Pour éviter l'erreur d'import de UserRole
 type UserRole = 'admin' | 'teacher';
@@ -26,9 +27,10 @@ export class GroupController {
   @Roles(UserRole.ADMIN, UserRole.TEACHER)
   @ApiOperation({ summary: 'Créer un groupe' })
   @ApiResponse({ status: 201, description: 'Groupe créé avec succès' })
+  @ApiBody({ type: CreateGroupDto })
   async create(@Body() createGroupDto: CreateGroupDto) {
     // Convertir le DTO en format compatible avec Prisma
-    const prismaData = {
+    const prismaData: Prisma.GroupCreateInput = {
       label: createGroupDto.label,
       session: {
         connect: {
@@ -49,7 +51,7 @@ export class GroupController {
     @Query('sessionId') sessionId?: string,
     @Query('periodId') periodId?: string,
   ) {
-    const where: any = {};
+    const where: Prisma.GroupWhereInput = {};
     
     if (sessionId) {
       where.session_id = sessionId;
@@ -81,15 +83,20 @@ export class GroupController {
   @ApiResponse({ status: 200, description: 'Groupe mis à jour avec succès' })
   @ApiResponse({ status: 404, description: 'Groupe non trouvé' })
   @ApiParam({ name: 'id', description: 'ID du groupe' })
+  @ApiBody({ type: UpdateGroupDto })
   async update(
     @Param('id') id: string,
     @Body() updateGroupDto: UpdateGroupDto,
   ) {
-    const prismaData: any = { ...updateGroupDto };
+    // Conversion du DTO en format Prisma
+    const prismaData: Prisma.GroupUpdateInput = {};
+    
+    if (updateGroupDto.label !== undefined) {
+      prismaData.label = updateGroupDto.label;
+    }
     
     // Si session_id est fourni, le transformer en relation Prisma
     if (updateGroupDto.session_id) {
-      delete prismaData.session_id;
       prismaData.session = {
         connect: {
           id: updateGroupDto.session_id

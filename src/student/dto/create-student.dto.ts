@@ -9,6 +9,7 @@ import {
   MaxLength,
   Matches,
   IsDateString,
+  IsDate,
 } from 'class-validator';
 import { Type } from 'class-transformer';
 import { Escape } from 'class-sanitizer';
@@ -102,13 +103,36 @@ export class CreateStudentDto {
 
   @ApiProperty({ 
     description: 'Date d\'entrée en France', 
-    example: '2022-01-01', 
-    required: false 
+    example: '2022-01-15',
+    required: false,
+    type: Date
   })
-  @IsString()
+  @IsDate()
   @IsOptional()
-  @MaxLength(10)
-  date_entree_france?: string;
+  @Type(() => Date)
+  date_entree_france?: Date;
+
+  @ApiProperty({
+    description: 'Date du titre de séjour',
+    example: '2022-03-20',
+    required: false,
+    type: Date
+  })
+  @IsDate()
+  @IsOptional()
+  @Type(() => Date)
+  date_titre_sejour?: Date;
+
+  @ApiProperty({
+    description: 'Date du Contrat d\'Intégration Républicaine (CIR)',
+    example: '2022-02-10',
+    required: false,
+    type: Date
+  })
+  @IsDate()
+  @IsOptional()
+  @Type(() => Date)
+  date_cir?: Date;
 
   @ApiProperty({ 
     description: 'ID du genre', 

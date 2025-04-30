@@ -17,10 +17,10 @@ import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiProperty, ApiParam, ApiQuery, ApiBody } from '@nestjs/swagger';
 import { Prisma, Course } from '@prisma/client';
-import { IsString, IsOptional, IsUUID, IsDateString } from 'class-validator';
-import { Type } from 'class-transformer';
+import { CreateCourseDto } from './dto/create-course.dto';
+import { UpdateCourseDto } from './dto/update-course.dto';
 
-// DTOs pour la documentation Swagger
+// DTO pour la documentation Swagger uniquement
 class CourseDto {
   @ApiProperty({ description: 'Identifiant unique du cours', example: 'abc123' })
   course_id: string;
@@ -41,55 +41,6 @@ class CourseDto {
   group_id: string;
 }
 
-class CreateCourseDto {
-  @ApiProperty({ description: 'Jour du cours', example: '2025-05-15T09:00:00.000Z', type: Date })
-  @IsDateString()
-  day: Date;
-
-  @ApiProperty({ description: 'Heure de début', example: '2025-05-15T09:00:00.000Z', type: Date })
-  @IsDateString()
-  start_hour: Date;
-
-  @ApiProperty({ description: 'Heure de fin', example: '2025-05-15T11:00:00.000Z', type: Date })
-  @IsDateString()
-  end_hour: Date;
-
-  @ApiProperty({ description: 'Intitulé du cours', example: 'Français - Niveau A1' })
-  @IsString()
-  intitule: string;
-
-  @ApiProperty({ description: 'Identifiant du groupe auquel appartient ce cours', example: 'def456' })
-  @IsUUID()
-  group_id: string;
-}
-
-class UpdateCourseDto {
-  @ApiProperty({ description: 'Jour du cours', required: false, example: '2025-05-15T09:00:00.000Z', type: Date })
-  @IsDateString()
-  @IsOptional()
-  day?: Date;
-
-  @ApiProperty({ description: 'Heure de début', required: false, example: '2025-05-15T09:00:00.000Z', type: Date })
-  @IsDateString()
-  @IsOptional()
-  start_hour?: Date;
-
-  @ApiProperty({ description: 'Heure de fin', required: false, example: '2025-05-15T11:00:00.000Z', type: Date })
-  @IsDateString()
-  @IsOptional()
-  end_hour?: Date;
-
-  @ApiProperty({ description: 'Intitulé du cours', required: false, example: 'Français - Niveau A1' })
-  @IsString()
-  @IsOptional()
-  intitule?: string;
-
-  @ApiProperty({ description: 'Identifiant du groupe auquel appartient ce cours', required: false, example: 'def456' })
-  @IsUUID()
-  @IsOptional()
-  group_id?: string;
-}
-
 @ApiTags('cours')
 @ApiBearerAuth()
 @Controller('courses')
@@ -103,8 +54,21 @@ export class CourseController {
   @ApiOperation({ summary: 'Créer un nouveau cours' })
   @ApiResponse({ status: 201, description: 'Cours créé avec succès', type: CourseDto })
   @ApiBody({ type: CreateCourseDto })
-  async create(@Body() createCourseData: Prisma.CourseCreateInput) {
-    return this.courseService.create(createCourseData);
+  async create(@Body() createCourseDto: CreateCourseDto) {
+    // Convertir le DTO en format Prisma
+    const prismaData: Prisma.CourseCreateInput = {
+      day: createCourseDto.day,
+      start_hour: createCourseDto.start_hour,
+      end_hour: createCourseDto.end_hour,
+      intitule: createCourseDto.intitule,
+      group: {
+        connect: {
+          id: createCourseDto.group_id
+        }
+      }
+    };
+    
+    return this.courseService.create(prismaData);
   }
 
   @Get()
@@ -173,8 +137,26 @@ export class CourseController {
   @ApiResponse({ status: 404, description: 'Cours introuvable' })
   @ApiParam({ name: 'courseId', description: 'Identifiant du cours', example: 'abc123' })
   @ApiBody({ type: UpdateCourseDto })
-  async update(@Param('courseId') courseId: string, @Body() updateCourseData: Prisma.CourseUpdateInput) {
-    return this.courseService.update(courseId, updateCourseData);
+  async update(@Param('courseId') courseId: string, @Body() updateCourseDto: UpdateCourseDto) {
+    // Convertir le DTO en format Prisma
+    const prismaData: Prisma.CourseUpdateInput = {};
+    
+    // Copier les propriétés valides
+    if (updateCourseDto.day !== undefined) prismaData.day = updateCourseDto.day;
+    if (updateCourseDto.start_hour !== undefined) prismaData.start_hour = updateCourseDto.start_hour;
+    if (updateCourseDto.end_hour !== undefined) prismaData.end_hour = updateCourseDto.end_hour;
+    if (updateCourseDto.intitule !== undefined) prismaData.intitule = updateCourseDto.intitule;
+    
+    // Gérer la relation avec le groupe si présente
+    if (updateCourseDto.group_id) {
+      prismaData.group = {
+        connect: {
+          id: updateCourseDto.group_id
+        }
+      };
+    }
+    
+    return this.courseService.update(courseId, prismaData);
   }
 
   @Delete(':courseId')

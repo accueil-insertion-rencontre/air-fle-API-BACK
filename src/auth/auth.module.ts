@@ -1,11 +1,11 @@
 import { Module } from '@nestjs/common';
-import { JwtModule } from '@nestjs/jwt';
-import { PassportModule } from '@nestjs/passport';
 import { AuthService } from './auth.service';
 import { AuthController } from './auth.controller';
-import { UserModule } from '../user/user.module';
+import { JwtModule } from '@nestjs/jwt';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 import { JwtStrategy } from './strategies/jwt.strategy';
-import { jwtConstants } from './constants';
+import { PassportModule } from '@nestjs/passport';
+import { UserModule } from '../user/user.module';
 import { PrismaModule } from '../prisma/prisma.module';
 import { RedisModule } from '../redis/redis.module';
 
@@ -15,9 +15,14 @@ import { RedisModule } from '../redis/redis.module';
     PassportModule,
     PrismaModule,
     RedisModule,
-    JwtModule.register({
-      secret: jwtConstants.secret,
-      signOptions: { expiresIn: jwtConstants.expiresIn },
+    ConfigModule,
+    JwtModule.registerAsync({
+      imports: [ConfigModule],
+      useFactory: async (configService: ConfigService) => ({
+        secret: configService.get<string>('JWT_SECRET') || 'fallback-secret-key',
+        signOptions: { expiresIn: '1d' },
+      }),
+      inject: [ConfigService],
     }),
   ],
   controllers: [AuthController],
