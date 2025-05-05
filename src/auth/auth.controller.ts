@@ -1,11 +1,25 @@
-import { Controller, Post, Body, HttpCode, HttpStatus, Get, Ip, UseGuards } from '@nestjs/common';
+import { 
+  Controller, 
+  Post, 
+  Body, 
+  HttpCode, 
+  HttpStatus, 
+  Get, 
+  Ip, 
+  UseGuards, 
+  Request, 
+  Patch, 
+  Param 
+} from '@nestjs/common';
 import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
-import { ApiTags, ApiOperation, ApiResponse, ApiBody, ApiBearerAuth } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiResponse, ApiBody, ApiBearerAuth, ApiParam } from '@nestjs/swagger';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { RolesGuard } from './guards/roles.guard';
 import { Roles } from './decorators/roles.decorator';
 import { AuthService } from './auth.service';
+import { ResetPasswordRequestDto, ResetPasswordConfirmDto } from './dto/reset-password.dto';
+import { ChangePasswordDto } from './dto/change-password.dto';
 
 @ApiTags('Authentification')
 @Controller('auth')
@@ -81,6 +95,135 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   async login(@Body() loginDto: LoginDto, @Ip() ip: string) {
     return this.authService.login(loginDto, ip);
+  }
+
+  @ApiOperation({ summary: 'Déconnexion de l\'utilisateur' })
+  @ApiResponse({ 
+    status: 200, 
+    description: 'Utilisateur déconnecté avec succès',
+    schema: {
+      type: 'object',
+      properties: {
+        success: { type: 'boolean', example: true },
+        message: { type: 'string', example: 'Déconnexion réussie' }
+      }
+    }
+  })
+  @Post('logout')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @HttpCode(HttpStatus.OK)
+  async logout(@Request() req, @Ip() ip: string) {
+    const token = req.headers.authorization.split(' ')[1];
+    return this.authService.logout(token, req.user.id, ip);
+  }
+
+  @ApiOperation({ summary: 'Demande de réinitialisation de mot de passe' })
+  @ApiBody({ type: ResetPasswordRequestDto })
+  @ApiResponse({ 
+    status: 200, 
+    description: 'Demande de réinitialisation traitée',
+    schema: {
+      type: 'object',
+      properties: {
+        success: { type: 'boolean', example: true },
+        message: { type: 'string', example: 'Si votre email est enregistré dans notre système, vous recevrez un lien pour réinitialiser votre mot de passe.' }
+      }
+    }
+  })
+  @Post('reset-password/request')
+  @HttpCode(HttpStatus.OK)
+  async requestPasswordReset(@Body() dto: ResetPasswordRequestDto, @Ip() ip: string) {
+    return this.authService.requestPasswordReset(dto, ip);
+  }
+
+  @ApiOperation({ summary: 'Confirmation de réinitialisation de mot de passe' })
+  @ApiBody({ type: ResetPasswordConfirmDto })
+  @ApiResponse({ 
+    status: 200, 
+    description: 'Mot de passe réinitialisé avec succès',
+    schema: {
+      type: 'object',
+      properties: {
+        success: { type: 'boolean', example: true },
+        message: { type: 'string', example: 'Votre mot de passe a été réinitialisé avec succès' }
+      }
+    }
+  })
+  @ApiResponse({ 
+    status: 400, 
+    description: 'Token invalide ou expiré',
+    schema: {
+      type: 'object',
+      properties: {
+        success: { type: 'boolean', example: false },
+        message: { type: 'string', example: 'Token de réinitialisation invalide ou expiré' }
+      }
+    }
+  })
+  @Post('reset-password/confirm')
+  @HttpCode(HttpStatus.OK)
+  async confirmPasswordReset(@Body() dto: ResetPasswordConfirmDto, @Ip() ip: string) {
+    return this.authService.confirmPasswordReset(dto, ip);
+  }
+
+  @ApiOperation({ summary: 'Changement de mot de passe pour l\'utilisateur connecté' })
+  @ApiBody({ type: ChangePasswordDto })
+  @ApiResponse({ 
+    status: 200, 
+    description: 'Mot de passe changé avec succès',
+    schema: {
+      type: 'object',
+      properties: {
+        success: { type: 'boolean', example: true },
+        message: { type: 'string', example: 'Votre mot de passe a été changé avec succès' }
+      }
+    }
+  })
+  @ApiResponse({ 
+    status: 400, 
+    description: 'Informations invalides',
+    schema: {
+      type: 'object',
+      properties: {
+        success: { type: 'boolean', example: false },
+        message: { type: 'string', example: 'Mot de passe actuel incorrect' }
+      }
+    }
+  })
+  @Post('change-password')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @HttpCode(HttpStatus.OK)
+  async changePassword(@Request() req, @Body() dto: ChangePasswordDto, @Ip() ip: string) {
+    return this.authService.changePassword(req.user.id, dto, ip);
+  }
+
+  @ApiOperation({ summary: 'Activation/désactivation d\'un compte utilisateur (admin uniquement)' })
+  @ApiParam({ name: 'userId', description: 'ID de l\'utilisateur à modifier' })
+  @ApiResponse({ 
+    status: 200, 
+    description: 'Statut du compte modifié avec succès',
+    schema: {
+      type: 'object',
+      properties: {
+        success: { type: 'boolean', example: true },
+        message: { type: 'string', example: 'Le compte utilisateur a été activé avec succès' }
+      }
+    }
+  })
+  @Patch('users/:userId/status')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('admin')
+  @ApiBearerAuth()
+  @HttpCode(HttpStatus.OK)
+  async setUserActiveStatus(
+    @Request() req, 
+    @Param('userId') userId: string, 
+    @Body() body: { active: boolean },
+    @Ip() ip: string
+  ) {
+    return this.authService.setUserActiveStatus(req.user.id, userId, body.active, ip);
   }
 
   @ApiOperation({ summary: 'Inscription d\'un nouvel utilisateur' })
