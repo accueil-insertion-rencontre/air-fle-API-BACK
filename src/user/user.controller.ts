@@ -17,8 +17,8 @@ export class UserController {
   constructor(private readonly userService: UserService) {}
 
   @Post()
-  @Roles('ADMIN', 'teacher')
-  @ApiOperation({ summary: 'Créer un utilisateur' })
+  @Roles('admin')
+  @ApiOperation({ summary: 'Créer un utilisateur (admin uniquement)' })
   @ApiResponse({ status: 201, description: 'Utilisateur créé avec succès' })
   @ApiBody({ type: CreateUserDto })
   create(@Body() createUserDto: CreateUserDto) {
@@ -26,8 +26,8 @@ export class UserController {
   }
 
   @Get()
-  @Roles('ADMIN', 'teacher')
-  @ApiOperation({ summary: 'Récupérer tous les utilisateurs' })
+  @Roles('admin')
+  @ApiOperation({ summary: 'Récupérer tous les utilisateurs (admin uniquement)' })
   @ApiResponse({ status: 200, description: 'Liste des utilisateurs récupérée avec succès' })
   @ApiQuery({ name: 'skip', required: false, description: 'Nombre d\'éléments à sauter' })
   @ApiQuery({ name: 'take', required: false, description: 'Nombre d\'éléments à prendre' })
@@ -57,8 +57,8 @@ export class UserController {
   }
 
   @Get(':id')
-  @Roles('ADMIN', 'teacher')
-  @ApiOperation({ summary: 'Récupérer un utilisateur par ID' })
+  @Roles('admin')
+  @ApiOperation({ summary: 'Récupérer un utilisateur par ID (admin uniquement)' })
   @ApiResponse({ status: 200, description: 'Utilisateur récupéré avec succès' })
   @ApiResponse({ status: 404, description: 'Utilisateur non trouvé' })
   @ApiParam({ name: 'id', description: 'ID de l\'utilisateur' })
@@ -67,8 +67,8 @@ export class UserController {
   }
 
   @Patch(':id')
-  @Roles('ADMIN', 'teacher')
-  @ApiOperation({ summary: 'Mettre à jour un utilisateur' })
+  @Roles('admin')
+  @ApiOperation({ summary: 'Mettre à jour un utilisateur (admin uniquement)' })
   @ApiResponse({ status: 200, description: 'Utilisateur mis à jour avec succès' })
   @ApiResponse({ status: 404, description: 'Utilisateur non trouvé' })
   @ApiParam({ name: 'id', description: 'ID de l\'utilisateur' })
@@ -81,8 +81,8 @@ export class UserController {
   }
 
   @Delete(':id')
-  @Roles('ADMIN', 'teacher')
-  @ApiOperation({ summary: 'Supprimer un utilisateur' })
+  @Roles('admin')
+  @ApiOperation({ summary: 'Supprimer un utilisateur (admin uniquement)' })
   @ApiResponse({ status: 200, description: 'Utilisateur supprimé avec succès' })
   @ApiResponse({ status: 404, description: 'Utilisateur non trouvé' })
   @ApiParam({ name: 'id', description: 'ID de l\'utilisateur' })
