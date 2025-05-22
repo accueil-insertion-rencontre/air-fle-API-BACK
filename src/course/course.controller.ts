@@ -50,7 +50,7 @@ export class CourseController {
 
   @Post()
   @HttpCode(HttpStatus.CREATED)
-  @Roles('ADMIN')
+  @Roles('admin')
   @ApiOperation({ summary: 'Créer un nouveau cours' })
   @ApiResponse({ status: 201, description: 'Cours créé avec succès', type: CourseDto })
   @ApiBody({ type: CreateCourseDto })
@@ -73,7 +73,7 @@ export class CourseController {
 
   @Get()
   @HttpCode(HttpStatus.OK)
-  @Roles('ADMIN')
+  @Roles('admin')
   @ApiOperation({ summary: 'Récupérer tous les cours avec filtrage optionnel' })
   @ApiResponse({ status: 200, description: 'Retourne tous les cours', type: [CourseDto] })
   @ApiQuery({ name: 'skip', required: false, description: 'Nombre d\'éléments à sauter' })
@@ -120,7 +120,7 @@ export class CourseController {
 
   @Get(':courseId')
   @HttpCode(HttpStatus.OK)
-  @Roles('ADMIN')
+  @Roles('admin')
   @ApiOperation({ summary: 'Récupérer un cours par son ID' })
   @ApiResponse({ status: 200, description: 'Retourne le cours', type: CourseDto })
   @ApiResponse({ status: 404, description: 'Cours introuvable' })
@@ -131,7 +131,7 @@ export class CourseController {
 
   @Patch(':courseId')
   @HttpCode(HttpStatus.OK)
-  @Roles('ADMIN')
+  @Roles('admin')
   @ApiOperation({ summary: 'Mettre à jour un cours' })
   @ApiResponse({ status: 200, description: 'Cours mis à jour avec succès', type: CourseDto })
   @ApiResponse({ status: 404, description: 'Cours introuvable' })
@@ -161,7 +161,7 @@ export class CourseController {
 
   @Delete(':courseId')
   @HttpCode(HttpStatus.NO_CONTENT)
-  @Roles('ADMIN')
+  @Roles('admin')
   @ApiOperation({ summary: 'Supprimer un cours' })
   @ApiResponse({ status: 204, description: 'Cours supprimé avec succès' })
   @ApiResponse({ status: 404, description: 'Cours introuvable' })

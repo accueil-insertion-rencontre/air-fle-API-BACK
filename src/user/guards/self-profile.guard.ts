@@ -9,11 +9,19 @@ export class SelfProfileGuard implements CanActivate {
 
     // Vérifier si l'utilisateur accède à son propre profil
     if (user && params.id && user.id === params.id) {
-      return true;
+      // Vérifier si l'utilisateur est un enseignant avec la permission self:read
+      if (user.role === 'teacher' && user.permissions && user.permissions.includes('self:read')) {
+        return true;
+      }
+      
+      // Ou si c'est un autre rôle (permettre l'accès à son propre profil par défaut)
+      if (user.role !== 'teacher') {
+        return true;
+      }
     }
 
-    // Permettre l'accès aux administrateurs
-    if (user && user.role === 'ADMIN') {
+    // Permettre l'accès aux administrateurs à tous les profils
+    if (user && user.role === 'admin') {
       return true;
     }
 

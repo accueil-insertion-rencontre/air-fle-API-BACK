@@ -35,11 +35,11 @@ export class SessionController {
   constructor(private readonly sessionService: SessionService) {}
 
   @Post()
-  @Roles(UserRole.ADMIN, UserRole.TEACHER)
   @HttpCode(HttpStatus.CREATED)
-  @ApiOperation({ summary: 'Créer une session' })
-  @ApiResponse({ status: HttpStatus.CREATED, description: 'Session créée avec succès' })
-  create(@Body() createSessionDto: CreateSessionDto) {
+  @Roles('admin', 'teacher')
+  @ApiOperation({ summary: 'Créer une nouvelle session' })
+  @ApiResponse({ status: 201, description: 'Session créée avec succès' })
+  async create(@Body() createSessionDto: CreateSessionDto) {
     return this.sessionService.create(createSessionDto);
   }
 
@@ -108,7 +108,7 @@ export class SessionController {
   }
 
   @Patch(':id')
-  @Roles(UserRole.ADMIN, UserRole.TEACHER)
+  @Roles('admin', 'teacher')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Mettre à jour une session' })
   @ApiResponse({ status: HttpStatus.OK, description: 'Session mise à jour avec succès' })
@@ -122,13 +122,13 @@ export class SessionController {
   }
 
   @Delete(':id')
-  @Roles(UserRole.ADMIN)
-  @HttpCode(HttpStatus.NO_CONTENT)
+  @HttpCode(HttpStatus.OK)
+  @Roles('admin')
   @ApiOperation({ summary: 'Supprimer une session' })
-  @ApiResponse({ status: HttpStatus.NO_CONTENT, description: 'Session supprimée avec succès' })
-  @ApiResponse({ status: HttpStatus.NOT_FOUND, description: 'Session non trouvée' })
+  @ApiResponse({ status: 200, description: 'Session supprimée avec succès' })
+  @ApiResponse({ status: 404, description: 'Session non trouvée' })
   @ApiParam({ name: 'id', description: 'ID de la session' })
-  remove(@Param('id') id: string) {
+  async remove(@Param('id') id: string) {
     return this.sessionService.remove(id);
   }
 }

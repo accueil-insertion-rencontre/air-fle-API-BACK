@@ -145,7 +145,7 @@ export class StudentController {
 
   @Post(':id/disabilities')
   @HttpCode(HttpStatus.OK)
-  @Roles('ADMIN')
+  @Roles('admin')
   @ApiOperation({ summary: 'Associer des handicaps à un étudiant' })
   @ApiResponse({ status: 200, description: 'Handicaps associés avec succès' })
   @ApiResponse({ status: 404, description: 'Étudiant introuvable' })

@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Query, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Query, UseGuards, HttpCode, HttpStatus } from '@nestjs/common';
 import { AbsenceService } from './absence.service';
 import { Prisma } from '@prisma/client';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
@@ -31,7 +31,8 @@ export class AbsenceController {
   constructor(private readonly absenceService: AbsenceService) {}
 
   @Post()
-  @Roles('ADMIN', 'TEACHER')
+  @HttpCode(HttpStatus.CREATED)
+  @Roles('admin', 'teacher')
   @ApiOperation({ summary: 'Créer une nouvelle absence' })
   @ApiResponse({ status: 201, description: 'Absence créée avec succès', type: AbsenceDto })
   create(@Body() createAbsenceDto: CreateAbsenceDto) {
@@ -46,54 +47,16 @@ export class AbsenceController {
   }
 
   @Get()
-  @Roles('ADMIN', 'TEACHER')
-  @ApiOperation({ summary: 'Récupérer toutes les absences avec possibilité de filtrage' })
-  @ApiResponse({ status: 200, description: 'Liste des absences', type: [AbsenceDto] })
-  @ApiQuery({ name: 'skip', required: false, description: 'Nombre d\'éléments à sauter' })
-  @ApiQuery({ name: 'take', required: false, description: 'Nombre d\'éléments à récupérer' })
-  @ApiQuery({ name: 'studentId', required: false, description: 'Filtrer par identifiant étudiant' })
-  @ApiQuery({ name: 'courseId', required: false, description: 'Filtrer par identifiant de cours' })
-  findAll(
-    @Query('skip') skip?: string,
-    @Query('take') take?: string,
-    @Query('studentId') studentId?: string,
-    @Query('courseId') courseId?: string,
-  ) {
-    const where: Prisma.AbsenceWhereInput = {};
-    
-    if (studentId) {
-      where.student_id = studentId;
-    }
-    
-    if (courseId) {
-      where.course_id = courseId;
-    }
-    
-    return this.absenceService.findAll({
-      skip: skip ? parseInt(skip, 10) : undefined,
-      take: take ? parseInt(take, 10) : undefined,
-      where,
-    }).then(result => {
-      // Transformer les résultats pour l'API
-      const transformedData = result.data.map(absence => ({
-        id: absence.id,
-        student_id: absence.student_id,
-        course_id: absence.course_id,
-        reason: absence.reason,
-        // Inclure d'autres propriétés nécessaires
-        student: absence.student,
-        course: absence.course
-      }));
-      
-      return {
-        data: transformedData,
-        meta: result.meta
-      };
-    });
+  @HttpCode(HttpStatus.OK)
+  @Roles('admin', 'teacher')
+  @ApiOperation({ summary: 'Récupérer toutes les absences' })
+  @ApiResponse({ status: 200, description: 'Retourne toutes les absences', type: [AbsenceDto] })
+  async findAll() {
+    return this.absenceService.findAll({});
   }
 
   @Get(':id')
-  @Roles('ADMIN', 'TEACHER')
+  @Roles('admin', 'teacher')
   @ApiOperation({ summary: 'Récupérer une absence par son identifiant' })
   @ApiResponse({ status: 200, description: 'Absence trouvée', type: AbsenceDto })
   @ApiResponse({ status: 404, description: 'Absence introuvable' })
@@ -114,15 +77,13 @@ export class AbsenceController {
   }
 
   @Patch(':id')
-  @Roles('ADMIN', 'TEACHER')
+  @HttpCode(HttpStatus.OK)
+  @Roles('admin', 'teacher')
   @ApiOperation({ summary: 'Mettre à jour une absence' })
   @ApiResponse({ status: 200, description: 'Absence mise à jour avec succès', type: AbsenceDto })
-  @ApiResponse({ status: 404, description: 'Absence introuvable' })
+  @ApiResponse({ status: 404, description: 'Absence non trouvée' })
   @ApiParam({ name: 'id', description: 'Identifiant de l\'absence', example: 'abc123' })
-  update(
-    @Param('id') id: string,
-    @Body() updateAbsenceDto: UpdateAbsenceDto,
-  ) {
+  update(@Param('id') id: string, @Body() updateAbsenceDto: UpdateAbsenceDto) {
     // Transformer le DTO d'API en Input pour Prisma
     const updateAbsenceData: Prisma.AbsenceUpdateInput = {};
     
@@ -153,10 +114,11 @@ export class AbsenceController {
   }
 
   @Delete(':id')
-  @Roles('ADMIN')
+  @HttpCode(HttpStatus.OK)
+  @Roles('admin', 'teacher')
   @ApiOperation({ summary: 'Supprimer une absence' })
   @ApiResponse({ status: 200, description: 'Absence supprimée avec succès' })
-  @ApiResponse({ status: 404, description: 'Absence introuvable' })
+  @ApiResponse({ status: 404, description: 'Absence non trouvée' })
   @ApiParam({ name: 'id', description: 'Identifiant de l\'absence', example: 'abc123' })
   remove(@Param('id') id: string) {
     return this.absenceService.remove(id);

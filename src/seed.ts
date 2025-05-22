@@ -24,18 +24,18 @@ async function main() {
   console.log('Rôles créés:', { adminRole, teacherRole });
 
   // Créer un utilisateur admin par défaut
-  const hashedPassword = await argon2.hash('admin123');
+  const hashedAdminPassword = await argon2.hash('admin123');
   
   const adminUser = await prisma.user.upsert({
     where: { email: 'admin@airfle.com' },
     update: {
-      password: hashedPassword // Mettre à jour le mot de passe pour utiliser Argon2
+      password: hashedAdminPassword // Mettre à jour le mot de passe pour utiliser Argon2
     },
     create: {
       firstname: 'Admin',
       lastname: 'System',
       email: 'admin@airfle.com',
-      password: hashedPassword,
+      password: hashedAdminPassword,
       role: {
         connect: {
           id: adminRole.id,
@@ -45,6 +45,29 @@ async function main() {
   });
 
   console.log('Utilisateur admin créé:', adminUser);
+
+  // Créer un utilisateur enseignant par défaut
+  const hashedTeacherPassword = await argon2.hash('teacher123');
+  
+  const teacherUser = await prisma.user.upsert({
+    where: { email: 'teacher@airfle.com' },
+    update: {
+      password: hashedTeacherPassword // Mettre à jour le mot de passe pour utiliser Argon2
+    },
+    create: {
+      firstname: 'Teacher',
+      lastname: 'User',
+      email: 'teacher@airfle.com',
+      password: hashedTeacherPassword,
+      role: {
+        connect: {
+          id: teacherRole.id,
+        },
+      },
+    },
+  });
+
+  console.log('Utilisateur enseignant créé:', teacherUser);
 }
 
 main()

@@ -35,7 +35,7 @@ export class DisabilityController {
 
   @Get()
   @HttpCode(HttpStatus.OK)
-  @Roles('ADMIN')
+  @Roles('admin')
   @ApiOperation({ summary: 'Récupérer tous les types de handicap' })
   @ApiResponse({ status: 200, description: 'Retourne tous les types de handicap', type: [DisabilityDto] })
   async findAll() {
@@ -44,10 +44,10 @@ export class DisabilityController {
 
   @Get(':id')
   @HttpCode(HttpStatus.OK)
-  @Roles('ADMIN')
+  @Roles('admin')
   @ApiOperation({ summary: 'Récupérer un type de handicap par son ID' })
-  @ApiResponse({ status: 200, description: 'Retourne le type de handicap', type: DisabilityDto })
-  @ApiResponse({ status: 404, description: 'Type de handicap introuvable' })
+  @ApiResponse({ status: 200, description: 'Retourne le type de handicap spécifié', type: DisabilityDto })
+  @ApiResponse({ status: 404, description: 'Type de handicap non trouvé' })
   @ApiParam({ name: 'id', description: 'Identifiant du type de handicap', example: 'abc123' })
   async findOne(@Param('id') id: string) {
     return this.disabilityService.findOne(id);
@@ -55,7 +55,7 @@ export class DisabilityController {
 
   @Post()
   @HttpCode(HttpStatus.CREATED)
-  @Roles('ADMIN')
+  @Roles('admin')
   @ApiOperation({ summary: 'Créer un nouveau type de handicap' })
   @ApiResponse({ status: 201, description: 'Type de handicap créé avec succès', type: DisabilityDto })
   @ApiBody({ type: CreateDisabilityDto })
@@ -65,10 +65,10 @@ export class DisabilityController {
 
   @Patch(':id')
   @HttpCode(HttpStatus.OK)
-  @Roles('ADMIN')
+  @Roles('admin')
   @ApiOperation({ summary: 'Mettre à jour un type de handicap' })
   @ApiResponse({ status: 200, description: 'Type de handicap mis à jour avec succès', type: DisabilityDto })
-  @ApiResponse({ status: 404, description: 'Type de handicap introuvable' })
+  @ApiResponse({ status: 404, description: 'Type de handicap non trouvé' })
   @ApiParam({ name: 'id', description: 'Identifiant du type de handicap', example: 'abc123' })
   @ApiBody({ type: UpdateDisabilityDto })
   async update(@Param('id') id: string, @Body() updateDisabilityDto: UpdateDisabilityDto) {
@@ -76,13 +76,13 @@ export class DisabilityController {
   }
 
   @Delete(':id')
-  @HttpCode(HttpStatus.NO_CONTENT)
-  @Roles('ADMIN')
+  @HttpCode(HttpStatus.OK)
+  @Roles('admin')
   @ApiOperation({ summary: 'Supprimer un type de handicap' })
-  @ApiResponse({ status: 204, description: 'Type de handicap supprimé avec succès' })
-  @ApiResponse({ status: 404, description: 'Type de handicap introuvable' })
+  @ApiResponse({ status: 200, description: 'Type de handicap supprimé avec succès' })
+  @ApiResponse({ status: 404, description: 'Type de handicap non trouvé' })
   @ApiParam({ name: 'id', description: 'Identifiant du type de handicap', example: 'abc123' })
   async remove(@Param('id') id: string) {
-    await this.disabilityService.remove(id);
+    return this.disabilityService.remove(id);
   }
 }

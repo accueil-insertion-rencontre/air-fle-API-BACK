@@ -26,12 +26,12 @@ const ROLE_PERMISSIONS = {
     'admin:access'
   ],
   teacher: [
-    'user:read',
     'student:read', 'student:write',
     'group:read',
     'session:read',
     'todolist:read', 'todolist:write',
-    'teacher:access'
+    'teacher:access',
+    'self:read'
   ],
   // Autres rôles si nécessaire
 };

@@ -12,8 +12,8 @@ import { Prisma } from '@prisma/client';
 // Pour éviter l'erreur d'import de UserRole
 type UserRole = 'admin' | 'teacher';
 const UserRole: Record<string, UserRole> = {
-  ADMIN: 'admin',
-  TEACHER: 'teacher',
+  admin: 'admin',
+  teacher: 'teacher',
 };
 
 @ApiTags('groups')
@@ -24,7 +24,7 @@ export class GroupController {
   constructor(private readonly groupService: GroupService) {}
 
   @Post()
-  @Roles(UserRole.ADMIN, UserRole.TEACHER)
+  @Roles(UserRole.admin, UserRole.teacher)
   @ApiOperation({ summary: 'Créer un groupe' })
   @ApiResponse({ status: 201, description: 'Groupe créé avec succès' })
   @ApiBody({ type: CreateGroupDto })
@@ -78,7 +78,7 @@ export class GroupController {
   }
 
   @Put(':id')
-  @Roles(UserRole.ADMIN, UserRole.TEACHER)
+  @Roles(UserRole.admin, UserRole.teacher)
   @ApiOperation({ summary: 'Mettre à jour un groupe' })
   @ApiResponse({ status: 200, description: 'Groupe mis à jour avec succès' })
   @ApiResponse({ status: 404, description: 'Groupe non trouvé' })
@@ -108,7 +108,7 @@ export class GroupController {
   }
 
   @Delete(':id')
-  @Roles(UserRole.ADMIN)
+  @Roles(UserRole.admin)
   @ApiOperation({ summary: 'Supprimer un groupe' })
   @ApiResponse({ status: 200, description: 'Groupe supprimé avec succès' })
   @ApiResponse({ status: 404, description: 'Groupe non trouvé' })
@@ -118,7 +118,7 @@ export class GroupController {
   }
 
   @Post(':id/students/:studentId')
-  @Roles(UserRole.ADMIN, UserRole.TEACHER)
+  @Roles(UserRole.admin, UserRole.teacher)
   @ApiOperation({ summary: 'Ajouter un étudiant au groupe' })
   @ApiResponse({ status: 200, description: 'Étudiant ajouté avec succès' })
   @ApiResponse({ status: 404, description: 'Groupe ou étudiant non trouvé' })
@@ -132,7 +132,7 @@ export class GroupController {
   }
 
   @Delete(':id/students/:studentId')
-  @Roles(UserRole.ADMIN, UserRole.TEACHER)
+  @Roles(UserRole.admin, UserRole.teacher)
   @ApiOperation({ summary: 'Retirer un étudiant du groupe' })
   @ApiResponse({ status: 200, description: 'Étudiant retiré avec succès' })
   @ApiResponse({ status: 404, description: 'Groupe ou étudiant non trouvé' })
