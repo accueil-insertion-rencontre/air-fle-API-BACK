@@ -8,7 +8,8 @@ import {
   MaxLength, 
   Matches,
   IsOptional,
-  IsBoolean
+  IsBoolean,
+  IsISO8601
 } from 'class-validator';
 import { Escape } from 'class-sanitizer';
 
@@ -65,6 +66,15 @@ export class CreateUserDto {
     message: 'Le mot de passe ne doit contenir que des caractères alphanumériques et certains caractères spéciaux'
   })
   password: string;
+
+  @ApiProperty({
+    description: 'Date de naissance de l\'utilisateur (format ISO 8601)',
+    example: '1990-01-01',
+    required: false
+  })
+  @IsOptional()
+  @IsISO8601()
+  birthdate?: string;
 
   @ApiProperty({
     description: 'ID du rôle',

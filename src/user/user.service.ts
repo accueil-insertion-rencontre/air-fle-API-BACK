@@ -66,6 +66,7 @@ export class UserService {
     password: string;
     role_id: string;
     isActive?: boolean;
+    birthdate?: string;
   }) {
     // Vérifier si l'utilisateur existe déjà
     const existingUser = await this.findByEmail(data.email);
@@ -76,20 +77,28 @@ export class UserService {
     // Hasher le mot de passe avec argon2
     const hashedPassword = await argon2.hash(data.password);
 
-    // Créer l'utilisateur
-    const user = await this.prisma.user.create({
-      data: {
-        firstname: data.firstname,
-        lastname: data.lastname,
-        email: data.email,
-        password: hashedPassword,
-        isActive: data.isActive !== undefined ? data.isActive : true, // Utiliser la valeur fournie ou true par défaut
-        role: {
-          connect: {
-            id: data.role_id,
-          },
+    // Préparer les données de l'utilisateur
+    const userData: any = {
+      firstname: data.firstname,
+      lastname: data.lastname,
+      email: data.email,
+      password: hashedPassword,
+      isActive: data.isActive !== undefined ? data.isActive : true, // Utiliser la valeur fournie ou true par défaut
+      role: {
+        connect: {
+          id: data.role_id,
         },
       },
+    };
+
+    // Ajouter la date de naissance si elle est fournie
+    if (data.birthdate) {
+      userData.birthdate = new Date(data.birthdate);
+    }
+
+    // Créer l'utilisateur
+    const user = await this.prisma.user.create({
+      data: userData,
       include: {
         role: true,
       },

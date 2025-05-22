@@ -23,15 +23,43 @@ const ROLE_PERMISSIONS = {
     'group:read', 'group:write', 'group:delete',
     'session:read', 'session:write', 'session:delete',
     'todolist:read', 'todolist:write', 'todolist:delete',
-    'admin:access'
+    'admin:access',
+    'status:read', 'status:write', 'status:delete',
+    'period:read', 'period:write', 'period:delete',
+    'orientation:read', 'orientation:write', 'orientation:delete',
+    'nationality:read', 'nationality:write', 'nationality:delete',
+    'gender:read', 'gender:write', 'gender:delete',
+    'frenchlevel:read', 'frenchlevel:write', 'frenchlevel:delete',
+    'financing:read', 'financing:write', 'financing:delete',
+    'exitreason:read', 'exitreason:write', 'exitreason:delete',
+    'exam:read', 'exam:write', 'exam:delete',
+    'disability:read', 'disability:write', 'disability:delete',
+    'course:read', 'course:write', 'course:delete',
+    'continuation:read', 'continuation:write', 'continuation:delete',
+    'address:read', 'address:write', 'address:delete',
+    'absence:read', 'absence:write', 'absence:delete'
   ],
   teacher: [
-    'student:read', 'student:write',
-    'group:read',
-    'session:read',
-    'todolist:read', 'todolist:write',
+    'student:read', 'student:write', 'student:delete',
+    'group:read', 'group:write', 'group:delete',
+    'session:read', 'session:write', 'session:delete',
+    'todolist:read', 'todolist:write', 'todolist:delete',
     'teacher:access',
-    'self:read'
+    'self:read',
+    'status:read', 'status:write', 'status:delete',
+    'period:read', 'period:write', 'period:delete',
+    'orientation:read', 'orientation:write', 'orientation:delete',
+    'nationality:read', 'nationality:write', 'nationality:delete',
+    'gender:read', 'gender:write', 'gender:delete',
+    'frenchlevel:read', 'frenchlevel:write', 'frenchlevel:delete',
+    'financing:read', 'financing:write', 'financing:delete',
+    'exitreason:read', 'exitreason:write', 'exitreason:delete',
+    'exam:read', 'exam:write', 'exam:delete',
+    'disability:read', 'disability:write', 'disability:delete',
+    'course:read', 'course:write', 'course:delete',
+    'continuation:read', 'continuation:write', 'continuation:delete',
+    'address:read', 'address:write', 'address:delete',
+    'absence:read', 'absence:write', 'absence:delete'
   ],
   // Autres rôles si nécessaire
 };
@@ -566,20 +594,28 @@ export class AuthService {
         }
       }
 
-      // Créer l'utilisateur avec le champ isActive si fourni
-      const user = await this.prisma.user.create({
-        data: {
-          firstname: registerDto.firstname,
-          lastname: registerDto.lastname,
-          email,
-          password: hashedPassword,
-          isActive: registerDto.isActive !== undefined ? registerDto.isActive : true,
-          role: {
-            connect: {
-              id: userRole.id,
-            },
+      // Préparer les données de l'utilisateur
+      const userData = {
+        firstname: registerDto.firstname,
+        lastname: registerDto.lastname,
+        email,
+        password: hashedPassword,
+        isActive: registerDto.isActive !== undefined ? registerDto.isActive : true,
+        role: {
+          connect: {
+            id: userRole.id,
           },
         },
+      };
+
+      // Ajouter la date de naissance si elle est fournie
+      if (registerDto.birthdate) {
+        userData['birthdate'] = new Date(registerDto.birthdate);
+      }
+
+      // Créer l'utilisateur
+      const user = await this.prisma.user.create({
+        data: userData,
         include: {
           role: true,
         },
