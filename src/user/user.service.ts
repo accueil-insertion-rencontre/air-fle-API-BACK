@@ -65,6 +65,7 @@ export class UserService {
     email: string;
     password: string;
     role_id: string;
+    isActive?: boolean;
   }) {
     // Vérifier si l'utilisateur existe déjà
     const existingUser = await this.findByEmail(data.email);
@@ -82,6 +83,7 @@ export class UserService {
         lastname: data.lastname,
         email: data.email,
         password: hashedPassword,
+        isActive: data.isActive !== undefined ? data.isActive : true, // Utiliser la valeur fournie ou true par défaut
         role: {
           connect: {
             id: data.role_id,

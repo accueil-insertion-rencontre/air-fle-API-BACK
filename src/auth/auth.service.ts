@@ -566,13 +566,14 @@ export class AuthService {
         }
       }
 
-      // Créer l'utilisateur sans le champ isActive dans la requête
+      // Créer l'utilisateur avec le champ isActive si fourni
       const user = await this.prisma.user.create({
         data: {
           firstname: registerDto.firstname,
           lastname: registerDto.lastname,
           email,
           password: hashedPassword,
+          isActive: registerDto.isActive !== undefined ? registerDto.isActive : true,
           role: {
             connect: {
               id: userRole.id,
@@ -583,9 +584,6 @@ export class AuthService {
           role: true,
         },
       });
-
-      // Activer explicitement le compte après création
-      await this.prisma.$executeRaw`UPDATE "User" SET "isActive" = true WHERE id = ${user.id}`;
 
       // Récupérer les permissions associées au rôle
       // @ts-ignore - La relation role sera disponible après régénération des types Prisma

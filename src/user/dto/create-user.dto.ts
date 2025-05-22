@@ -6,7 +6,9 @@ import {
   IsUUID, 
   MinLength, 
   MaxLength, 
-  Matches 
+  Matches,
+  IsOptional,
+  IsBoolean
 } from 'class-validator';
 import { Escape } from 'class-sanitizer';
 
@@ -72,4 +74,14 @@ export class CreateUserDto {
   @IsUUID(4)
   @IsNotEmpty()
   role_id: string;
+
+  @ApiProperty({
+    description: 'Statut du compte (actif/inactif)',
+    example: true,
+    required: false,
+    default: true
+  })
+  @IsOptional()
+  @IsBoolean()
+  isActive?: boolean;
 } 
