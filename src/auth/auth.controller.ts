@@ -260,9 +260,22 @@ export class AuthController {
       }
     }
   })
+  @ApiResponse({
+    status: 403,
+    description: 'Accès refusé - Route temporairement désactivée',
+  })
   @Post('register')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('admin')
+  @ApiBearerAuth()
   @HttpCode(HttpStatus.CREATED)
   async register(@Body() registerDto: RegisterDto) {
-    return this.authService.register(registerDto);
+    // Vous pouvez également retourner un message d'erreur explicite
+    return {
+      success: false,
+      message: 'Cette fonctionnalité est temporairement désactivée. Veuillez contacter un administrateur pour créer un compte.'
+    };
+    // Commenté pour désactiver la fonctionnalité
+    // return this.authService.register(registerDto);
   }
 }

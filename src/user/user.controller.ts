@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Query, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Query, UseGuards, Req } from '@nestjs/common';
 import { UserService } from './user.service';
 import { Prisma } from '@prisma/client';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
@@ -8,6 +8,8 @@ import { SelfProfileGuard } from './guards/self-profile.guard';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiParam, ApiQuery, ApiBody } from '@nestjs/swagger';
+import { Request } from 'express';
+import { UnauthorizedException } from '@nestjs/common';
 
 @Controller('users')
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -85,9 +87,21 @@ export class UserController {
   @ApiOperation({ summary: 'Supprimer un utilisateur (admin uniquement)' })
   @ApiResponse({ status: 200, description: 'Utilisateur supprimé avec succès' })
   @ApiResponse({ status: 404, description: 'Utilisateur non trouvé' })
+  @ApiResponse({ status: 403, description: 'Un administrateur ne peut pas supprimer son propre compte ou le dernier administrateur du système' })
   @ApiParam({ name: 'id', description: 'ID de l\'utilisateur' })
-  remove(@Param('id') id: string) {
-    return this.userService.remove(id);
+  async remove(@Param('id') id: string, @Req() req: Request) {
+    try {
+      // Extraire le token JWT de l'en-tête Authorization
+      const authHeader = req.headers.authorization;
+      const token = authHeader?.split(' ')[1]; // Format: "Bearer <token>"
+      
+      return await this.userService.remove(id, token);
+    } catch (error) {
+      if (error instanceof UnauthorizedException) {
+        throw error; // Laisser l'exception se propager pour être traitée par NestJS
+      }
+      throw error;
+    }
   }
 
   @Get('profile/:id')

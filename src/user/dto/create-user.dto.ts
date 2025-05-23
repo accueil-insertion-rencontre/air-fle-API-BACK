@@ -6,7 +6,10 @@ import {
   IsUUID, 
   MinLength, 
   MaxLength, 
-  Matches 
+  Matches,
+  IsOptional,
+  IsBoolean,
+  IsISO8601
 } from 'class-validator';
 import { Escape } from 'class-sanitizer';
 
@@ -65,6 +68,15 @@ export class CreateUserDto {
   password: string;
 
   @ApiProperty({
+    description: 'Date de naissance de l\'utilisateur (format ISO 8601)',
+    example: '1990-01-01',
+    required: false
+  })
+  @IsOptional()
+  @IsISO8601()
+  birthdate?: string;
+
+  @ApiProperty({
     description: 'ID du rôle',
     example: '550e8400-e29b-41d4-a716-446655440000',
     required: true
@@ -72,4 +84,14 @@ export class CreateUserDto {
   @IsUUID(4)
   @IsNotEmpty()
   role_id: string;
+
+  @ApiProperty({
+    description: 'Statut du compte (actif/inactif)',
+    example: true,
+    required: false,
+    default: true
+  })
+  @IsOptional()
+  @IsBoolean()
+  isActive?: boolean;
 } 
