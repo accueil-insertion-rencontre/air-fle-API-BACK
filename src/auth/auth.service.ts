@@ -338,6 +338,25 @@ export class AuthService {
   }
 
   /**
+   * Vérifie si un token a été émis avant un changement de mot de passe
+   * @param userId ID de l'utilisateur
+   * @param issuedAt Timestamp d'émission du token (en secondes)
+   * @returns true si le token a été émis avant un changement de mot de passe
+   */
+  async isTokenIssuedBeforePasswordChange(userId: string, issuedAt: number): Promise<boolean> {
+    const passwordChangeTimestamp = await this.redisService.get(`user_tokens:${userId}`);
+    
+    if (passwordChangeTimestamp) {
+      const changeTime = parseInt(passwordChangeTimestamp, 10);
+      const tokenIssuedAtMs = issuedAt * 1000; // Convertir en millisecondes
+      
+      return tokenIssuedAtMs < changeTime;
+    }
+    
+    return false; // Pas de changement de mot de passe enregistré
+  }
+
+  /**
    * Demande de réinitialisation de mot de passe
    * @param dto Informations pour la demande
    * @param ip Adresse IP de la requête
@@ -431,6 +450,13 @@ export class AuthService {
         where: { id: userId },
         data: { password: hashedPassword }
       });
+      
+      // Créer une clé unique pour stocker les tokens de l'utilisateur à invalider
+      const userTokenKey = `user_tokens:${userId}`;
+      
+      // Stocker une marque d'invalidation avec le timestamp actuel
+      // Tous les tokens générés avant ce timestamp seront considérés comme invalides
+      await this.redisService.set(userTokenKey, Date.now().toString(), 0); // 0 = pas d'expiration
 
       // Supprimer le token de réinitialisation
       await this.redisService.del(key);
@@ -438,7 +464,7 @@ export class AuthService {
       // Journaliser la réinitialisation réussie
       await this.logAuthEvent(user.id, 'password_reset_success', 'Réinitialisation de mot de passe réussie', ip);
 
-      return { success: true, message: 'Votre mot de passe a été réinitialisé avec succès' };
+      return { success: true, message: 'Votre mot de passe a été réinitialisé avec succès. Veuillez vous connecter avec votre nouveau mot de passe.' };
     } catch (error) {
       console.error('Erreur lors de la réinitialisation de mot de passe:', error);
       return { 
@@ -488,10 +514,17 @@ export class AuthService {
         data: { password: hashedPassword }
       });
 
+      // Créer une clé unique pour stocker les tokens de l'utilisateur à invalider
+      const userTokenKey = `user_tokens:${userId}`;
+      
+      // Stocker une marque d'invalidation avec le timestamp actuel
+      // Tous les tokens générés avant ce timestamp seront considérés comme invalides
+      await this.redisService.set(userTokenKey, Date.now().toString(), 0); // 0 = pas d'expiration
+
       // Journaliser le changement de mot de passe
       await this.logAuthEvent(user.id, 'password_changed', 'Changement de mot de passe réussi', ip);
 
-      return { success: true, message: 'Votre mot de passe a été changé avec succès' };
+      return { success: true, message: 'Votre mot de passe a été changé avec succès. Veuillez vous reconnecter avec votre nouveau mot de passe.' };
     } catch (error) {
       console.error('Erreur lors du changement de mot de passe:', error);
       return { 
@@ -596,16 +629,16 @@ export class AuthService {
 
       // Préparer les données de l'utilisateur
       const userData = {
-        firstname: registerDto.firstname,
-        lastname: registerDto.lastname,
-        email,
-        password: hashedPassword,
+          firstname: registerDto.firstname,
+          lastname: registerDto.lastname,
+          email,
+          password: hashedPassword,
         isActive: registerDto.isActive !== undefined ? registerDto.isActive : true,
-        role: {
-          connect: {
-            id: userRole.id,
+          role: {
+            connect: {
+              id: userRole.id,
+            },
           },
-        },
       };
 
       // Ajouter la date de naissance si elle est fournie

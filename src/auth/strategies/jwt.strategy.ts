@@ -4,12 +4,14 @@ import { ExtractJwt, Strategy } from 'passport-jwt';
 import { ConfigService } from '@nestjs/config';
 import { AuthService } from '../auth.service';
 import { Request } from 'express';
+import { UserService } from '../../user/user.service';
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
   constructor(
     private configService: ConfigService,
-    private authService: AuthService
+    private authService: AuthService,
+    private userService: UserService
   ) {
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
@@ -28,6 +30,22 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     const token = ExtractJwt.fromAuthHeaderAsBearerToken()(req);
     if (token && await this.authService.isTokenBlacklisted(token)) {
       throw new UnauthorizedException('Token invalide ou révoqué');
+    }
+
+    // Vérifier si l'utilisateur existe toujours dans la base de données
+    const user = await this.userService.findById(payload.sub);
+    if (!user) {
+      throw new UnauthorizedException('Utilisateur non trouvé ou supprimé');
+    }
+
+    // Vérifier si le compte est actif
+    if (user.isActive === false) {
+      throw new UnauthorizedException('Compte désactivé');
+    }
+
+    // Vérifier si le token a été émis avant un changement de mot de passe
+    if (await this.authService.isTokenIssuedBeforePasswordChange(payload.sub, payload.iat)) {
+      throw new UnauthorizedException('Session expirée suite à un changement de mot de passe');
     }
 
     return { 

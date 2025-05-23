@@ -11,9 +11,9 @@ export class SelfProfileGuard implements CanActivate {
     if (user && params.id && user.id === params.id) {
       // Vérifier si l'utilisateur est un enseignant avec la permission self:read
       if (user.role === 'teacher' && user.permissions && user.permissions.includes('self:read')) {
-        return true;
-      }
-      
+      return true;
+    }
+
       // Ou si c'est un autre rôle (permettre l'accès à son propre profil par défaut)
       if (user.role !== 'teacher') {
         return true;
