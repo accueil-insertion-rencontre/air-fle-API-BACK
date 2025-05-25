@@ -190,20 +190,22 @@ export class UserService {
               if (userToDelete.role && userToDelete.role.rolename === 'admin') {
                 throw new UnauthorizedException('Un administrateur ne peut pas supprimer son propre compte');
               }
-            }
-            
-            // Traitement pour la liste noire du token
-            if (decoded.exp) {
-              const exp = decoded.exp * 1000; // Convertir en millisecondes
-              const now = Date.now();
-              const timeToExpire = Math.floor((exp - now) / 1000); // Secondes restantes
+              
+              // SEULEMENT ici : ajouter le token à la blacklist car l'utilisateur supprime SON PROPRE compte
+              if (decoded.exp) {
+                const exp = decoded.exp * 1000; // Convertir en millisecondes
+                const now = Date.now();
+                const timeToExpire = Math.floor((exp - now) / 1000); // Secondes restantes
 
-              if (timeToExpire > 0) {
-                // Ajouter le token à la liste noire jusqu'à son expiration
-                await this.redisService.set(`blacklist:${token}`, 'revoked', timeToExpire);
-                console.log(`Token ajouté à la liste noire pour l'utilisateur ${id}`);
+                if (timeToExpire > 0) {
+                  // Ajouter le token à la liste noire jusqu'à son expiration
+                  await this.redisService.set(`blacklist:${token}`, 'revoked', timeToExpire);
+                  // Log sécurisé sans exposer le token complet
+                  console.log(`Token révoqué pour l'utilisateur ${id} suite à la suppression de son propre compte`);
+                }
               }
             }
+            // Si l'admin supprime quelqu'un d'autre, NE PAS blacklister le token de l'admin !
           }
         } catch (error) {
           console.error('Erreur lors de la révocation du token:', error);
