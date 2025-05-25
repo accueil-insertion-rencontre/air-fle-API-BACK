@@ -22,7 +22,7 @@ const ROLE_PERMISSIONS = {
     'student:read', 'student:write', 'student:delete',
     'group:read', 'group:write', 'group:delete',
     'session:read', 'session:write', 'session:delete',
-    'todolist:read', 'todolist:write', 'todolist:delete',
+    'task:read', 'task:write', 'task:delete',
     'admin:access',
     'status:read', 'status:write', 'status:delete',
     'period:read', 'period:write', 'period:delete',
@@ -43,7 +43,7 @@ const ROLE_PERMISSIONS = {
     'student:read', 'student:write', 'student:delete',
     'group:read', 'group:write', 'group:delete',
     'session:read', 'session:write', 'session:delete',
-    'todolist:read', 'todolist:write', 'todolist:delete',
+    'task:read', 'task:write', 'task:delete',
     'teacher:access',
     'self:read',
     'status:read', 'status:write', 'status:delete',
@@ -392,9 +392,16 @@ export class AuthService {
       // Journaliser la demande
       await this.logAuthEvent(user.id, 'password_reset_requested', 'Demande de réinitialisation de mot de passe', ip);
 
-      // TODO: Envoyer un email avec le lien de réinitialisation
-      // Example: this.mailService.sendPasswordResetEmail(user.email, resetToken);
-      console.log(`[Password Reset] Token for ${user.email}: ${resetToken}`);
+      // ⚠️ TODO CRITIQUE: Implémenter l'envoi d'email pour la réinitialisation de mot de passe
+      // En production, le token NE DOIT PAS être loggé mais envoyé par email sécurisé
+      // Example: await this.mailService.sendPasswordResetEmail(user.email, resetToken);
+      
+      if (process.env.NODE_ENV === 'development') {
+        console.log(`[DEV ONLY] Password Reset Token for ${user.email}: ${resetToken}`);
+        console.log('⚠️  Ce token ne devrait PAS être loggé en production !');
+      } else {
+        console.warn('⚠️  SÉCURITÉ: Token de reset généré mais service email non configuré !');
+      }
 
       return { 
         success: true, 
@@ -700,6 +707,44 @@ export class AuthService {
       return { 
         success: false, 
         message: 'Une erreur est survenue lors de la récupération des rôles' 
+      };
+    }
+  }
+
+  /**
+   * Récupère les informations complètes de l'utilisateur connecté
+   * @param userId ID de l'utilisateur
+   */
+  async getCurrentUser(userId: string) {
+    try {
+      const user = await this.prisma.user.findUnique({
+        where: { id: userId },
+        include: { role: true }
+      });
+
+      if (!user) {
+        return { success: false, message: 'Utilisateur non trouvé' };
+      }
+
+      // Récupérer les permissions associées au rôle
+      // @ts-ignore - La relation role est disponible après régénération des types Prisma
+      const permissions = this.getPermissionsByRole(user.role.rolename);
+
+      return {
+        id: user.id,
+        email: user.email,
+        firstname: user.firstname,
+        lastname: user.lastname,
+        isActive: user.isActive,
+        // @ts-ignore - La relation role est disponible après régénération des types Prisma
+        role: user.role.rolename,
+        permissions
+      };
+    } catch (error) {
+      console.error('Erreur lors de la récupération de l\'utilisateur:', error);
+      return { 
+        success: false, 
+        message: 'Une erreur est survenue lors de la récupération des informations utilisateur' 
       };
     }
   }
