@@ -278,4 +278,28 @@ export class AuthController {
     // Commenté pour désactiver la fonctionnalité
     // return this.authService.register(registerDto);
   }
+
+  @ApiOperation({ summary: 'Récupérer les informations de l\'utilisateur connecté' })
+  @ApiResponse({ 
+    status: 200, 
+    description: 'Informations de l\'utilisateur récupérées avec succès',
+    schema: {
+      type: 'object',
+      properties: {
+        id: { type: 'string', example: '1a2b3c4d-5e6f-7g8h-9i0j' },
+        email: { type: 'string', example: 'utilisateur@exemple.com' },
+        firstname: { type: 'string', example: 'Jean' },
+        lastname: { type: 'string', example: 'Dupont' },
+        role: { type: 'string', example: 'admin' },
+        permissions: { type: 'array', items: { type: 'string' } }
+      }
+    }
+  })
+  @Get('me')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @HttpCode(HttpStatus.OK)
+  async getMe(@Request() req) {
+    return this.authService.getCurrentUser(req.user.id);
+  }
 }
