@@ -13,10 +13,15 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     private authService: AuthService,
     private userService: UserService
   ) {
+    const jwtSecret = configService.get<string>('JWT_SECRET');
+    if (!jwtSecret) {
+      throw new Error('JWT_SECRET is required but not found in configuration');
+    }
+    
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
       ignoreExpiration: false,
-      secretOrKey: configService.get<string>('JWT_SECRET') || 'fallback-secret-key',
+      secretOrKey: jwtSecret,
       passReqToCallback: true,
     });
   }
@@ -48,15 +53,17 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       throw new UnauthorizedException('Session expirée suite à un changement de mot de passe');
     }
 
+    // Retourner les données à jour de l'utilisateur depuis la base de données
+    // au lieu des données potentiellement obsolètes du token
     return { 
-      id: payload.sub, 
-      email: payload.email,
-      role: payload.role,
-      permissions: payload.permissions || [],
-      businessInfo: payload.businessInfo || {
-        frenchLevel: null,
-        group: null
-      }
+      id: user.id, 
+      email: user.email,
+      firstname: user.firstname,
+      lastname: user.lastname,
+      // @ts-ignore - La relation role est disponible après régénération des types Prisma
+      role: user.role.rolename,
+      permissions: payload.permissions || [], // Garder les permissions du token pour éviter une requête supplémentaire
+      isActive: user.isActive
     };
   }
 } 
