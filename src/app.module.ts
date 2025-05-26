@@ -20,7 +20,7 @@ import { StatusModule } from './status/status.module';
 import { FinancingModule } from './financing/financing.module';
 import { ExamModule } from './exam/exam.module';
 import { ContinuationModule } from './continuation/continuation.module';
-import { TodolistModule } from './todolist/todolist.module';
+import { TaskModule } from './task/task.module';
 import { DisabilityModule } from './disability/disability.module';
 
 @Module({
@@ -44,7 +44,7 @@ import { DisabilityModule } from './disability/disability.module';
     FinancingModule,
     ExamModule,
     ContinuationModule,
-    TodolistModule,
+    TaskModule,
     DisabilityModule
   ],
   controllers: [AppController],

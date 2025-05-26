@@ -1,11 +1,5 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
-  provider = "prisma-client-js"
+  provider      = "prisma-client-js"
   binaryTargets = ["native", "linux-musl-openssl-3.0.x"]
 }
 
@@ -14,276 +8,277 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// Référentiels de base
 model Role {
-  id               String             @id @default(uuid())
-  rolename         String             @unique
-  users            User[]
+  id       String @id @default(uuid())
+  rolename String @unique
+  users    User[]
 }
 
 model Nationality {
-  id               String             @id @default(uuid())
-  label            String
-  students         Student[]
+  id       String    @id @default(uuid())
+  label    String
+  students Student[]
 }
 
 model FrenchLevel {
-  id               String             @id @default(uuid())
-  code             String?
-  description      String?
-  students         Student[]          @relation("CurrentLevel")
-  studentsInitial  Student[]          @relation("InitialLevel")
+  id              String    @id @default(uuid())
+  description     String?
+  code            String?
+  students        Student[] @relation("CurrentLevel")
+  studentsInitial Student[] @relation("InitialLevel")
 }
 
 model Gender {
-  id               String             @id @default(uuid())
-  label            String
-  students         Student[]
+  id       String    @id @default(uuid())
+  label    String
+  students Student[]
 }
 
 model Address {
-  id               String             @id @default(uuid())
-  street           String
-  complement       String?
-  zipcode          Int
-  city             String
-  country          String             @default("France")
-  students         StudentAddress[]
+  id         String           @id @default(uuid())
+  street     String
+  complement String?
+  city       String
+  country    String           @default("France")
+  zipcode    Int
+  students   StudentAddress[]
 }
 
 model ExitReason {
-  id               String             @id @default(uuid())
-  reason           String
-  students         Student[]
+  id       String    @id @default(uuid())
+  reason   String
+  students Student[]
 }
 
 model Orientation {
-  id               String             @id @default(uuid())
-  type             String
-  description      String?
-  students         Student[]
+  id          String    @id @default(uuid())
+  type        String
+  description String?
+  students    Student[]
 }
 
 model Period {
-  id               String             @id @default(uuid())
-  label            String
-  startedAt        DateTime
-  endedAt          DateTime
-  actual_period    Boolean            @default(false)
-  groups           GroupPeriod[]
+  id            String        @id @default(uuid())
+  label         String
+  startedAt     DateTime
+  endedAt       DateTime
+  actual_period Boolean       @default(false)
+  groups        GroupPeriod[]
 }
 
 model Session {
-  id               String             @id @default(uuid())
-  label            String?
-  startedAt        DateTime
-  finishedAt       DateTime
-  groups           Group[]
+  id         String   @id @default(uuid())
+  startedAt  DateTime
+  finishedAt DateTime
+  label      String?
+  groups     Group[]
 }
 
 model Status {
-  id               String             @id @default(uuid())
-  label            String
-  students         Student[]
+  id       String    @id @default(uuid())
+  label    String
+  students Student[]
 }
 
 model Financing {
-  id               String             @id @default(uuid())
-  type             String
-  students         Student[]
+  id       String    @id @default(uuid())
+  type     String
+  students Student[]
 }
 
 model Disability {
-  id               String             @id @default(uuid())
-  label            String
-  description      String?
-  students         StudentDisability[]
+  id          String              @id @default(uuid())
+  label       String
+  description String?
+  students    StudentDisability[]
 }
 
-// Entités principales
 model User {
-  id               String             @id @default(uuid())
-  firstname        String
-  lastname         String
-  email            String             @unique
-  birthdate        DateTime?
-  password         String
-  isActive         Boolean            @default(true)
-  role             Role               @relation(fields: [role_id], references: [id])
-  role_id          String
-  todoLists        Todolist[]
-  courses          UserCourse[]
-  createdAt        DateTime           @default(now())
-  updatedAt        DateTime           @updatedAt
+  id        String       @id @default(uuid())
+  firstname String
+  lastname  String
+  email     String       @unique
+  password  String
+  role_id   String
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+  birthdate DateTime?
+  isActive  Boolean      @default(true)
+  tasks     Task[]
+  role      Role         @relation(fields: [role_id], references: [id])
+  courses   UserCourse[]
 }
 
 model Student {
-  id                String             @id @default(uuid())
-  firstname         String
-  lastname          String
-  birthdate         DateTime
-  placeOfBirth      String?
-  email             String?
-  phone             String?
-  date_test_initial String?
-  commentaire       String?
+  id                 String              @id @default(uuid())
+  firstname          String
+  lastname           String
+  birthdate          DateTime
+  email              String?
+  phone              String?
+  commentaire        String?
   date_entree_france String?
-  date_titre_sejour DateTime?
-  date_cir          DateTime?
-  
-  // Relations
-  gender            Gender             @relation(fields: [gender_id], references: [id])
-  gender_id         String
-  
-  currentLevel      FrenchLevel?       @relation("CurrentLevel", fields: [current_level_id], references: [id])
-  current_level_id  String?
-  
-  initialLevel      FrenchLevel        @relation("InitialLevel", fields: [initial_level_id], references: [id])
-  initial_level_id  String
-  
-  nationality       Nationality        @relation(fields: [nationality_id], references: [id])
-  nationality_id    String
-  
-  addresses         StudentAddress[]
-  
-  orientation       Orientation?       @relation(fields: [orientation_id], references: [id])
-  orientation_id    String?
-  
-  exitReason        ExitReason?        @relation(fields: [exit_reason_id], references: [id])
-  exit_reason_id    String?
-  
-  financing         Financing          @relation(fields: [financing_id], references: [id])
-  financing_id      String
-  
-  status            Status             @relation(fields: [status_id], references: [id])
-  status_id         String
-  
-  disabilities      StudentDisability[]
-  
-  exams             Exam[]
-  absences          Absence[]
-  continuation      Continuation?
-  groups            StudentGroup[]
-  
-  createdAt         DateTime           @default(now())
-  updatedAt         DateTime           @updatedAt
+  gender_id          String
+  nationality_id     String
+  orientation_id     String?
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+  current_level_id   String?
+  date_test_initial  String?
+  exit_reason_id     String?
+  financing_id       String
+  initial_level_id   String
+  placeOfBirth       String?
+  status_id          String
+  date_cir           DateTime?
+  date_titre_sejour  DateTime?
+  absences           Absence[]
+  continuation       Continuation?
+  exams              Exam[]
+  currentLevel       FrenchLevel?        @relation("CurrentLevel", fields: [current_level_id], references: [id])
+  exitReason         ExitReason?         @relation(fields: [exit_reason_id], references: [id])
+  financing          Financing           @relation(fields: [financing_id], references: [id])
+  gender             Gender              @relation(fields: [gender_id], references: [id])
+  initialLevel       FrenchLevel         @relation("InitialLevel", fields: [initial_level_id], references: [id])
+  nationality        Nationality         @relation(fields: [nationality_id], references: [id])
+  orientation        Orientation?        @relation(fields: [orientation_id], references: [id])
+  status             Status              @relation(fields: [status_id], references: [id])
+  addresses          StudentAddress[]
+  disabilities       StudentDisability[]
+  groups             StudentGroup[]
 }
 
-// Table de jointure pour la relation many-to-many entre Student et Disability
 model StudentDisability {
-  id             String     @id @default(uuid())
-  student        Student    @relation(fields: [student_id], references: [id])
-  student_id     String
-  disability     Disability @relation(fields: [disability_id], references: [id])
-  disability_id  String
-  
-  createdAt      DateTime   @default(now())
-  updatedAt      DateTime   @updatedAt
+  id            String     @id @default(uuid())
+  student_id    String
+  disability_id String
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+  disability    Disability @relation(fields: [disability_id], references: [id])
+  student       Student    @relation(fields: [student_id], references: [id])
   
   @@unique([student_id, disability_id])
 }
 
-model Todolist {
-  id                 String           @id @default(uuid())
-  title              String
-  description        String?
-  completionPercentage Decimal        @default(0) @db.Decimal(15,2)
-  createdAt          DateTime         @default(now())
-  updatedAt          DateTime         @updatedAt
-  dueAt              DateTime?
-  user               User             @relation(fields: [user_id], references: [id])
-  user_id            String
+model Task {
+  id                   String    @id @default(uuid())
+  title                String
+  description          String?
+  status               String    @default("pending") // pending, in_progress, completed (calculé)
+  completionPercentage Decimal   @default(0) @db.Decimal(15, 2)
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
+  dueAt                DateTime?
+  
+  // Relation avec l'utilisateur
+  user                 User      @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  user_id              String
+  
+  // Relation avec les sous-tâches
+  subtasks             Subtask[]
+}
+
+model Subtask {
+  id          String   @id @default(uuid())
+  title       String
+  description String?
+  status      String   @default("pending") // pending, completed SEULEMENT
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  // Relation avec la tâche parente
+  task        Task     @relation(fields: [task_id], references: [id], onDelete: Cascade)
+  task_id     String
 }
 
 model Group {
-  id                String             @id @default(uuid())
-  label             String
-  session           Session            @relation(fields: [session_id], references: [id])
-  session_id        String
-  students          StudentGroup[]
-  courses           Course[]
-  periods           GroupPeriod[]
+  id         String         @id @default(uuid())
+  label      String
+  session_id String
+  courses    Course[]
+  session    Session        @relation(fields: [session_id], references: [id])
+  periods    GroupPeriod[]
+  students   StudentGroup[]
 }
 
 model Course {
-  course_id          String             @id @default(uuid())
-  day               DateTime?
-  start_hour        DateTime?
-  end_hour          DateTime?
-  intitule          String?
-  group             Group              @relation(fields: [group_id], references: [id])
-  group_id          String
-  users             UserCourse[]
-  absences          Absence[]
+  day        DateTime?
+  end_hour   DateTime?
+  group_id   String
+  intitule   String?
+  start_hour DateTime?
+  course_id  String       @id @default(uuid())
+  absences   Absence[]
+  group      Group        @relation(fields: [group_id], references: [id])
+  users      UserCourse[]
   
   @@index([group_id])
 }
 
 model Exam {
-  id                String             @id @default(uuid())
-  label             String
-  taked_at          DateTime
-  note              String?
-  student           Student            @relation(fields: [student_id], references: [id])
-  student_id        String
+  id         String   @id @default(uuid())
+  label      String
+  note       String?
+  student_id String
+  taked_at   DateTime
+  student    Student  @relation(fields: [student_id], references: [id])
 }
 
 model Continuation {
-  id                String             @id @default(uuid())
-  temporality       String?
-  commentary        String?
-  student           Student            @relation(fields: [student_id], references: [id])
-  student_id        String             @unique
+  id          String  @id @default(uuid())
+  temporality String?
+  commentary  String?
+  student_id  String  @unique
+  student     Student @relation(fields: [student_id], references: [id])
 }
 
 model Absence {
-  id                String             @id @default(uuid())
-  reason            String?
-  student           Student            @relation(fields: [student_id], references: [id])
-  student_id        String
-  course            Course             @relation(fields: [course_id], references: [course_id])
-  course_id        String
+  id         String  @id @default(uuid())
+  reason     String?
+  student_id String
+  course_id  String
+  course     Course  @relation(fields: [course_id], references: [course_id])
+  student    Student @relation(fields: [student_id], references: [id])
   
   @@unique([student_id, course_id])
 }
 
-// Tables de jointure
 model StudentAddress {
-  id                String             @id @default(uuid())
-  student           Student            @relation(fields: [student_id], references: [id])
-  student_id        String
-  address           Address            @relation(fields: [address_id], references: [id])
-  address_id        String
+  id         String  @id @default(uuid())
+  student_id String
+  address_id String
+  address    Address @relation(fields: [address_id], references: [id])
+  student    Student @relation(fields: [student_id], references: [id])
   
   @@unique([student_id, address_id])
 }
 
 model StudentGroup {
-  id                String             @id @default(uuid())
-  student           Student            @relation(fields: [student_id], references: [id])
-  student_id        String
-  group             Group              @relation(fields: [group_id], references: [id])
-  group_id          String
+  id         String  @id @default(uuid())
+  student_id String
+  group_id   String
+  group      Group   @relation(fields: [group_id], references: [id])
+  student    Student @relation(fields: [student_id], references: [id])
   
   @@unique([student_id, group_id])
 }
 
 model UserCourse {
-  id                String             @id @default(uuid())
-  user              User               @relation(fields: [user_id], references: [id])
-  user_id           String
-  course            Course             @relation(fields: [course_id], references: [course_id])
-  course_id         String
+  id        String @id @default(uuid())
+  user_id   String
+  course_id String
+  course    Course @relation(fields: [course_id], references: [course_id])
+  user      User   @relation(fields: [user_id], references: [id])
   
   @@unique([user_id, course_id])
 }
 
 model GroupPeriod {
-  id                String             @id @default(uuid())
-  group             Group              @relation(fields: [group_id], references: [id])
-  group_id          String
-  period            Period             @relation(fields: [period_id], references: [id])
-  period_id         String
+  id        String @id @default(uuid())
+  group_id  String
+  period_id String
+  group     Group  @relation(fields: [group_id], references: [id])
+  period    Period @relation(fields: [period_id], references: [id])
   
   @@unique([group_id, period_id])
 }

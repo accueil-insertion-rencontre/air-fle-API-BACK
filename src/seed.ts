@@ -4,6 +4,10 @@ import * as argon2 from 'argon2';
 const prisma = new PrismaClient();
 
 async function main() {
+  console.log('🚨 ATTENTION: Ce script crée des comptes par défaut avec des mots de passe prédéfinis.');
+  console.log('🔒 SÉCURITÉ: Changez immédiatement ces mots de passe en production !');
+  console.log('');
+
   // Créer les rôles par défaut s'ils n'existent pas déjà
   const adminRole = await prisma.role.upsert({
     where: { rolename: 'admin' },
@@ -24,7 +28,8 @@ async function main() {
   console.log('Rôles créés:', { adminRole, teacherRole });
 
   // Créer un utilisateur admin par défaut
-  const hashedAdminPassword = await argon2.hash('admin123');
+  // ⚠️ SÉCURITÉ: Mot de passe temporaire - À CHANGER IMMÉDIATEMENT en production !
+  const hashedAdminPassword = await argon2.hash('TempAdmin2024!@#');
   
   const adminUser = await prisma.user.upsert({
     where: { email: 'admin@airfle.com' },
@@ -44,10 +49,12 @@ async function main() {
     },
   });
 
-  console.log('Utilisateur admin créé:', adminUser);
+  console.log('✅ Utilisateur admin créé:', { id: adminUser.id, email: adminUser.email });
+  console.log('🔑 Mot de passe admin temporaire: TempAdmin2024!@#');
 
   // Créer un utilisateur enseignant par défaut
-  const hashedTeacherPassword = await argon2.hash('teacher123');
+  // ⚠️ SÉCURITÉ: Mot de passe temporaire - À CHANGER IMMÉDIATEMENT en production !
+  const hashedTeacherPassword = await argon2.hash('TempTeacher2024!@#');
   
   const teacherUser = await prisma.user.upsert({
     where: { email: 'teacher@airfle.com' },
@@ -67,7 +74,12 @@ async function main() {
     },
   });
 
-  console.log('Utilisateur enseignant créé:', teacherUser);
+  console.log('✅ Utilisateur enseignant créé:', { id: teacherUser.id, email: teacherUser.email });
+  console.log('🔑 Mot de passe teacher temporaire: TempTeacher2024!@#');
+  
+  console.log('');
+  console.log('🚨 IMPORTANT: Changez ces mots de passe dès la première connexion !');
+  console.log('🔒 Utilisez des mots de passe forts et uniques pour chaque environnement.');
 }
 
 main()
