@@ -1,19 +1,39 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { LearnerHistoryService } from '../learner-history/learner-history.service';
 import { Prisma } from '@prisma/client';
 
 @Injectable()
 export class AbsenceService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private learnerHistoryService: LearnerHistoryService
+  ) {}
 
-  async create(data: Prisma.AbsenceCreateInput) {
-    return this.prisma.absence.create({
+  async create(data: Prisma.AbsenceCreateInput, createdByUserId?: string) {
+    const absence = await this.prisma.absence.create({
       data,
       include: {
         student: true,
         course: true,
       },
     });
+
+    // Enregistrer l'absence dans l'historique
+    await this.learnerHistoryService.recordAbsenceChange(
+      absence.student_id,
+      absence.id,
+      'created',
+      {
+        reason: absence.reason,
+        course: absence.course,
+        date: new Date(),
+      },
+      undefined,
+      createdByUserId
+    );
+
+    return absence;
   }
 
   async findAll(params: {
@@ -63,9 +83,12 @@ export class AbsenceService {
     return absence;
   }
 
-  async update(id: string, data: Prisma.AbsenceUpdateInput) {
+  async update(id: string, data: Prisma.AbsenceUpdateInput, updatedByUserId?: string) {
+    // Récupérer l'absence actuelle
+    const currentAbsence = await this.findOne(id);
+
     try {
-      return await this.prisma.absence.update({
+      const updatedAbsence = await this.prisma.absence.update({
         where: { id },
         data,
         include: {
@@ -73,6 +96,24 @@ export class AbsenceService {
           course: true,
         },
       });
+
+      // Enregistrer la modification dans l'historique
+      await this.learnerHistoryService.recordAbsenceChange(
+        updatedAbsence.student_id,
+        updatedAbsence.id,
+        'updated',
+        {
+          reason: updatedAbsence.reason,
+          course: updatedAbsence.course,
+        },
+        {
+          reason: currentAbsence.reason,
+          course: currentAbsence.course,
+        },
+        updatedByUserId
+      );
+
+      return updatedAbsence;
     } catch (error) {
       if (error.code === 'P2025') {
         throw new NotFoundException(`Absence with ID ${id} not found`);
@@ -81,11 +122,29 @@ export class AbsenceService {
     }
   }
 
-  async remove(id: string) {
+  async remove(id: string, deletedByUserId?: string) {
+    // Récupérer l'absence avant suppression
+    const absence = await this.findOne(id);
+
     try {
-      return await this.prisma.absence.delete({
+      const deletedAbsence = await this.prisma.absence.delete({
         where: { id },
       });
+
+      // Enregistrer la suppression dans l'historique
+      await this.learnerHistoryService.recordAbsenceChange(
+        absence.student_id,
+        absence.id,
+        'deleted',
+        {
+          reason: absence.reason,
+          course: absence.course,
+        },
+        undefined,
+        deletedByUserId
+      );
+
+      return deletedAbsence;
     } catch (error) {
       if (error.code === 'P2025') {
         throw new NotFoundException(`Absence with ID ${id} not found`);
