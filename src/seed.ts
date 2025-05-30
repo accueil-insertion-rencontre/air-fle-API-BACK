@@ -29,7 +29,7 @@ async function main() {
 
   // Créer un utilisateur admin par défaut
   // ⚠️ SÉCURITÉ: Mot de passe temporaire - À CHANGER IMMÉDIATEMENT en production !
-  const hashedAdminPassword = await argon2.hash('TempAdmin2024!@#');
+  const hashedAdminPassword = await argon2.hash('Admin123');
   
   const adminUser = await prisma.user.upsert({
     where: { email: 'admin@airfle.com' },
@@ -50,11 +50,11 @@ async function main() {
   });
 
   console.log('✅ Utilisateur admin créé:', { id: adminUser.id, email: adminUser.email });
-  console.log('🔑 Mot de passe admin temporaire: TempAdmin2024!@#');
+  console.log('🔑 Mot de passe admin temporaire: Admin123');
 
   // Créer un utilisateur enseignant par défaut
   // ⚠️ SÉCURITÉ: Mot de passe temporaire - À CHANGER IMMÉDIATEMENT en production !
-  const hashedTeacherPassword = await argon2.hash('TempTeacher2024!@#');
+  const hashedTeacherPassword = await argon2.hash('Teacher123');
   
   const teacherUser = await prisma.user.upsert({
     where: { email: 'teacher@airfle.com' },
@@ -75,7 +75,7 @@ async function main() {
   });
 
   console.log('✅ Utilisateur enseignant créé:', { id: teacherUser.id, email: teacherUser.email });
-  console.log('🔑 Mot de passe teacher temporaire: TempTeacher2024!@#');
+  console.log('🔑 Mot de passe teacher temporaire: Teacher123');
   
   console.log('');
   console.log('🚨 IMPORTANT: Changez ces mots de passe dès la première connexion !');
