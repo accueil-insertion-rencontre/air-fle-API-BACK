@@ -143,7 +143,7 @@ export class CreateStudentDto {
   gender_id: string;
 
   @ApiProperty({ 
-    description: 'ID du niveau initial', 
+    description: 'ID du niveau initial (à l\'arrivée)', 
     example: 'f54480bd-4893-41d6-831d-f6eb81dffce6' 
   })
   @IsUUID(4)
@@ -182,6 +182,15 @@ export class CreateStudentDto {
   @IsUUID(4)
   @IsOptional()
   current_level_id?: string;
+
+  @ApiProperty({ 
+    description: 'ID du niveau de sortie (quand il quitte après formation)', 
+    example: 'f54480bd-4893-41d6-831d-f6eb81dffce6', 
+    required: false 
+  })
+  @IsUUID(4)
+  @IsOptional()
+  departure_level_id?: string;
 
   @ApiProperty({ 
     description: 'ID de l\'orientation', 
