@@ -24,8 +24,9 @@ model FrenchLevel {
   id              String    @id @default(uuid())
   description     String?
   code            String?
-  students        Student[] @relation("CurrentLevel")
   studentsInitial Student[] @relation("InitialLevel")
+  studentsCurrent Student[] @relation("CurrentLevel")
+  studentsDeparture Student[] @relation("DepartureLevel")
 }
 
 model Gender {
@@ -107,6 +108,7 @@ model User {
   tasks     Task[]
   role      Role         @relation(fields: [role_id], references: [id])
   courses   UserCourse[]
+  learner_history_changes LearnerHistory[]
 }
 
 model Student {
@@ -123,11 +125,12 @@ model Student {
   orientation_id     String?
   createdAt          DateTime            @default(now())
   updatedAt          DateTime            @updatedAt
-  current_level_id   String?
+  initial_level_id   String              // Niveau initial (à l'arrivée)
+  current_level_id   String?             // Niveau actuel (évolutif pendant formation)
+  departure_level_id String?             // Niveau de sortie (quand il quitte après formation)
   date_test_initial  String?
   exit_reason_id     String?
   financing_id       String
-  initial_level_id   String
   placeOfBirth       String?
   status_id          String
   date_cir           DateTime?
@@ -135,11 +138,13 @@ model Student {
   absences           Absence[]
   continuation       Continuation?
   exams              Exam[]
+  history            LearnerHistory[]
+  initialLevel       FrenchLevel         @relation("InitialLevel", fields: [initial_level_id], references: [id])
   currentLevel       FrenchLevel?        @relation("CurrentLevel", fields: [current_level_id], references: [id])
+  departureLevel     FrenchLevel?        @relation("DepartureLevel", fields: [departure_level_id], references: [id])
   exitReason         ExitReason?         @relation(fields: [exit_reason_id], references: [id])
   financing          Financing           @relation(fields: [financing_id], references: [id])
   gender             Gender              @relation(fields: [gender_id], references: [id])
-  initialLevel       FrenchLevel         @relation("InitialLevel", fields: [initial_level_id], references: [id])
   nationality        Nationality         @relation(fields: [nationality_id], references: [id])
   orientation        Orientation?        @relation(fields: [orientation_id], references: [id])
   status             Status              @relation(fields: [status_id], references: [id])
@@ -281,4 +286,47 @@ model GroupPeriod {
   period    Period @relation(fields: [period_id], references: [id])
   
   @@unique([group_id, period_id])
+}
+
+model LearnerHistory {
+  id          String   @id @default(uuid())
+  
+  // ID de l'étudiant concerné (toujours présent)
+  student_id  String
+  
+  // Type d'entité modifiée (student, exam, absence, group, continuation, etc.)
+  entity_type String   // 'student', 'exam', 'absence', 'group_assignment', 'continuation', 'address', 'disability'
+  
+  // ID de l'entité modifiée (null pour les modifications directes de l'étudiant)
+  entity_id   String?
+  
+  // Type d'action effectuée
+  action_type String   // 'created', 'updated', 'deleted', 'assigned', 'unassigned'
+  
+  // Type de changement spécifique
+  change_type String   // 'level_change', 'status_change', 'exam_taken', 'group_change', 'personal_info_update', etc.
+  
+  // Date du changement
+  change_date DateTime @default(now())
+  
+  // Données avant changement (JSON)
+  previous_data Json?
+  
+  // Nouvelles données (JSON)
+  new_data     Json?
+  
+  // Description du changement
+  description  String?
+  
+  // ID de l'utilisateur qui a effectué le changement
+  changed_by_user_id String?
+  
+  // Relations
+  student     Student @relation(fields: [student_id], references: [id], onDelete: Cascade)
+  changed_by  User?   @relation(fields: [changed_by_user_id], references: [id])
+  
+  @@index([student_id, change_date])
+  @@index([entity_type, action_type])
+  @@index([change_type])
+  @@index([entity_id])
 }
