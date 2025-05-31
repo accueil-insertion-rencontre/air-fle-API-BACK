@@ -6,16 +6,14 @@ services:
     container_name: postgres-dev
     ports:
       - "5433:5432"
-    environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: airfle
+    env_file:
+      - .env
     volumes:
       - postgres-dev-data:/var/lib/postgresql/data
     networks:
       - airfle-dev-network
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres -d airfle"]
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
       interval: 5s
       timeout: 3s
       retries: 5
@@ -45,10 +43,8 @@ services:
     container_name: api-dev
     ports:
       - "3000:3000"
-    environment:
-      - DATABASE_URL=postgresql://postgres:postgres@postgres-dev:5432/airfle?schema=public
-      - REDIS_URL=redis://redis-dev:6379
-      - NODE_ENV=development
+    env_file:
+      - .env
     depends_on:
       postgres-dev:
         condition: service_healthy
@@ -80,8 +76,10 @@ services:
     ports:
       - "5555:5555"
     environment:
-      - DATABASE_URL=postgresql://postgres:postgres@postgres-dev:5432/airfle?schema=public
+      - DATABASE_URL=${DATABASE_URL:-postgresql://postgres:postgres@postgres-dev:5432/airfle?schema=public}
       - BROWSER=none
+    env_file:
+      - .env
     depends_on:
       postgres-dev:
         condition: service_healthy
