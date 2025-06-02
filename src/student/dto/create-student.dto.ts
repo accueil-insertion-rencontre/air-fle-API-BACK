@@ -37,10 +37,12 @@ export class CreateStudentDto {
 
   @ApiProperty({ 
     description: 'Date de naissance (format ISO)', 
-    example: '1990-01-01T00:00:00.000Z' 
+    example: '1990-01-01',
+    type: Date
   })
-  @IsDateString()
-  birthdate: string | Date;
+  @IsDate()
+  @Type(() => Date)
+  birthdate: Date;
 
   @ApiProperty({ 
     description: 'Lieu de naissance', 
@@ -105,12 +107,11 @@ export class CreateStudentDto {
     description: 'Date d\'entrée en France', 
     example: '2022-01-15',
     required: false,
-    type: Date
+    type: String
   })
-  @IsDate()
+  @IsISO8601()
   @IsOptional()
-  @Type(() => Date)
-  date_entree_france?: Date;
+  date_entree_france?: string;
 
   @ApiProperty({
     description: 'Date du titre de séjour',
