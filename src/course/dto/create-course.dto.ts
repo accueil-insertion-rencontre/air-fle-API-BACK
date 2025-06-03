@@ -54,4 +54,14 @@ export class CreateCourseDto {
   })
   @IsUUID()
   group_id: string;
+
+  @ApiProperty({
+    description: 'ID du professeur assigné au cours (optionnel)',
+    example: '456e7890-e89b-12d3-a456-426614174001',
+    required: false,
+    nullable: true
+  })
+  @IsUUID()
+  @IsOptional()
+  user_id?: string | null;
 } 
