@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsDate, IsOptional, IsString, IsUUID } from 'class-validator';
+import { IsDate, IsOptional, IsString, IsUUID, Matches } from 'class-validator';
 import { Type } from 'class-transformer';
 import { Escape } from 'class-sanitizer';
 
@@ -64,4 +64,17 @@ export class CreateCourseDto {
   @IsUUID()
   @IsOptional()
   user_id?: string | null;
+
+  @ApiProperty({
+    description: 'Couleur personnalisée du cours (hex, ex: #007bff)',
+    example: '#007bff',
+    required: false,
+    nullable: true
+  })
+  @IsString()
+  @IsOptional()
+  @Matches(/^#[0-9A-Fa-f]{6}$/, {
+    message: 'La couleur doit être au format hexadécimal (#RRGGBB)'
+  })
+  color?: string | null;
 } 
