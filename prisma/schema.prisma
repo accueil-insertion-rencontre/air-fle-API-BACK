@@ -213,6 +213,7 @@ model Course {
   intitule   String?
   start_hour DateTime?
   course_id  String       @id @default(uuid())
+  color      String?      // Nouveau champ pour la couleur hexadécimale
   absences   Absence[]
   group      Group        @relation(fields: [group_id], references: [id])
   users      UserCourse[]
