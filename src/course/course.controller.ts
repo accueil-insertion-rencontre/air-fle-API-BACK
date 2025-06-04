@@ -39,6 +39,9 @@ class CourseDto {
 
   @ApiProperty({ description: 'Identifiant du groupe auquel appartient ce cours', example: 'def456' })
   group_id: string;
+
+  @ApiProperty({ description: 'Couleur personnalisée du cours', example: '#007bff', required: false, nullable: true })
+  color?: string | null;
 }
 
 @ApiTags('cours')
@@ -57,6 +60,7 @@ export class CourseController {
   async create(@Body() createCourseDto: CreateCourseDto) {
     console.log('=== CREATION DE COURS API ===');
     console.log('Données reçues:', createCourseDto);
+    console.log('Couleur dans DTO:', createCourseDto.color);
     
     // Extraire user_id pour l'assignation
     const { user_id, ...courseData } = createCourseDto;
@@ -67,6 +71,7 @@ export class CourseController {
       start_hour: courseData.start_hour,
       end_hour: courseData.end_hour,
       intitule: courseData.intitule,
+      color: courseData.color,
       group: {
         connect: {
           id: courseData.group_id
@@ -75,6 +80,7 @@ export class CourseController {
     };
     
     console.log('Données Prisma:', prismaData);
+    console.log('Couleur dans Prisma:', prismaData.color);
     console.log('Professeur à assigner:', user_id);
     
     return this.courseService.create(prismaData, user_id);
@@ -149,6 +155,7 @@ export class CourseController {
   async update(@Param('courseId') courseId: string, @Body() updateCourseDto: CreateCourseDto) {
     console.log('=== MISE A JOUR DE COURS API ===');
     console.log('Données reçues:', updateCourseDto);
+    console.log('Couleur dans DTO:', updateCourseDto.color);
     
     // Extraire user_id pour l'assignation
     const { user_id, ...courseData } = updateCourseDto;
@@ -161,6 +168,7 @@ export class CourseController {
     if (courseData.start_hour !== undefined) prismaData.start_hour = courseData.start_hour;
     if (courseData.end_hour !== undefined) prismaData.end_hour = courseData.end_hour;
     if (courseData.intitule !== undefined) prismaData.intitule = courseData.intitule;
+    if (courseData.color !== undefined) prismaData.color = courseData.color;
     
     // Gérer la relation avec le groupe si présente
     if (courseData.group_id) {
@@ -172,6 +180,7 @@ export class CourseController {
     }
     
     console.log('Données Prisma pour mise à jour:', prismaData);
+    console.log('Couleur dans Prisma:', prismaData.color);
     console.log('Professeur à assigner/modifier:', user_id);
     
     return this.courseService.update(courseId, prismaData, user_id);
