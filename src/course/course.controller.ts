@@ -39,6 +39,9 @@ class CourseDto {
 
   @ApiProperty({ description: 'Identifiant du groupe auquel appartient ce cours', example: 'def456' })
   group_id: string;
+
+  @ApiProperty({ description: 'Couleur personnalisée du cours', example: '#007bff', required: false, nullable: true })
+  color?: string | null;
 }
 
 @ApiTags('cours')
@@ -55,20 +58,32 @@ export class CourseController {
   @ApiResponse({ status: 201, description: 'Cours créé avec succès', type: CourseDto })
   @ApiBody({ type: CreateCourseDto })
   async create(@Body() createCourseDto: CreateCourseDto) {
+    console.log('=== CREATION DE COURS API ===');
+    console.log('Données reçues:', createCourseDto);
+    console.log('Couleur dans DTO:', createCourseDto.color);
+    
+    // Extraire user_id pour l'assignation
+    const { user_id, ...courseData } = createCourseDto;
+    
     // Convertir le DTO en format Prisma
     const prismaData: Prisma.CourseCreateInput = {
-      day: createCourseDto.day,
-      start_hour: createCourseDto.start_hour,
-      end_hour: createCourseDto.end_hour,
-      intitule: createCourseDto.intitule,
+      day: courseData.day,
+      start_hour: courseData.start_hour,
+      end_hour: courseData.end_hour,
+      intitule: courseData.intitule,
+      color: courseData.color,
       group: {
         connect: {
-          id: createCourseDto.group_id
+          id: courseData.group_id
         }
       }
     };
     
-    return this.courseService.create(prismaData);
+    console.log('Données Prisma:', prismaData);
+    console.log('Couleur dans Prisma:', prismaData.color);
+    console.log('Professeur à assigner:', user_id);
+    
+    return this.courseService.create(prismaData, user_id);
   }
 
   @Get()
@@ -136,27 +151,39 @@ export class CourseController {
   @ApiResponse({ status: 200, description: 'Cours mis à jour avec succès', type: CourseDto })
   @ApiResponse({ status: 404, description: 'Cours introuvable' })
   @ApiParam({ name: 'courseId', description: 'Identifiant du cours', example: 'abc123' })
-  @ApiBody({ type: UpdateCourseDto })
-  async update(@Param('courseId') courseId: string, @Body() updateCourseDto: UpdateCourseDto) {
+  @ApiBody({ type: CreateCourseDto })
+  async update(@Param('courseId') courseId: string, @Body() updateCourseDto: CreateCourseDto) {
+    console.log('=== MISE A JOUR DE COURS API ===');
+    console.log('Données reçues:', updateCourseDto);
+    console.log('Couleur dans DTO:', updateCourseDto.color);
+    
+    // Extraire user_id pour l'assignation
+    const { user_id, ...courseData } = updateCourseDto;
+    
     // Convertir le DTO en format Prisma
     const prismaData: Prisma.CourseUpdateInput = {};
     
     // Copier les propriétés valides
-    if (updateCourseDto.day !== undefined) prismaData.day = updateCourseDto.day;
-    if (updateCourseDto.start_hour !== undefined) prismaData.start_hour = updateCourseDto.start_hour;
-    if (updateCourseDto.end_hour !== undefined) prismaData.end_hour = updateCourseDto.end_hour;
-    if (updateCourseDto.intitule !== undefined) prismaData.intitule = updateCourseDto.intitule;
+    if (courseData.day !== undefined) prismaData.day = courseData.day;
+    if (courseData.start_hour !== undefined) prismaData.start_hour = courseData.start_hour;
+    if (courseData.end_hour !== undefined) prismaData.end_hour = courseData.end_hour;
+    if (courseData.intitule !== undefined) prismaData.intitule = courseData.intitule;
+    if (courseData.color !== undefined) prismaData.color = courseData.color;
     
     // Gérer la relation avec le groupe si présente
-    if (updateCourseDto.group_id) {
+    if (courseData.group_id) {
       prismaData.group = {
         connect: {
-          id: updateCourseDto.group_id
+          id: courseData.group_id
         }
       };
     }
     
-    return this.courseService.update(courseId, prismaData);
+    console.log('Données Prisma pour mise à jour:', prismaData);
+    console.log('Couleur dans Prisma:', prismaData.color);
+    console.log('Professeur à assigner/modifier:', user_id);
+    
+    return this.courseService.update(courseId, prismaData, user_id);
   }
 
   @Delete(':courseId')
