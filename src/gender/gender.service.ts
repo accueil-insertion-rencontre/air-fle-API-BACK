@@ -1,6 +1,6 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { Gender, Prisma } from '@prisma/client';
+import { Prisma, Gender } from '@prisma/client';
 
 @Injectable()
 export class GenderService {
@@ -12,26 +12,29 @@ export class GenderService {
 
   async findOne(id: string): Promise<Gender | null> {
     return this.prisma.gender.findUnique({
-      where: { id },
+      where: { gender_uuid: id },
     });
   }
 
-  async create(data: Prisma.GenderCreateInput): Promise<Gender> {
+  async create(createGenderData: Prisma.GenderCreateInput): Promise<Gender> {
     return this.prisma.gender.create({
-      data,
+      data: createGenderData,
     });
   }
 
-  async update(id: string, data: Prisma.GenderUpdateInput): Promise<Gender> {
+  async update(
+    id: string,
+    updateGenderData: Prisma.GenderUpdateInput,
+  ): Promise<Gender> {
     return this.prisma.gender.update({
-      where: { id },
-      data,
+      where: { gender_uuid: id },
+      data: updateGenderData,
     });
   }
 
   async delete(id: string): Promise<Gender> {
     return this.prisma.gender.delete({
-      where: { id },
+      where: { gender_uuid: id },
     });
   }
-} 
+}
