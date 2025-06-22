@@ -34,4 +34,4 @@ describe('ExamModule', () => {
     const service = module.get<ExamService>(ExamService);
     expect(service).toBeDefined();
   });
-}); 
+});
