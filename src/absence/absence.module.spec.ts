@@ -34,4 +34,4 @@ describe('AbsenceModule', () => {
     const absenceService = module.get<AbsenceService>(AbsenceService);
     expect(absenceService).toBeDefined();
   });
-}); 
+});
