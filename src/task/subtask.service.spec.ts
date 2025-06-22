@@ -62,7 +62,7 @@ describe('SubtaskService', () => {
         id: subtaskId,
         title: 'Sous-tâche test',
         status: 'pending',
-        task: { id: 'task-1', user_id: 'user-1' }
+        task: { id: 'task-1', user_id: 'user-1' },
       };
 
       mockPrismaService.subtask.findUnique.mockResolvedValue(subtask);
@@ -77,7 +77,7 @@ describe('SubtaskService', () => {
               user: true,
             },
           },
-        }
+        },
       });
       expect(result).toEqual(subtask);
     });
@@ -94,11 +94,21 @@ describe('SubtaskService', () => {
   });
 
   describe('findAll', () => {
-    it('devrait retourner toutes les sous-tâches d\'une tâche', async () => {
+    it("devrait retourner toutes les sous-tâches d'une tâche", async () => {
       const taskId = 'task-1';
       const subtasks = [
-        { id: 'sub-1', title: 'Sous-tâche 1', status: 'pending', task_id: taskId },
-        { id: 'sub-2', title: 'Sous-tâche 2', status: 'completed', task_id: taskId }
+        {
+          id: 'sub-1',
+          title: 'Sous-tâche 1',
+          status: 'pending',
+          task_id: taskId,
+        },
+        {
+          id: 'sub-2',
+          title: 'Sous-tâche 2',
+          status: 'completed',
+          task_id: taskId,
+        },
       ];
 
       mockPrismaService.subtask.findMany.mockResolvedValue(subtasks);
@@ -125,7 +135,7 @@ describe('SubtaskService', () => {
       const taskId = 'task-1';
       const createSubtaskDto = {
         title: 'Nouvelle sous-tâche',
-        description: 'Description de la sous-tâche'
+        description: 'Description de la sous-tâche',
       };
 
       const newSubtask = {
@@ -133,12 +143,12 @@ describe('SubtaskService', () => {
         title: 'Nouvelle sous-tâche',
         description: 'Description de la sous-tâche',
         status: 'pending',
-        task_id: taskId
+        task_id: taskId,
       };
 
       mockPrismaService.task.findUnique.mockResolvedValue({
         id: taskId,
-        subtasks: [newSubtask]
+        subtasks: [newSubtask],
       });
       mockPrismaService.task.update.mockResolvedValue({});
       mockPrismaService.subtask.create.mockResolvedValue(newSubtask);
@@ -150,8 +160,8 @@ describe('SubtaskService', () => {
           ...createSubtaskDto,
           status: 'pending',
           task: {
-            connect: { id: taskId }
-          }
+            connect: { id: taskId },
+          },
         },
         include: {
           task: {
@@ -170,7 +180,7 @@ describe('SubtaskService', () => {
       const subtaskId = 'subtask-1';
       const updateDto = {
         title: 'Titre mis à jour',
-        status: 'completed' as any
+        status: 'completed' as any,
       };
 
       const existingSubtask = {
@@ -178,19 +188,19 @@ describe('SubtaskService', () => {
         title: 'Ancien titre',
         status: 'pending',
         task_id: 'task-1',
-        task: { id: 'task-1', user_id: 'user-1' }
+        task: { id: 'task-1', user_id: 'user-1' },
       };
 
       const updatedSubtask = {
         ...existingSubtask,
-        ...updateDto
+        ...updateDto,
       };
 
       mockPrismaService.subtask.findUnique.mockResolvedValue(existingSubtask);
       mockPrismaService.subtask.update.mockResolvedValue(updatedSubtask);
       mockPrismaService.task.findUnique.mockResolvedValue({
         id: 'task-1',
-        subtasks: [updatedSubtask]
+        subtasks: [updatedSubtask],
       });
       mockPrismaService.task.update.mockResolvedValue({});
 
@@ -216,7 +226,9 @@ describe('SubtaskService', () => {
 
       mockPrismaService.subtask.findUnique.mockResolvedValue(null);
 
-      await expect(service.update(subtaskId, updateDto)).rejects.toThrow(NotFoundException);
+      await expect(service.update(subtaskId, updateDto)).rejects.toThrow(
+        NotFoundException,
+      );
     });
   });
 
@@ -228,14 +240,14 @@ describe('SubtaskService', () => {
         title: 'Sous-tâche à supprimer',
         status: 'completed',
         task_id: 'task-1',
-        task: { id: 'task-1', user_id: 'user-1' }
+        task: { id: 'task-1', user_id: 'user-1' },
       };
 
       mockPrismaService.subtask.findUnique.mockResolvedValue(existingSubtask);
       mockPrismaService.subtask.delete.mockResolvedValue(existingSubtask);
       mockPrismaService.task.findUnique.mockResolvedValue({
         id: 'task-1',
-        subtasks: []
+        subtasks: [],
       });
       mockPrismaService.task.update.mockResolvedValue({});
 
@@ -259,12 +271,14 @@ describe('SubtaskService', () => {
 
       mockPrismaService.subtask.findUnique.mockResolvedValue(null);
 
-      await expect(service.delete(subtaskId)).rejects.toThrow(NotFoundException);
+      await expect(service.delete(subtaskId)).rejects.toThrow(
+        NotFoundException,
+      );
     });
   });
 
   describe('toggleStatus', () => {
-    it('devrait basculer le statut d\'une sous-tâche de pending à completed', async () => {
+    it("devrait basculer le statut d'une sous-tâche de pending à completed", async () => {
       const subtaskId = 'subtask-1';
 
       const existingSubtask = {
@@ -272,22 +286,22 @@ describe('SubtaskService', () => {
         title: 'Sous-tâche test',
         status: 'pending',
         task_id: 'task-1',
-        task: { id: 'task-1', user_id: 'user-1' }
+        task: { id: 'task-1', user_id: 'user-1' },
       };
 
       const toggledSubtask = {
         ...existingSubtask,
-        status: 'completed'
+        status: 'completed',
       };
 
       mockPrismaService.subtask.findUnique
         .mockResolvedValueOnce(existingSubtask)
         .mockResolvedValueOnce(existingSubtask);
-      
+
       mockPrismaService.subtask.update.mockResolvedValue(toggledSubtask);
       mockPrismaService.task.findUnique.mockResolvedValue({
         id: 'task-1',
-        subtasks: [toggledSubtask]
+        subtasks: [toggledSubtask],
       });
       mockPrismaService.task.update.mockResolvedValue({});
 
@@ -312,7 +326,9 @@ describe('SubtaskService', () => {
 
       mockPrismaService.subtask.findUnique.mockResolvedValue(null);
 
-      await expect(service.toggleStatus(subtaskId)).rejects.toThrow(NotFoundException);
+      await expect(service.toggleStatus(subtaskId)).rejects.toThrow(
+        NotFoundException,
+      );
     });
   });
-}); 
+});
