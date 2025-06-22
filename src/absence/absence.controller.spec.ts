@@ -16,7 +16,7 @@ describe('AbsenceController', () => {
     course_id: 'course-id',
     reason: 'Maladie',
     student: { id: 'student-id', firstname: 'John', lastname: 'Doe' },
-    course: { course_id: 'course-id', intitule: 'Français A1' }
+    course: { course_id: 'course-id', intitule: 'Français A1' },
   };
 
   const absenceServiceMock = {
@@ -24,11 +24,13 @@ describe('AbsenceController', () => {
     findAll: vi.fn(),
     findOne: vi.fn(),
     update: vi.fn(),
-    remove: vi.fn()
+    remove: vi.fn(),
   };
 
   beforeEach(async () => {
-    controller = new AbsenceController(absenceServiceMock as unknown as AbsenceService);
+    controller = new AbsenceController(
+      absenceServiceMock as unknown as AbsenceService,
+    );
     absenceService = absenceServiceMock as unknown as AbsenceService;
 
     // Reset les mocks après chaque test
@@ -44,7 +46,7 @@ describe('AbsenceController', () => {
       const createAbsenceDto: CreateAbsenceDto = {
         student_id: 'student-id',
         course_id: 'course-id',
-        reason: 'Maladie'
+        reason: 'Maladie',
       };
 
       absenceServiceMock.create.mockResolvedValue(mockAbsence);
@@ -54,7 +56,7 @@ describe('AbsenceController', () => {
       expect(absenceServiceMock.create).toHaveBeenCalledWith({
         student: { connect: { id: 'student-id' } },
         course: { connect: { course_id: 'course-id' } },
-        reason: 'Maladie'
+        reason: 'Maladie',
       });
       expect(result).toEqual(mockAbsence);
     });
@@ -67,23 +69,28 @@ describe('AbsenceController', () => {
         meta: {
           total: 1,
           skip: 0,
-          take: 10
-        }
+          take: 10,
+        },
       };
 
       absenceServiceMock.findAll.mockResolvedValue(mockPaginatedResponse);
 
-      const result = await controller.findAll('0', '10', 'student-id', 'course-id');
+      const result = await controller.findAll(
+        '0',
+        '10',
+        'student-id',
+        'course-id',
+      );
 
       expect(absenceServiceMock.findAll).toHaveBeenCalledWith({
         skip: 0,
         take: 10,
         where: {
           student_id: 'student-id',
-          course_id: 'course-id'
-        }
+          course_id: 'course-id',
+        },
       });
-      
+
       expect(result.data).toBeDefined();
       expect(result.meta).toBeDefined();
       expect(result.data.length).toBe(1);
@@ -95,18 +102,23 @@ describe('AbsenceController', () => {
         meta: {
           total: 1,
           skip: 0,
-          take: 1
-        }
+          take: 1,
+        },
       };
 
       absenceServiceMock.findAll.mockResolvedValue(mockPaginatedResponse);
 
-      const result = await controller.findAll(undefined, undefined, undefined, undefined);
+      const result = await controller.findAll(
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+      );
 
       expect(absenceServiceMock.findAll).toHaveBeenCalledWith({
         skip: undefined,
         take: undefined,
-        where: {}
+        where: {},
       });
     });
   });
@@ -122,17 +134,17 @@ describe('AbsenceController', () => {
         id: 'absence-id',
         student_id: 'student-id',
         course_id: 'course-id',
-        reason: 'Maladie'
+        reason: 'Maladie',
       });
     });
 
-    it('devrait propager l\'erreur si l\'absence n\'existe pas', async () => {
+    it("devrait propager l'erreur si l'absence n'existe pas", async () => {
       absenceServiceMock.findOne.mockRejectedValue(
-        new NotFoundException('Absence with ID nonexistent-id not found')
+        new NotFoundException('Absence with ID nonexistent-id not found'),
       );
 
       await expect(controller.findOne('nonexistent-id')).rejects.toThrow(
-        new NotFoundException('Absence with ID nonexistent-id not found')
+        new NotFoundException('Absence with ID nonexistent-id not found'),
       );
     });
   });
@@ -140,12 +152,12 @@ describe('AbsenceController', () => {
   describe('update', () => {
     it('devrait mettre à jour une absence', async () => {
       const updateAbsenceDto: UpdateAbsenceDto = {
-        reason: 'Rendez-vous médical'
+        reason: 'Rendez-vous médical',
       };
 
       const updatedAbsence = {
         ...mockAbsence,
-        reason: 'Rendez-vous médical'
+        reason: 'Rendez-vous médical',
       };
 
       absenceServiceMock.update.mockResolvedValue(updatedAbsence);
@@ -153,7 +165,7 @@ describe('AbsenceController', () => {
       const result = await controller.update('absence-id', updateAbsenceDto);
 
       expect(absenceServiceMock.update).toHaveBeenCalledWith('absence-id', {
-        reason: 'Rendez-vous médical'
+        reason: 'Rendez-vous médical',
       });
       expect(result.reason).toBe('Rendez-vous médical');
     });
@@ -161,13 +173,13 @@ describe('AbsenceController', () => {
     it('devrait gérer la mise à jour des relations étudiant et cours', async () => {
       const updateAbsenceDto: UpdateAbsenceDto = {
         student_id: 'new-student-id',
-        course_id: 'new-course-id'
+        course_id: 'new-course-id',
       };
 
       const updatedAbsence = {
         ...mockAbsence,
         student_id: 'new-student-id',
-        course_id: 'new-course-id'
+        course_id: 'new-course-id',
       };
 
       absenceServiceMock.update.mockResolvedValue(updatedAbsence);
@@ -176,7 +188,7 @@ describe('AbsenceController', () => {
 
       expect(absenceServiceMock.update).toHaveBeenCalledWith('absence-id', {
         student: { connect: { id: 'new-student-id' } },
-        course: { connect: { course_id: 'new-course-id' } }
+        course: { connect: { course_id: 'new-course-id' } },
       });
     });
   });
@@ -191,13 +203,13 @@ describe('AbsenceController', () => {
       expect(result).toEqual(mockAbsence);
     });
 
-    it('devrait propager l\'erreur si l\'absence n\'existe pas', async () => {
+    it("devrait propager l'erreur si l'absence n'existe pas", async () => {
       absenceServiceMock.remove.mockRejectedValue(
-        new NotFoundException('Absence with ID nonexistent-id not found')
+        new NotFoundException('Absence with ID nonexistent-id not found'),
       );
 
       await expect(controller.remove('nonexistent-id')).rejects.toThrow(
-        new NotFoundException('Absence with ID nonexistent-id not found')
+        new NotFoundException('Absence with ID nonexistent-id not found'),
       );
     });
   });
