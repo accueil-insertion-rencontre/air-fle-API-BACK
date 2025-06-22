@@ -16,7 +16,7 @@ describe('CourseController', () => {
     intitule: 'Français - Niveau A1',
     group_id: 'group-id',
     users: [],
-    absences: []
+    absences: [],
   };
 
   const courseServiceMock = {
@@ -24,11 +24,13 @@ describe('CourseController', () => {
     findAll: vi.fn(),
     findOne: vi.fn(),
     update: vi.fn(),
-    remove: vi.fn()
+    remove: vi.fn(),
   };
 
   beforeEach(async () => {
-    controller = new CourseController(courseServiceMock as unknown as CourseService);
+    controller = new CourseController(
+      courseServiceMock as unknown as CourseService,
+    );
 
     // Reset les mocks après chaque test
     vi.clearAllMocks();
@@ -45,7 +47,7 @@ describe('CourseController', () => {
         start_hour: new Date('2023-09-01T09:00:00.000Z'),
         end_hour: new Date('2023-09-01T11:00:00.000Z'),
         intitule: 'Français - Niveau A1',
-        group: { connect: { id: 'group-id' } }
+        group: { connect: { id: 'group-id' } },
       };
 
       courseServiceMock.create.mockResolvedValue(mockCourse);
@@ -67,7 +69,7 @@ describe('CourseController', () => {
         skip: undefined,
         take: undefined,
         where: {},
-        orderBy: { day: 'desc' }
+        orderBy: { day: 'desc' },
       });
       expect(result).toEqual([mockCourse]);
     });
@@ -81,7 +83,7 @@ describe('CourseController', () => {
         '{"day":"asc"}',
         'Français',
         'group-id',
-        '2023-09-01'
+        '2023-09-01',
       );
 
       const searchDate = new Date('2023-09-01');
@@ -94,9 +96,9 @@ describe('CourseController', () => {
           day: {
             gte: new Date(searchDate.setHours(0, 0, 0, 0)),
             lt: new Date(searchDate.setHours(23, 59, 59, 999)),
-          }
+          },
         },
-        orderBy: { day: 'asc' }
+        orderBy: { day: 'asc' },
       });
       expect(result).toEqual([mockCourse]);
     });
@@ -112,13 +114,13 @@ describe('CourseController', () => {
       expect(result).toEqual(mockCourse);
     });
 
-    it('devrait propager l\'erreur si le cours n\'existe pas', async () => {
+    it("devrait propager l'erreur si le cours n'existe pas", async () => {
       courseServiceMock.findOne.mockRejectedValue(
-        new NotFoundException(`Cours avec l'ID nonexistent-id non trouvé`)
+        new NotFoundException(`Cours avec l'ID nonexistent-id non trouvé`),
       );
 
       await expect(controller.findOne('nonexistent-id')).rejects.toThrow(
-        new NotFoundException(`Cours avec l'ID nonexistent-id non trouvé`)
+        new NotFoundException(`Cours avec l'ID nonexistent-id non trouvé`),
       );
     });
   });
@@ -126,19 +128,22 @@ describe('CourseController', () => {
   describe('update', () => {
     it('devrait mettre à jour un cours', async () => {
       const updateCourseData = {
-        intitule: 'Français - Niveau A2'
+        intitule: 'Français - Niveau A2',
       };
 
       const updatedCourse = {
         ...mockCourse,
-        intitule: 'Français - Niveau A2'
+        intitule: 'Français - Niveau A2',
       };
 
       courseServiceMock.update.mockResolvedValue(updatedCourse);
 
       const result = await controller.update('course-id', updateCourseData);
 
-      expect(courseServiceMock.update).toHaveBeenCalledWith('course-id', updateCourseData);
+      expect(courseServiceMock.update).toHaveBeenCalledWith(
+        'course-id',
+        updateCourseData,
+      );
       expect(result).toEqual(updatedCourse);
     });
   });
@@ -152,13 +157,13 @@ describe('CourseController', () => {
       expect(courseServiceMock.remove).toHaveBeenCalledWith('course-id');
     });
 
-    it('devrait propager l\'erreur si le cours n\'existe pas', async () => {
+    it("devrait propager l'erreur si le cours n'existe pas", async () => {
       courseServiceMock.remove.mockRejectedValue(
-        new NotFoundException(`Cours avec l'ID nonexistent-id non trouvé`)
+        new NotFoundException(`Cours avec l'ID nonexistent-id non trouvé`),
       );
 
       await expect(controller.remove('nonexistent-id')).rejects.toThrow(
-        new NotFoundException(`Cours avec l'ID nonexistent-id non trouvé`)
+        new NotFoundException(`Cours avec l'ID nonexistent-id non trouvé`),
       );
     });
   });
