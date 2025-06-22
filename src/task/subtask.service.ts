@@ -1,99 +1,112 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { Subtask, Prisma } from '@prisma/client';
+import { Prisma } from '@prisma/client';
 import { CreateSubtaskDto } from './dto/create-subtask.dto';
 import { UpdateSubtaskDto } from './dto/update-subtask.dto';
 
-// Type pour une sous-tâche avec ses relations
+// Type pour une subtask avec ses relations - EXPORTÉ !
 export type SubtaskWithRelations = Prisma.SubtaskGetPayload<{
   include: {
-    task: {
-      include: {
-        user: true;
-      };
-    };
+    task: true;
   };
 }>;
 
 @Injectable()
 export class SubtaskService {
-  constructor(
-    private prisma: PrismaService
-  ) {}
+  constructor(private prisma: PrismaService) {}
 
   async findAll(taskId: string): Promise<SubtaskWithRelations[]> {
     return this.prisma.subtask.findMany({
-      where: { task_id: taskId },
+      where: { task_uuid: taskId },
       include: {
         task: {
           include: {
-            user: true
-          }
-        }
+            user: true,
+          },
+        },
       },
-      orderBy: { createdAt: 'asc' }
+      orderBy: { subtask_created_at: 'asc' },
     });
   }
 
   async findOne(id: string): Promise<SubtaskWithRelations | null> {
     return this.prisma.subtask.findUnique({
-      where: { id },
+      where: { subtask_uuid: id },
       include: {
         task: {
           include: {
-            user: true
-          }
-        }
-      }
+            user: true,
+          },
+        },
+      },
     });
   }
 
-  async create(taskId: string, createSubtaskDto: CreateSubtaskDto): Promise<SubtaskWithRelations> {
+  async create(
+    taskId: string,
+    createSubtaskDto: CreateSubtaskDto,
+  ): Promise<SubtaskWithRelations> {
     const subtask = await this.prisma.subtask.create({
       data: {
-        ...createSubtaskDto,
-        status: createSubtaskDto.status || 'pending',
+        subtask_title: createSubtaskDto.title,
+        subtask_description: createSubtaskDto.description || null,
+        subtask_status: createSubtaskDto.status || 'pending',
+        subtask_created_at: new Date(),
+        subtask_updated_at: new Date(),
         task: {
-          connect: { id: taskId }
-        }
+          connect: { task_uuid: taskId },
+        },
       },
       include: {
         task: {
           include: {
-            user: true
-          }
-        }
-      }
+            user: true,
+          },
+        },
+      },
     });
 
-    // Mettre à jour le statut de la tâche parente
+    // Mettre à jour le progrès de la tâche parent
     await this.updateTaskProgress(taskId);
 
     return subtask;
   }
 
-  async update(id: string, updateSubtaskDto: UpdateSubtaskDto): Promise<SubtaskWithRelations> {
-    const subtask = await this.findOne(id);
-    if (!subtask) {
-      throw new NotFoundException('Sous-tâche non trouvée');
+  async update(
+    id: string,
+    updateSubtaskDto: UpdateSubtaskDto,
+  ): Promise<SubtaskWithRelations> {
+    // Conversion du DTO en format Prisma
+    const prismaData: Prisma.SubtaskUpdateInput = {};
+
+    if (updateSubtaskDto.title !== undefined) {
+      prismaData.subtask_title = updateSubtaskDto.title;
     }
 
+    if (updateSubtaskDto.description !== undefined) {
+      prismaData.subtask_description = updateSubtaskDto.description;
+    }
+
+    if (updateSubtaskDto.status !== undefined) {
+      prismaData.subtask_status = updateSubtaskDto.status;
+    }
+
+    prismaData.subtask_updated_at = new Date();
+
     const updatedSubtask = await this.prisma.subtask.update({
-      where: { id },
-      data: updateSubtaskDto,
+      where: { subtask_uuid: id },
+      data: prismaData,
       include: {
         task: {
           include: {
-            user: true
-          }
-        }
-      }
+            user: true,
+          },
+        },
+      },
     });
 
-    // Mettre à jour le statut de la tâche parente si le statut de la sous-tâche a changé
-    if (updateSubtaskDto.status) {
-      await this.updateTaskProgress(subtask.task_id);
-    }
+    // Mettre à jour le progrès de la tâche parent
+    await this.updateTaskProgress(updatedSubtask.task_uuid);
 
     return updatedSubtask;
   }
@@ -104,71 +117,90 @@ export class SubtaskService {
       throw new NotFoundException('Sous-tâche non trouvée');
     }
 
-    const newStatus: 'pending' | 'completed' = subtask.status === 'completed' ? 'pending' : 'completed';
+    const newStatus: 'pending' | 'completed' =
+      subtask.subtask_status === 'completed' ? 'pending' : 'completed';
 
-    return this.update(id, { status: newStatus });
-  }
-
-  async delete(id: string): Promise<SubtaskWithRelations> {
-    const subtask = await this.findOne(id);
-    if (!subtask) {
-      throw new NotFoundException('Sous-tâche non trouvée');
-    }
-
-    const deletedSubtask = await this.prisma.subtask.delete({
-      where: { id },
+    const updatedSubtask = await this.prisma.subtask.update({
+      where: { subtask_uuid: id },
+      data: {
+        subtask_status: newStatus,
+        subtask_updated_at: new Date(),
+      },
       include: {
         task: {
           include: {
-            user: true
-          }
-        }
-      }
+            user: true,
+          },
+        },
+      },
     });
 
-    // Mettre à jour le statut de la tâche parente
-    await this.updateTaskProgress(subtask.task_id);
+    // Mettre à jour le progrès de la tâche parent
+    await this.updateTaskProgress(updatedSubtask.task_uuid);
 
-    return deletedSubtask;
+    return updatedSubtask;
+  }
+
+  async delete(id: string): Promise<SubtaskWithRelations> {
+    const subtask = await this.prisma.subtask.delete({
+      where: { subtask_uuid: id },
+      include: {
+        task: {
+          include: {
+            user: true,
+          },
+        },
+      },
+    });
+
+    // Mettre à jour le progrès de la tâche parent
+    await this.updateTaskProgress(subtask.task_uuid);
+
+    return subtask;
   }
 
   private async updateTaskProgress(taskId: string): Promise<void> {
     const task = await this.prisma.task.findUnique({
-      where: { id: taskId },
+      where: { task_uuid: taskId },
       include: {
-        subtasks: true
-      }
+        subtasks: true,
+      },
     });
 
-    if (!task) return;
+    if (!task) {
+      return;
+    }
 
     const totalSubtasks = task.subtasks.length;
-    
+
     if (totalSubtasks === 0) {
       return;
     }
 
     const completedSubtasks = task.subtasks.filter(
-      subtask => subtask.status === 'completed'
+      (subtask) => subtask.subtask_status === 'completed',
     ).length;
 
-    const completionPercentage = Math.round((completedSubtasks / totalSubtasks) * 100);
-    
-    let status: string;
-    if (completionPercentage === 0) {
-      status = 'pending';
-    } else if (completionPercentage === 100) {
-      status = 'completed';
+    const progressPercentage = Math.round(
+      (completedSubtasks / totalSubtasks) * 100,
+    );
+
+    // Déterminer le statut basé sur le pourcentage
+    let status: number;
+    if (progressPercentage === 0) {
+      status = 0; // pending
+    } else if (progressPercentage === 100) {
+      status = 100; // completed
     } else {
-      status = 'in_progress';
+      status = progressPercentage; // in_progress avec pourcentage
     }
 
     await this.prisma.task.update({
-      where: { id: taskId },
+      where: { task_uuid: taskId },
       data: {
-        status,
-        completionPercentage
-      }
+        task_status: status,
+        task_updated_at: new Date(),
+      },
     });
   }
-} 
+}
