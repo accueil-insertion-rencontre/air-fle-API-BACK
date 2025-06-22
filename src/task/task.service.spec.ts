@@ -67,7 +67,7 @@ describe('TaskService', () => {
         id: taskId,
         title: 'Tâche test',
         user: { id: 'user-1' },
-        subtasks: []
+        subtasks: [],
       };
 
       mockPrismaService.task.findUnique.mockResolvedValue(expectedTask);
@@ -79,9 +79,9 @@ describe('TaskService', () => {
         include: {
           user: true,
           subtasks: {
-            orderBy: { createdAt: 'asc' }
-          }
-        }
+            orderBy: { createdAt: 'asc' },
+          },
+        },
       });
       expect(result).toEqual(expectedTask);
     });
@@ -98,11 +98,11 @@ describe('TaskService', () => {
   });
 
   describe('findAll', () => {
-    it('devrait retourner toutes les tâches d\'un utilisateur', async () => {
+    it("devrait retourner toutes les tâches d'un utilisateur", async () => {
       const userId = 'user-1';
       const expectedTasks = [
         { id: 'task-1', title: 'Tâche 1', user_id: userId, subtasks: [] },
-        { id: 'task-2', title: 'Tâche 2', user_id: userId, subtasks: [] }
+        { id: 'task-2', title: 'Tâche 2', user_id: userId, subtasks: [] },
       ];
 
       mockPrismaService.task.findMany.mockResolvedValue(expectedTasks);
@@ -114,10 +114,10 @@ describe('TaskService', () => {
         include: {
           user: true,
           subtasks: {
-            orderBy: { createdAt: 'asc' }
-          }
+            orderBy: { createdAt: 'asc' },
+          },
         },
-        orderBy: { createdAt: 'desc' }
+        orderBy: { createdAt: 'desc' },
       });
       expect(result).toEqual(expectedTasks);
     });
@@ -129,7 +129,7 @@ describe('TaskService', () => {
       const createTaskDto = {
         title: 'Tâche simple',
         description: 'Description simple',
-        priority: 'HIGH' as any
+        priority: 'HIGH' as any,
       };
 
       const expectedTask = {
@@ -141,15 +141,15 @@ describe('TaskService', () => {
         completionPercentage: 0,
         user_id: userId,
         user: { id: userId },
-        subtasks: []
+        subtasks: [],
       };
 
       mockPrismaService.$transaction.mockImplementation(async (callback) => {
         const mockTx = {
           task: {
             create: vi.fn().mockResolvedValue({ id: 'task-1' }),
-            findUnique: vi.fn().mockResolvedValue(expectedTask)
-          }
+            findUnique: vi.fn().mockResolvedValue(expectedTask),
+          },
         };
         return await callback(mockTx);
       });
@@ -166,24 +166,24 @@ describe('TaskService', () => {
       const taskId = 'task-1';
       const updateDto = {
         title: 'Titre mis à jour',
-        description: 'Description mise à jour'
+        description: 'Description mise à jour',
       };
 
       const existingTask = {
         id: taskId,
         title: 'Ancien titre',
         user: { id: 'user-1' },
-        subtasks: []
+        subtasks: [],
       };
 
       const updatedTask = {
         ...existingTask,
-        ...updateDto
+        ...updateDto,
       };
 
       // Mock pour findOne d'abord
       mockPrismaService.task.findUnique.mockResolvedValue(existingTask);
-      // Mock pour update ensuite  
+      // Mock pour update ensuite
       mockPrismaService.task.update.mockResolvedValue(updatedTask);
 
       const result = await service.update(taskId, updateDto);
@@ -194,9 +194,9 @@ describe('TaskService', () => {
         include: {
           user: true,
           subtasks: {
-            orderBy: { createdAt: 'asc' }
-          }
-        }
+            orderBy: { createdAt: 'asc' },
+          },
+        },
       });
       expect(result).toEqual(updatedTask);
     });
@@ -207,7 +207,9 @@ describe('TaskService', () => {
 
       mockPrismaService.task.findUnique.mockResolvedValue(null);
 
-      await expect(service.update(taskId, updateDto)).rejects.toThrow(NotFoundException);
+      await expect(service.update(taskId, updateDto)).rejects.toThrow(
+        NotFoundException,
+      );
     });
   });
 
@@ -218,7 +220,7 @@ describe('TaskService', () => {
         id: taskId,
         title: 'Tâche à supprimer',
         user: { id: 'user-1' },
-        subtasks: []
+        subtasks: [],
       };
 
       mockPrismaService.task.findUnique.mockResolvedValue(existingTask);
@@ -230,8 +232,8 @@ describe('TaskService', () => {
         where: { id: taskId },
         include: {
           user: true,
-          subtasks: true
-        }
+          subtasks: true,
+        },
       });
       expect(result).toEqual(existingTask);
     });
@@ -246,7 +248,7 @@ describe('TaskService', () => {
   });
 
   describe('getStatistics', () => {
-    it('devrait retourner les statistiques d\'une tâche', async () => {
+    it("devrait retourner les statistiques d'une tâche", async () => {
       const taskId = 'task-1';
       const taskWithSubtasks = {
         id: taskId,
@@ -255,8 +257,8 @@ describe('TaskService', () => {
         subtasks: [
           { id: 'sub-1', status: 'completed' },
           { id: 'sub-2', status: 'pending' },
-          { id: 'sub-3', status: 'completed' }
-        ]
+          { id: 'sub-3', status: 'completed' },
+        ],
       };
 
       mockPrismaService.task.findUnique.mockResolvedValue(taskWithSubtasks);
@@ -267,14 +269,14 @@ describe('TaskService', () => {
         task: {
           id: taskId,
           title: 'Tâche test',
-          status: 'in_progress'
+          status: 'in_progress',
         },
         subtasks: {
           total: 3,
           completed: 2,
           pending: 1,
-          completionPercentage: 66.67
-        }
+          completionPercentage: 66.67,
+        },
       });
     });
 
@@ -283,7 +285,9 @@ describe('TaskService', () => {
 
       mockPrismaService.task.findUnique.mockResolvedValue(null);
 
-      await expect(service.getStatistics(taskId)).rejects.toThrow(NotFoundException);
+      await expect(service.getStatistics(taskId)).rejects.toThrow(
+        NotFoundException,
+      );
     });
   });
-}); 
+});
