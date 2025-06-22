@@ -34,4 +34,4 @@ describe('AddressModule', () => {
     const addressService = module.get<AddressService>(AddressService);
     expect(addressService).toBeDefined();
   });
-}); 
+});
