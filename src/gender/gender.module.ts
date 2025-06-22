@@ -9,4 +9,4 @@ import { PrismaModule } from '../prisma/prisma.module';
   providers: [GenderService],
   exports: [GenderService],
 })
-export class GenderModule {} 
+export class GenderModule {}
