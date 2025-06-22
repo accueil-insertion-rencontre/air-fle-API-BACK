@@ -1,161 +1,112 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { Prisma } from '@prisma/client';
+import { Prisma, Group } from '@prisma/client';
+
+// Type pour un groupe avec ses relations
+type GroupWithRelations = Prisma.GroupGetPayload<{
+  include: {
+    session: true;
+    courses: true;
+    students: {
+      include: {
+        student: true;
+      };
+    };
+    periods: {
+      include: {
+        period: true;
+      };
+    };
+  };
+}>;
 
 @Injectable()
 export class GroupService {
   constructor(private prisma: PrismaService) {}
 
-  async create(data: Prisma.GroupCreateInput) {
-    return this.prisma.group.create({
-      data,
-      include: {
-        students: {
-          include: {
-            student: true,
-          },
-        },
-        session: true,
-      },
-    });
-  }
-
   async findAll(params?: {
     skip?: number;
     take?: number;
     where?: Prisma.GroupWhereInput;
-    orderBy?: Prisma.GroupOrderByWithRelationInput;
-  }) {
-    const { skip, take, where, orderBy } = params || {};
-    const [groups, total] = await Promise.all([
-      this.prisma.group.findMany({
-        skip,
-        take,
-        where,
-        orderBy,
-        include: {
-          students: {
-            include: {
-              student: true,
-            },
-          },
-          session: true,
-        },
-      }),
-      this.prisma.group.count({ where }),
-    ]);
-
-    return {
-      data: groups,
-      meta: {
-        total,
-        skip: skip || 0,
-        take: take || total,
-      },
-    };
-  }
-
-  async findOne(id: string) {
-    const group = await this.prisma.group.findUnique({
-      where: { id },
+  }): Promise<GroupWithRelations[]> {
+    return this.prisma.group.findMany({
+      ...params,
       include: {
+        session: true,
+        courses: true,
         students: {
           include: {
             student: true,
           },
         },
-        session: true,
+        periods: {
+          include: {
+            period: true,
+          },
+        },
       },
     });
-
-    if (!group) {
-      throw new NotFoundException(`Groupe avec l'ID ${id} non trouvé`);
-    }
-
-    return group;
   }
 
-  async update(id: string, data: Prisma.GroupUpdateInput) {
-    try {
-      return await this.prisma.group.update({
-        where: { id },
-        data,
-        include: {
-          students: {
-            include: {
-              student: true,
-            },
+  async findOne(id: string): Promise<GroupWithRelations | null> {
+    return this.prisma.group.findUnique({
+      where: { group_uuid: id },
+      include: {
+        session: true,
+        courses: true,
+        students: {
+          include: {
+            student: true,
           },
-          session: true,
         },
-      });
-    } catch (error) {
-      if (error.code === 'P2025') {
-        throw new NotFoundException(`Groupe avec l'ID ${id} non trouvé`);
-      }
-      throw error;
-    }
-  }
-
-  async remove(id: string) {
-    try {
-      return await this.prisma.group.delete({
-        where: { id },
-      });
-    } catch (error) {
-      if (error.code === 'P2025') {
-        throw new NotFoundException(`Groupe avec l'ID ${id} non trouvé`);
-      }
-      throw error;
-    }
-  }
-
-  async addStudent(groupId: string, studentId: string) {
-    try {
-      return await this.prisma.group.update({
-        where: { id: groupId },
-        data: {
-          students: {
-            create: {
-              student: {
-                connect: { id: studentId }
-              }
-            }
-          }
+        periods: {
+          include: {
+            period: true,
+          },
         },
-        include: {
-          students: {
-            include: {
-              student: true
-            }
-          }
-        }
-      });
-    } catch (error) {
-      if (error.code === 'P2002') {
-        throw new Error(`L'étudiant fait déjà partie de ce groupe`);
-      }
-      throw error;
-    }
+      },
+    });
   }
 
-  async removeStudent(groupId: string, studentId: string) {
-    try {
-      return await this.prisma.group.update({
-        where: { id: groupId },
-        data: {
-          students: {
-            deleteMany: {
-              student_id: studentId
-            }
-          }
-        }
-      });
-    } catch (error) {
-      if (error.code === 'P2025') {
-        throw new NotFoundException(`L'étudiant n'est pas membre de ce groupe`);
-      }
-      throw error;
-    }
+  async create(createGroupData: Prisma.GroupCreateInput): Promise<Group> {
+    return this.prisma.group.create({
+      data: createGroupData,
+    });
+  }
+
+  async update(
+    id: string,
+    updateGroupData: Prisma.GroupUpdateInput,
+  ): Promise<Group> {
+    return this.prisma.group.update({
+      where: { group_uuid: id },
+      data: updateGroupData,
+    });
+  }
+
+  async remove(id: string): Promise<Group> {
+    return this.prisma.group.delete({
+      where: { group_uuid: id },
+    });
+  }
+
+  async addStudent(groupId: string, studentId: string): Promise<any> {
+    return this.prisma.studentGroup.create({
+      data: {
+        group_uuid: groupId,
+        student_uuid: studentId,
+      },
+    });
+  }
+
+  async removeStudent(groupId: string, studentId: string): Promise<any> {
+    return this.prisma.studentGroup.delete({
+      where: {
+        student_uuid_group_uuid: {
+          student_uuid: studentId,
+          group_uuid: groupId,
+        },
+      },
+    });
   }
 }
