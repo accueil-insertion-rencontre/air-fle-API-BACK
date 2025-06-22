@@ -21,7 +21,7 @@ describe('ContinuationController', () => {
     temporality: 'Semestre 1',
     commentary: 'Continuation pour le premier semestre',
     student_id: 'student-id',
-    student: mockStudent
+    student: mockStudent,
   };
 
   beforeEach(() => {
@@ -58,7 +58,7 @@ describe('ContinuationController', () => {
   });
 
   describe('findByStudent', () => {
-    it('doit retourner une continuation par ID d\'étudiant', async () => {
+    it("doit retourner une continuation par ID d'étudiant", async () => {
       const result = await controller.findByStudent('student-id');
       expect(mockService.findByStudent).toHaveBeenCalledWith('student-id');
       expect(result).toEqual(mockContinuation);
@@ -70,15 +70,15 @@ describe('ContinuationController', () => {
       const dto: CreateContinuationDto = {
         temporality: 'Semestre 1',
         commentary: 'Continuation pour le premier semestre',
-        studentId: 'student-id'
+        studentId: 'student-id',
       };
 
       const expectedInput = {
         temporality: 'Semestre 1',
         commentary: 'Continuation pour le premier semestre',
         student: {
-          connect: { id: 'student-id' }
-        }
+          connect: { id: 'student-id' },
+        },
       };
 
       const result = await controller.create(dto);
@@ -93,36 +93,42 @@ describe('ContinuationController', () => {
       const dto: UpdateContinuationDto = {
         temporality: 'Semestre 2',
         commentary: 'Mise à jour commentaire',
-        studentId: 'new-student-id'
+        studentId: 'new-student-id',
       };
 
       const expectedInput = {
         temporality: 'Semestre 2',
         commentary: 'Mise à jour commentaire',
         student: {
-          connect: { id: 'new-student-id' }
-        }
+          connect: { id: 'new-student-id' },
+        },
       };
 
       const result = await controller.update(params, dto);
-      expect(mockService.update).toHaveBeenCalledWith('continuation-id', expectedInput);
+      expect(mockService.update).toHaveBeenCalledWith(
+        'continuation-id',
+        expectedInput,
+      );
       expect(result).toEqual(mockContinuation);
     });
 
-    it('doit mettre à jour une continuation sans changer l\'étudiant', async () => {
+    it("doit mettre à jour une continuation sans changer l'étudiant", async () => {
       const params: IdParamDto = { id: 'continuation-id' };
       const dto: UpdateContinuationDto = {
         temporality: 'Semestre 2',
-        commentary: 'Mise à jour commentaire'
+        commentary: 'Mise à jour commentaire',
       };
 
       const expectedInput = {
         temporality: 'Semestre 2',
-        commentary: 'Mise à jour commentaire'
+        commentary: 'Mise à jour commentaire',
       };
 
       const result = await controller.update(params, dto);
-      expect(mockService.update).toHaveBeenCalledWith('continuation-id', expectedInput);
+      expect(mockService.update).toHaveBeenCalledWith(
+        'continuation-id',
+        expectedInput,
+      );
       expect(result).toEqual(mockContinuation);
     });
   });
@@ -135,4 +141,4 @@ describe('ContinuationController', () => {
       expect(result).toEqual(mockContinuation);
     });
   });
-}); 
+});
