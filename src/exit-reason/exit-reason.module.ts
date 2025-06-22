@@ -9,4 +9,4 @@ import { PrismaModule } from '../prisma/prisma.module';
   providers: [ExitReasonService],
   exports: [ExitReasonService],
 })
-export class ExitReasonModule {} 
+export class ExitReasonModule {}
