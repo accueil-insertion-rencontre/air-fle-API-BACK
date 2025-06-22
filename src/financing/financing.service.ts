@@ -1,6 +1,6 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { Financing, Prisma } from '@prisma/client';
+import { Prisma, Financing } from '@prisma/client';
 
 @Injectable()
 export class FinancingService {
@@ -12,26 +12,31 @@ export class FinancingService {
 
   async findOne(id: string): Promise<Financing | null> {
     return this.prisma.financing.findUnique({
-      where: { id },
+      where: { financing_uuid: id },
     });
   }
 
-  async create(data: Prisma.FinancingCreateInput): Promise<Financing> {
+  async create(
+    createFinancingData: Prisma.FinancingCreateInput,
+  ): Promise<Financing> {
     return this.prisma.financing.create({
-      data,
+      data: createFinancingData,
     });
   }
 
-  async update(id: string, data: Prisma.FinancingUpdateInput): Promise<Financing> {
+  async update(
+    id: string,
+    updateFinancingData: Prisma.FinancingUpdateInput,
+  ): Promise<Financing> {
     return this.prisma.financing.update({
-      where: { id },
-      data,
+      where: { financing_uuid: id },
+      data: updateFinancingData,
     });
   }
 
   async delete(id: string): Promise<Financing> {
     return this.prisma.financing.delete({
-      where: { id },
+      where: { financing_uuid: id },
     });
   }
-} 
+}
