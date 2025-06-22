@@ -6,6 +6,6 @@ import { PrismaModule } from '../prisma/prisma.module';
 @Module({
   imports: [PrismaModule],
   providers: [SessionService],
-  controllers: [SessionController]
+  controllers: [SessionController],
 })
 export class SessionModule {}
