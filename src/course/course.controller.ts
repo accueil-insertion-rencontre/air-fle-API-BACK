@@ -15,36 +15,20 @@ import { CourseService } from './course.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
-import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiProperty, ApiParam, ApiQuery, ApiBody } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiBearerAuth,
+  ApiParam,
+  ApiQuery,
+  ApiBody,
+} from '@nestjs/swagger';
 import { Prisma, Course } from '@prisma/client';
 import { CreateCourseDto } from './dto/create-course.dto';
 import { UpdateCourseDto } from './dto/update-course.dto';
 
-// DTO pour la documentation Swagger uniquement
-class CourseDto {
-  @ApiProperty({ description: 'Identifiant unique du cours', example: 'abc123' })
-  course_id: string;
-
-  @ApiProperty({ description: 'Jour du cours', example: '2025-05-15T09:00:00.000Z', type: Date })
-  day: Date;
-
-  @ApiProperty({ description: 'Heure de début', example: '2025-05-15T09:00:00.000Z', type: Date })
-  start_hour: Date;
-
-  @ApiProperty({ description: 'Heure de fin', example: '2025-05-15T11:00:00.000Z', type: Date })
-  end_hour: Date;
-
-  @ApiProperty({ description: 'Intitulé du cours', example: 'Français - Niveau A1' })
-  intitule: string;
-
-  @ApiProperty({ description: 'Identifiant du groupe auquel appartient ce cours', example: 'def456' })
-  group_id: string;
-
-  @ApiProperty({ description: 'Couleur personnalisée du cours', example: '#007bff', required: false, nullable: true })
-  color?: string | null;
-}
-
-@ApiTags('cours')
+@ApiTags('courses')
 @ApiBearerAuth()
 @Controller('courses')
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -53,147 +37,179 @@ export class CourseController {
 
   @Post()
   @HttpCode(HttpStatus.CREATED)
-  @Roles('admin')
+  @Roles('admin', 'teacher')
   @ApiOperation({ summary: 'Créer un nouveau cours' })
-  @ApiResponse({ status: 201, description: 'Cours créé avec succès', type: CourseDto })
+  @ApiResponse({
+    status: 201,
+    description: 'Cours créé avec succès',
+  })
+  @ApiResponse({ status: 400, description: 'Données invalides' })
   @ApiBody({ type: CreateCourseDto })
   async create(@Body() createCourseDto: CreateCourseDto) {
-    console.log('=== CREATION DE COURS API ===');
-    console.log('Données reçues:', createCourseDto);
-    console.log('Couleur dans DTO:', createCourseDto.color);
-    
-    // Extraire user_id pour l'assignation
-    const { user_id, ...courseData } = createCourseDto;
-    
-    // Convertir le DTO en format Prisma
-    const prismaData: Prisma.CourseCreateInput = {
-      day: courseData.day,
-      start_hour: courseData.start_hour,
-      end_hour: courseData.end_hour,
-      intitule: courseData.intitule,
-      color: courseData.color,
+    const courseData: Prisma.CourseCreateInput = {
+      course_name: createCourseDto.course_name,
+      course_start_hour: createCourseDto.course_start_hour,
+      course_end_hour: createCourseDto.course_end_hour,
+      course_day: createCourseDto.course_day,
       group: {
         connect: {
-          id: courseData.group_id
-        }
-      }
+          group_uuid: createCourseDto.group_uuid,
+        },
+      },
     };
-    
-    console.log('Données Prisma:', prismaData);
-    console.log('Couleur dans Prisma:', prismaData.color);
-    console.log('Professeur à assigner:', user_id);
-    
-    return this.courseService.create(prismaData, user_id);
+
+    return this.courseService.create(courseData);
   }
 
   @Get()
   @HttpCode(HttpStatus.OK)
-  @Roles('admin')
+  @Roles('admin', 'teacher')
   @ApiOperation({ summary: 'Récupérer tous les cours avec filtrage optionnel' })
-  @ApiResponse({ status: 200, description: 'Retourne tous les cours', type: [CourseDto] })
-  @ApiQuery({ name: 'skip', required: false, description: 'Nombre d\'éléments à sauter' })
-  @ApiQuery({ name: 'take', required: false, description: 'Nombre d\'éléments à récupérer' })
-  @ApiQuery({ name: 'orderBy', required: false, description: 'Critères de tri (ex: {"day":"desc"})' })
-  @ApiQuery({ name: 'intitule', required: false, description: 'Filtrer par intitulé (recherche insensible à la casse)' })
-  @ApiQuery({ name: 'groupId', required: false, description: 'Filtrer par identifiant de groupe' })
-  @ApiQuery({ name: 'day', required: false, description: 'Filtrer par jour (format ISO)' })
+  @ApiResponse({
+    status: 200,
+    description: 'Retourne tous les cours',
+  })
+  @ApiQuery({
+    name: 'skip',
+    required: false,
+    description: "Nombre d'éléments à sauter",
+  })
+  @ApiQuery({
+    name: 'take',
+    required: false,
+    description: "Nombre d'éléments à récupérer",
+  })
+  @ApiQuery({
+    name: 'orderBy',
+    required: false,
+    description: 'Critères de tri (ex: {"course_day":"desc"})',
+  })
+  @ApiQuery({
+    name: 'course_name',
+    required: false,
+    description: 'Filtrer par nom (recherche insensible à la casse)',
+  })
+  @ApiQuery({
+    name: 'group_uuid',
+    required: false,
+    description: 'Filtrer par UUID de groupe',
+  })
+  @ApiQuery({ name: 'course_day', required: false, description: 'Filtrer par date' })
+  @ApiQuery({ 
+    name: 'expand', 
+    required: false, 
+    description: 'Champs à étendre (ex: "group.session", "teachers", "group.session,teachers")',
+    example: 'group.session'
+  })
   async findAll(
     @Query('skip') skip?: string,
     @Query('take') take?: string,
     @Query('orderBy') orderBy?: string,
-    @Query('intitule') intitule?: string,
-    @Query('groupId') groupId?: string,
-    @Query('day') day?: string,
+    @Query('course_name') course_name?: string,
+    @Query('group_uuid') group_uuid?: string,
+    @Query('course_day') course_day?: string,
+    @Query('expand') expand?: string,
   ) {
     const where: Prisma.CourseWhereInput = {};
 
-    if (intitule) {
-      where.intitule = { contains: intitule, mode: 'insensitive' };
+    if (course_name) {
+      where.course_name = { contains: course_name, mode: 'insensitive' };
     }
 
-    if (groupId) {
-      where.group_id = groupId;
+    if (group_uuid) {
+      where.group_uuid = group_uuid;
     }
 
-    if (day) {
-      const searchDate = new Date(day);
-      where.day = {
-        gte: new Date(searchDate.setHours(0, 0, 0, 0)),
-        lt: new Date(searchDate.setHours(23, 59, 59, 999)),
+    if (course_day) {
+      where.course_day = {
+        equals: new Date(course_day),
       };
     }
 
-    return this.courseService.findAll({
+    const params = {
       skip: skip ? parseInt(skip) : undefined,
       take: take ? parseInt(take) : undefined,
       where,
-      orderBy: orderBy
-        ? JSON.parse(orderBy)
-        : { day: 'desc' as const },
-    });
-  }
+      orderBy: orderBy ? JSON.parse(orderBy) : { course_day: 'desc' as const },
+    };
 
-  @Get(':courseId')
-  @HttpCode(HttpStatus.OK)
-  @Roles('admin')
-  @ApiOperation({ summary: 'Récupérer un cours par son ID' })
-  @ApiResponse({ status: 200, description: 'Retourne le cours', type: CourseDto })
-  @ApiResponse({ status: 404, description: 'Cours introuvable' })
-  @ApiParam({ name: 'courseId', description: 'Identifiant du cours', example: 'abc123' })
-  async findOne(@Param('courseId') courseId: string) {
-    return this.courseService.findOne(courseId);
-  }
-
-  @Patch(':courseId')
-  @HttpCode(HttpStatus.OK)
-  @Roles('admin')
-  @ApiOperation({ summary: 'Mettre à jour un cours' })
-  @ApiResponse({ status: 200, description: 'Cours mis à jour avec succès', type: CourseDto })
-  @ApiResponse({ status: 404, description: 'Cours introuvable' })
-  @ApiParam({ name: 'courseId', description: 'Identifiant du cours', example: 'abc123' })
-  @ApiBody({ type: CreateCourseDto })
-  async update(@Param('courseId') courseId: string, @Body() updateCourseDto: CreateCourseDto) {
-    console.log('=== MISE A JOUR DE COURS API ===');
-    console.log('Données reçues:', updateCourseDto);
-    console.log('Couleur dans DTO:', updateCourseDto.color);
-    
-    // Extraire user_id pour l'assignation
-    const { user_id, ...courseData } = updateCourseDto;
-    
-    // Convertir le DTO en format Prisma
-    const prismaData: Prisma.CourseUpdateInput = {};
-    
-    // Copier les propriétés valides
-    if (courseData.day !== undefined) prismaData.day = courseData.day;
-    if (courseData.start_hour !== undefined) prismaData.start_hour = courseData.start_hour;
-    if (courseData.end_hour !== undefined) prismaData.end_hour = courseData.end_hour;
-    if (courseData.intitule !== undefined) prismaData.intitule = courseData.intitule;
-    if (courseData.color !== undefined) prismaData.color = courseData.color;
-    
-    // Gérer la relation avec le groupe si présente
-    if (courseData.group_id) {
-      prismaData.group = {
-        connect: {
-          id: courseData.group_id
-        }
-      };
+    // ✅ Gestion intelligente de l'expansion
+    if (expand?.includes('group.session')) {
+      return this.courseService.findAllWithSession(params);
     }
-    
-    console.log('Données Prisma pour mise à jour:', prismaData);
-    console.log('Couleur dans Prisma:', prismaData.color);
-    console.log('Professeur à assigner/modifier:', user_id);
-    
-    return this.courseService.update(courseId, prismaData, user_id);
+
+    return this.courseService.findAll(params);
   }
 
-  @Delete(':courseId')
+  @Get(':id')
+  @HttpCode(HttpStatus.OK)
+  @Roles('admin', 'teacher')
+  @ApiOperation({ summary: 'Récupérer un cours par ID' })
+  @ApiResponse({
+    status: 200,
+    description: 'Retourne le cours',
+  })
+  @ApiResponse({ status: 404, description: 'Cours introuvable' })
+  @ApiParam({ name: 'id', description: 'UUID du cours', example: 'abc123' })
+  async findOne(@Param('id') id: string) {
+    return this.courseService.findOne(id);
+  }
+
+  @Patch(':id')
+  @HttpCode(HttpStatus.OK)
+  @Roles('admin', 'teacher')
+  @ApiOperation({ summary: 'Mettre à jour un cours' })
+  @ApiResponse({
+    status: 200,
+    description: 'Cours mis à jour avec succès',
+  })
+  @ApiResponse({ status: 404, description: 'Cours introuvable' })
+  @ApiParam({ name: 'id', description: 'UUID du cours', example: 'abc123' })
+  @ApiBody({ type: UpdateCourseDto })
+  async update(
+    @Param('id') id: string,
+    @Body() updateCourseDto: UpdateCourseDto,
+  ) {
+    return this.courseService.update(id, updateCourseDto);
+  }
+
+  @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
   @Roles('admin')
   @ApiOperation({ summary: 'Supprimer un cours' })
   @ApiResponse({ status: 204, description: 'Cours supprimé avec succès' })
   @ApiResponse({ status: 404, description: 'Cours introuvable' })
-  @ApiParam({ name: 'courseId', description: 'Identifiant du cours', example: 'abc123' })
-  async remove(@Param('courseId') courseId: string) {
-    await this.courseService.remove(courseId);
+  @ApiParam({ name: 'id', description: 'UUID du cours', example: 'abc123' })
+  async remove(@Param('id') id: string) {
+    return this.courseService.delete(id);
+  }
+
+  @Post(':id/teachers/:teacher_uuid')
+  @Roles('admin', 'teacher')
+  @ApiOperation({ summary: 'Assigner un enseignant au cours' })
+  @ApiResponse({ status: 200, description: 'Enseignant assigné avec succès' })
+  @ApiParam({ name: 'id', description: 'UUID du cours', example: 'abc123' })
+  @ApiParam({
+    name: 'teacher_uuid',
+    description: "UUID de l'enseignant",
+    example: 'def456',
+  })
+  async addTeacher(
+    @Param('id') courseId: string,
+    @Param('teacher_uuid') teacher_uuid: string,
+  ) {
+    return this.courseService.addTeacher(courseId, teacher_uuid);
+  }
+
+  @Delete(':id/teachers')
+  @Roles('admin')
+  @ApiOperation({ summary: 'Désassigner tous les enseignants du cours' })
+  @ApiResponse({
+    status: 200,
+    description: 'Enseignants désassignés avec succès',
+  })
+  @ApiParam({ name: 'id', description: 'UUID du cours', example: 'abc123' })
+  async removeAllTeachers(@Param('id') courseId: string) {
+    return this.courseService.removeAllTeachers(courseId);
   }
 }
