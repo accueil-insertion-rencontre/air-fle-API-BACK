@@ -34,4 +34,4 @@ describe('CourseModule', () => {
     const courseService = module.get<CourseService>(CourseService);
     expect(courseService).toBeDefined();
   });
-}); 
+});
