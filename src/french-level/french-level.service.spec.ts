@@ -22,10 +22,10 @@ describe('FrenchLevelService', () => {
         create: vi.fn(),
         update: vi.fn(),
         delete: vi.fn(),
-      }
+      },
     };
 
-    service = new FrenchLevelService(prismaService as any);
+    service = new FrenchLevelService(prismaService);
   });
 
   it('should be defined', () => {
@@ -38,7 +38,7 @@ describe('FrenchLevelService', () => {
       prismaService.frenchLevel.findMany.mockResolvedValue(mockFrenchLevels);
 
       const result = await service.findAll();
-      
+
       expect(result).toEqual(mockFrenchLevels);
       expect(prismaService.frenchLevel.findMany).toHaveBeenCalled();
     });
@@ -49,7 +49,7 @@ describe('FrenchLevelService', () => {
       prismaService.frenchLevel.findUnique.mockResolvedValue(mockFrenchLevel);
 
       const result = await service.findOne('1');
-      
+
       expect(result).toEqual(mockFrenchLevel);
       expect(prismaService.frenchLevel.findUnique).toHaveBeenCalledWith({
         where: { id: '1' },
@@ -60,7 +60,7 @@ describe('FrenchLevelService', () => {
       prismaService.frenchLevel.findUnique.mockResolvedValue(null);
 
       const result = await service.findOne('999');
-      
+
       expect(result).toBeNull();
       expect(prismaService.frenchLevel.findUnique).toHaveBeenCalledWith({
         where: { id: '999' },
@@ -78,7 +78,7 @@ describe('FrenchLevelService', () => {
       prismaService.frenchLevel.create.mockResolvedValue(mockFrenchLevel);
 
       const result = await service.create(createDto);
-      
+
       expect(result).toEqual(mockFrenchLevel);
       expect(prismaService.frenchLevel.create).toHaveBeenCalledWith({
         data: createDto,
@@ -100,7 +100,7 @@ describe('FrenchLevelService', () => {
       prismaService.frenchLevel.update.mockResolvedValue(updatedFrenchLevel);
 
       const result = await service.update('1', updateDto);
-      
+
       expect(result).toEqual(updatedFrenchLevel);
       expect(prismaService.frenchLevel.update).toHaveBeenCalledWith({
         where: { id: '1' },
@@ -114,11 +114,11 @@ describe('FrenchLevelService', () => {
       prismaService.frenchLevel.delete.mockResolvedValue(mockFrenchLevel);
 
       const result = await service.delete('1');
-      
+
       expect(result).toEqual(mockFrenchLevel);
       expect(prismaService.frenchLevel.delete).toHaveBeenCalledWith({
         where: { id: '1' },
       });
     });
   });
-}); 
+});
