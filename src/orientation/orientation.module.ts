@@ -9,4 +9,4 @@ import { PrismaModule } from '../prisma/prisma.module';
   providers: [OrientationService],
   exports: [OrientationService],
 })
-export class OrientationModule {} 
+export class OrientationModule {}
