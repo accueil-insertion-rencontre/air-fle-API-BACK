@@ -9,7 +9,7 @@ describe('ExitReasonService', () => {
 
   const mockExitReason = {
     id: 'exit-reason-id',
-    reason: 'Fin de formation'
+    reason: 'Fin de formation',
   };
 
   const prismaMock = {
@@ -18,13 +18,13 @@ describe('ExitReasonService', () => {
       findUnique: vi.fn(),
       create: vi.fn(),
       update: vi.fn(),
-      delete: vi.fn()
-    }
+      delete: vi.fn(),
+    },
   };
 
   beforeEach(async () => {
     service = new ExitReasonService(prismaMock as unknown as PrismaService);
-    
+
     // Réinitialisation des mocks à chaque test
     vi.clearAllMocks();
   });
@@ -38,7 +38,7 @@ describe('ExitReasonService', () => {
       prismaMock.exitReason.findMany.mockResolvedValue([mockExitReason]);
 
       const result = await service.findAll();
-      
+
       expect(prismaMock.exitReason.findMany).toHaveBeenCalled();
       expect(result).toEqual([mockExitReason]);
     });
@@ -49,20 +49,20 @@ describe('ExitReasonService', () => {
       prismaMock.exitReason.findUnique.mockResolvedValue(mockExitReason);
 
       const result = await service.findOne('exit-reason-id');
-      
+
       expect(prismaMock.exitReason.findUnique).toHaveBeenCalledWith({
-        where: { id: 'exit-reason-id' }
+        where: { id: 'exit-reason-id' },
       });
       expect(result).toEqual(mockExitReason);
     });
 
-    it('devrait retourner null si la raison de sortie n\'existe pas', async () => {
+    it("devrait retourner null si la raison de sortie n'existe pas", async () => {
       prismaMock.exitReason.findUnique.mockResolvedValue(null);
 
       const result = await service.findOne('nonexistent-id');
-      
+
       expect(prismaMock.exitReason.findUnique).toHaveBeenCalledWith({
-        where: { id: 'nonexistent-id' }
+        where: { id: 'nonexistent-id' },
       });
       expect(result).toBeNull();
     });
@@ -71,15 +71,15 @@ describe('ExitReasonService', () => {
   describe('create', () => {
     it('devrait créer une nouvelle raison de sortie', async () => {
       const createData: Prisma.ExitReasonCreateInput = {
-        reason: 'Fin de formation'
+        reason: 'Fin de formation',
       };
 
       prismaMock.exitReason.create.mockResolvedValue(mockExitReason);
 
       const result = await service.create(createData);
-      
+
       expect(prismaMock.exitReason.create).toHaveBeenCalledWith({
-        data: createData
+        data: createData,
       });
       expect(result).toEqual(mockExitReason);
     });
@@ -88,21 +88,21 @@ describe('ExitReasonService', () => {
   describe('update', () => {
     it('devrait mettre à jour une raison de sortie', async () => {
       const updateData: Prisma.ExitReasonUpdateInput = {
-        reason: 'Obtention du diplôme'
+        reason: 'Obtention du diplôme',
       };
 
       const updatedExitReason = {
         ...mockExitReason,
-        reason: 'Obtention du diplôme'
+        reason: 'Obtention du diplôme',
       };
 
       prismaMock.exitReason.update.mockResolvedValue(updatedExitReason);
 
       const result = await service.update('exit-reason-id', updateData);
-      
+
       expect(prismaMock.exitReason.update).toHaveBeenCalledWith({
         where: { id: 'exit-reason-id' },
-        data: updateData
+        data: updateData,
       });
       expect(result.reason).toBe('Obtention du diplôme');
     });
@@ -113,11 +113,11 @@ describe('ExitReasonService', () => {
       prismaMock.exitReason.delete.mockResolvedValue(mockExitReason);
 
       const result = await service.delete('exit-reason-id');
-      
+
       expect(prismaMock.exitReason.delete).toHaveBeenCalledWith({
-        where: { id: 'exit-reason-id' }
+        where: { id: 'exit-reason-id' },
       });
       expect(result).toEqual(mockExitReason);
     });
   });
-}); 
+});
