@@ -4,7 +4,7 @@ import { describe, it, expect, beforeEach } from 'vitest';
 
 describe('AppController', () => {
   let appController: AppController;
-  
+
   beforeEach(() => {
     const appService = { getHello: () => 'Hello World!' };
     appController = new AppController(appService as AppService);
