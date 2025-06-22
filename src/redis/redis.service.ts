@@ -9,8 +9,11 @@ export class RedisService implements OnModuleInit, OnModuleDestroy {
   constructor(private readonly configService: ConfigService) {}
 
   async onModuleInit() {
-    const redisUrl = this.configService.get<string>('REDIS_URL', 'redis://localhost:6379');
-    
+    const redisUrl = this.configService.get<string>(
+      'REDIS_URL',
+      'redis://localhost:6379',
+    );
+
     this.client = Redis.createClient({
       url: redisUrl,
     });
@@ -26,7 +29,11 @@ export class RedisService implements OnModuleInit, OnModuleDestroy {
     return this.client;
   }
 
-  async set(key: string, value: string, expireInSeconds?: number): Promise<void> {
+  async set(
+    key: string,
+    value: string,
+    expireInSeconds?: number,
+  ): Promise<void> {
     if (expireInSeconds) {
       await this.client.set(key, value, { EX: expireInSeconds });
     } else {
@@ -41,4 +48,4 @@ export class RedisService implements OnModuleInit, OnModuleDestroy {
   async del(key: string): Promise<void> {
     await this.client.del(key);
   }
-} 
+}
