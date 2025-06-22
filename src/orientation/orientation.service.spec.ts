@@ -69,7 +69,7 @@ describe('OrientationService', () => {
     it('should create a new orientation', async () => {
       const createDto = {
         type: 'Académique',
-        description: 'Orientation vers une formation académique'
+        description: 'Orientation vers une formation académique',
       };
       const result = {
         id: '2',
@@ -90,7 +90,7 @@ describe('OrientationService', () => {
   describe('update', () => {
     it('should update an orientation', async () => {
       const updateDto = {
-        description: 'Orientation mise à jour'
+        description: 'Orientation mise à jour',
       };
       const result = {
         id: '3',
@@ -126,4 +126,4 @@ describe('OrientationService', () => {
       });
     });
   });
-}); 
+});
