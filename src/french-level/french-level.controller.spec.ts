@@ -81,7 +81,7 @@ describe('FrenchLevelController', () => {
       const updateDto: UpdateFrenchLevelDto = {
         description: 'Niveau débutant mis à jour',
       };
-      const result = { 
+      const result = {
         id: '1',
         code: 'A1',
         description: 'Niveau débutant mis à jour',
@@ -106,4 +106,4 @@ describe('FrenchLevelController', () => {
       expect(service.delete).toHaveBeenCalledWith('1');
     });
   });
-}); 
+});
