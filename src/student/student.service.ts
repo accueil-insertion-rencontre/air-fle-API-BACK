@@ -60,8 +60,8 @@ export class StudentService {
 
   async update(
     params: {
-      where: any;
-      data: any;
+    where: any;
+    data: any;
     },
     updatedByUserId?: string,
   ): Promise<Student> {
