@@ -8,6 +8,6 @@ import { LearnerHistoryModule } from '../learner-history/learner-history.module'
   imports: [PrismaModule, LearnerHistoryModule],
   controllers: [AbsenceController],
   providers: [AbsenceService],
-  exports: [AbsenceService]
+  exports: [AbsenceService],
 })
 export class AbsenceModule {}
