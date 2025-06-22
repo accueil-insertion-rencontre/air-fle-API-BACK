@@ -1,10 +1,31 @@
-import { Controller, Get, Post, Put, Delete, Body, Param, UseGuards } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Put,
+  Delete,
+  Body,
+  Param,
+  UseGuards,
+  Patch,
+  HttpCode,
+  HttpStatus,
+} from '@nestjs/common';
 import { StatusService } from './status.service';
 import { Status } from '@prisma/client';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiBearerAuth,
+  ApiOperation,
+  ApiResponse,
+  ApiParam,
+  ApiBody,
+} from '@nestjs/swagger';
 import { CreateStatusDto } from './dto/create-status.dto';
 import { UpdateStatusDto } from './dto/update-status.dto';
+import { Prisma } from '@prisma/client';
+import { Roles } from '../auth/decorators/roles.decorator';
 
 @ApiTags('statuses')
 @ApiBearerAuth()
@@ -15,7 +36,10 @@ export class StatusController {
 
   @Get()
   @ApiOperation({ summary: 'Récupérer tous les statuts' })
-  @ApiResponse({ status: 200, description: 'Liste des statuts récupérée avec succès' })
+  @ApiResponse({
+    status: 200,
+    description: 'Liste des statuts récupérée avec succès',
+  })
   async findAll(): Promise<Status[]> {
     return this.statusService.findAll();
   }
@@ -31,18 +55,27 @@ export class StatusController {
   @Post()
   @ApiOperation({ summary: 'Créer un statut' })
   @ApiResponse({ status: 201, description: 'Statut créé avec succès' })
-  async create(@Body() data: CreateStatusDto): Promise<Status> {
+  create(@Body() createStatusDto: CreateStatusDto) {
+    const data: Prisma.StatusCreateInput = {
+      status_label: createStatusDto.status_label,
+    };
+
     return this.statusService.create(data);
   }
 
-  @Put(':id')
+  @Patch(':id')
+  @HttpCode(HttpStatus.OK)
+  @Roles('admin')
   @ApiOperation({ summary: 'Mettre à jour un statut' })
   @ApiResponse({ status: 200, description: 'Statut mis à jour avec succès' })
   @ApiResponse({ status: 404, description: 'Statut non trouvé' })
-  async update(
-    @Param('id') id: string,
-    @Body() data: UpdateStatusDto,
-  ): Promise<Status> {
+  @ApiParam({ name: 'id', description: 'UUID du statut' })
+  @ApiBody({ type: UpdateStatusDto })
+  update(@Param('id') id: string, @Body() updateStatusDto: UpdateStatusDto) {
+    const data: Prisma.StatusUpdateInput = {
+      status_label: updateStatusDto.status_label,
+    };
+
     return this.statusService.update(id, data);
   }
 
@@ -53,4 +86,4 @@ export class StatusController {
   async delete(@Param('id') id: string): Promise<Status> {
     return this.statusService.delete(id);
   }
-} 
+}
