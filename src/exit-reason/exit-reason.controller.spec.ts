@@ -9,7 +9,7 @@ describe('ExitReasonController', () => {
 
   const mockExitReason = {
     id: 'exit-reason-id',
-    reason: 'Fin de formation'
+    reason: 'Fin de formation',
   };
 
   const exitReasonServiceMock = {
@@ -17,13 +17,15 @@ describe('ExitReasonController', () => {
     findOne: vi.fn(),
     create: vi.fn(),
     update: vi.fn(),
-    delete: vi.fn()
+    delete: vi.fn(),
   };
 
   beforeEach(async () => {
-    controller = new ExitReasonController(exitReasonServiceMock as unknown as ExitReasonService);
+    controller = new ExitReasonController(
+      exitReasonServiceMock as unknown as ExitReasonService,
+    );
     exitReasonService = exitReasonServiceMock as unknown as ExitReasonService;
-    
+
     // Reset les mocks après chaque test
     vi.clearAllMocks();
   });
@@ -49,16 +51,20 @@ describe('ExitReasonController', () => {
 
       const result = await controller.findOne('exit-reason-id');
 
-      expect(exitReasonServiceMock.findOne).toHaveBeenCalledWith('exit-reason-id');
+      expect(exitReasonServiceMock.findOne).toHaveBeenCalledWith(
+        'exit-reason-id',
+      );
       expect(result).toEqual(mockExitReason);
     });
 
-    it('devrait retourner null si la raison de sortie n\'existe pas', async () => {
+    it("devrait retourner null si la raison de sortie n'existe pas", async () => {
       exitReasonServiceMock.findOne.mockResolvedValue(null);
 
       const result = await controller.findOne('nonexistent-id');
 
-      expect(exitReasonServiceMock.findOne).toHaveBeenCalledWith('nonexistent-id');
+      expect(exitReasonServiceMock.findOne).toHaveBeenCalledWith(
+        'nonexistent-id',
+      );
       expect(result).toBeNull();
     });
   });
@@ -66,14 +72,16 @@ describe('ExitReasonController', () => {
   describe('create', () => {
     it('devrait créer une nouvelle raison de sortie', async () => {
       const createExitReasonDto = {
-        reason: 'Fin de formation'
+        reason: 'Fin de formation',
       };
 
       exitReasonServiceMock.create.mockResolvedValue(mockExitReason);
 
       const result = await controller.create(createExitReasonDto);
 
-      expect(exitReasonServiceMock.create).toHaveBeenCalledWith(createExitReasonDto);
+      expect(exitReasonServiceMock.create).toHaveBeenCalledWith(
+        createExitReasonDto,
+      );
       expect(result).toEqual(mockExitReason);
     });
   });
@@ -81,19 +89,25 @@ describe('ExitReasonController', () => {
   describe('update', () => {
     it('devrait mettre à jour une raison de sortie', async () => {
       const updateExitReasonDto = {
-        reason: 'Obtention du diplôme'
+        reason: 'Obtention du diplôme',
       };
 
       const updatedExitReason = {
         ...mockExitReason,
-        reason: 'Obtention du diplôme'
+        reason: 'Obtention du diplôme',
       };
 
       exitReasonServiceMock.update.mockResolvedValue(updatedExitReason);
 
-      const result = await controller.update('exit-reason-id', updateExitReasonDto);
+      const result = await controller.update(
+        'exit-reason-id',
+        updateExitReasonDto,
+      );
 
-      expect(exitReasonServiceMock.update).toHaveBeenCalledWith('exit-reason-id', updateExitReasonDto);
+      expect(exitReasonServiceMock.update).toHaveBeenCalledWith(
+        'exit-reason-id',
+        updateExitReasonDto,
+      );
       expect(result.reason).toBe('Obtention du diplôme');
     });
   });
@@ -104,8 +118,10 @@ describe('ExitReasonController', () => {
 
       const result = await controller.delete('exit-reason-id');
 
-      expect(exitReasonServiceMock.delete).toHaveBeenCalledWith('exit-reason-id');
+      expect(exitReasonServiceMock.delete).toHaveBeenCalledWith(
+        'exit-reason-id',
+      );
       expect(result).toEqual(mockExitReason);
     });
   });
-}); 
+});
