@@ -1,64 +1,117 @@
-import { Controller, Get, Post, Put, Delete, Body, Param, UseGuards } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  UseGuards,
+} from '@nestjs/common';
 import { ContinuationService } from './continuation.service';
-import { Continuation } from '@prisma/client';
-import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { CreateContinuationDto } from './dto/create-continuation.dto';
 import { UpdateContinuationDto } from './dto/update-continuation.dto';
-import { IdParamDto } from './dto/id-param.dto';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../auth/guards/roles.guard';
+import { Roles } from '../auth/decorators/roles.decorator';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiBearerAuth,
+  ApiParam,
+  ApiBody,
+} from '@nestjs/swagger';
+import { Prisma } from '@prisma/client';
 
-@ApiTags('continuations')
+@Controller('continuation')
+@UseGuards(JwtAuthGuard, RolesGuard)
+@ApiTags('continuation')
 @ApiBearerAuth()
-@Controller('continuations')
-@UseGuards(JwtAuthGuard)
 export class ContinuationController {
   constructor(private readonly continuationService: ContinuationService) {}
 
-  @Get()
-  async findAll(): Promise<Continuation[]> {
-    return this.continuationService.findAll();
+  @Get('student/:studentId')
+  @Roles('admin', 'teacher')
+  @ApiOperation({ summary: "Récupérer toutes les continuations d'un étudiant" })
+  @ApiResponse({
+    status: 200,
+    description: 'Liste des continuations récupérée avec succès',
+  })
+  @ApiParam({ name: 'studentId', description: "ID de l'étudiant" })
+  findAllByStudent(@Param('studentId') studentId: string) {
+    return this.continuationService.findAll(studentId);
   }
 
   @Get(':id')
-  async findOne(@Param() params: IdParamDto): Promise<Continuation | null> {
-    return this.continuationService.findOne(params.id);
-  }
-
-  @Get('student/:studentId')
-  async findByStudent(@Param('studentId') studentId: string): Promise<Continuation | null> {
-    return this.continuationService.findByStudent(studentId);
+  @Roles('admin', 'teacher')
+  @ApiOperation({ summary: 'Récupérer une continuation par ID' })
+  @ApiResponse({
+    status: 200,
+    description: 'Continuation récupérée avec succès',
+  })
+  @ApiResponse({ status: 404, description: 'Continuation non trouvée' })
+  @ApiParam({ name: 'id', description: 'ID de la continuation' })
+  findOne(@Param('id') id: string) {
+    return this.continuationService.findOne(id);
   }
 
   @Post()
-  async create(@Body() createContinuationDto: CreateContinuationDto): Promise<Continuation> {
-    const { studentId, ...rest } = createContinuationDto;
-    return this.continuationService.create({
-      ...rest,
+  @Roles('admin', 'teacher')
+  @ApiOperation({ summary: 'Créer une nouvelle continuation' })
+  @ApiResponse({ status: 201, description: 'Continuation créée avec succès' })
+  @ApiResponse({ status: 400, description: 'Données invalides' })
+  @ApiBody({ type: CreateContinuationDto })
+  create(@Body() createContinuationDto: CreateContinuationDto) {
+    const continuationData: Prisma.ContinuationCreateInput = {
+      continuation_temporality: createContinuationDto.temporality,
+      continuation_commentary: createContinuationDto.commentary,
       student: {
-        connect: { id: studentId }
-      }
-    });
+        connect: {
+          student_uuid: createContinuationDto.studentId,
+        },
+      },
+    };
+
+    return this.continuationService.create(continuationData);
   }
 
-  @Put(':id')
-  async update(
-    @Param() params: IdParamDto,
+  @Patch(':id')
+  @Roles('admin', 'teacher')
+  @ApiOperation({ summary: 'Mettre à jour une continuation' })
+  @ApiResponse({
+    status: 200,
+    description: 'Continuation mise à jour avec succès',
+  })
+  @ApiResponse({ status: 404, description: 'Continuation non trouvée' })
+  @ApiParam({ name: 'id', description: 'ID de la continuation' })
+  @ApiBody({ type: UpdateContinuationDto })
+  update(
+    @Param('id') id: string,
     @Body() updateContinuationDto: UpdateContinuationDto,
-  ): Promise<Continuation> {
-    const { studentId, ...rest } = updateContinuationDto;
-    const data: any = { ...rest };
-    
-    if (studentId) {
-      data.student = {
-        connect: { id: studentId }
-      };
+  ) {
+    const updateData: Prisma.ContinuationUpdateInput = {};
+
+    if (updateContinuationDto.temporality !== undefined) {
+      updateData.continuation_temporality = updateContinuationDto.temporality;
     }
-    
-    return this.continuationService.update(params.id, data);
+    if (updateContinuationDto.commentary !== undefined) {
+      updateData.continuation_commentary = updateContinuationDto.commentary;
+    }
+
+    return this.continuationService.update(id, updateData);
   }
 
   @Delete(':id')
-  async delete(@Param() params: IdParamDto): Promise<Continuation> {
-    return this.continuationService.delete(params.id);
+  @Roles('admin')
+  @ApiOperation({ summary: 'Supprimer une continuation' })
+  @ApiResponse({
+    status: 200,
+    description: 'Continuation supprimée avec succès',
+  })
+  @ApiResponse({ status: 404, description: 'Continuation non trouvée' })
+  @ApiParam({ name: 'id', description: 'ID de la continuation' })
+  remove(@Param('id') id: string) {
+    return this.continuationService.delete(id);
   }
-} 
+}
