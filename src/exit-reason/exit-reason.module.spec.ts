@@ -34,4 +34,4 @@ describe('ExitReasonModule', () => {
     const service = module.get<ExitReasonService>(ExitReasonService);
     expect(service).toBeDefined();
   });
-}); 
+});
