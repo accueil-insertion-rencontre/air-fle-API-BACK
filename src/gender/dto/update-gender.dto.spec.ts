@@ -72,4 +72,4 @@ describe('UpdateGenderDto', () => {
       expect(errors.length).toBe(0);
     });
   });
-}); 
+});

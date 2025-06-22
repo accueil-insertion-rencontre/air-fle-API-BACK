@@ -5,11 +5,11 @@ import { Escape } from 'class-sanitizer';
 export class CreateNationalityDto {
   @ApiProperty({
     description: 'Libellé de la nationalité',
-    example: 'Française'
+    example: 'Française',
   })
   @IsString()
   @IsNotEmpty()
   @MaxLength(100)
   @Escape()
-  label: string;
-} 
+  nationality_label: string;
+}

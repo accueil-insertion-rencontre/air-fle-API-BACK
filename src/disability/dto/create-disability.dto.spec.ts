@@ -9,7 +9,7 @@ describe('CreateDisabilityDto', () => {
   beforeEach(() => {
     dto = {
       label: 'Moteur',
-      description: 'Handicap affectant la mobilité'
+      description: 'Handicap affectant la mobilité',
     };
   });
 
@@ -35,7 +35,7 @@ describe('CreateDisabilityDto', () => {
     expect(errors[0].constraints).toHaveProperty('isString');
   });
 
-  it('devrait échouer si label n\'est pas une chaîne', async () => {
+  it("devrait échouer si label n'est pas une chaîne", async () => {
     dto.label = 123 as any;
     const dtoObj = plainToInstance(CreateDisabilityDto, dto);
     const errors = await validate(dtoObj);
@@ -44,11 +44,11 @@ describe('CreateDisabilityDto', () => {
   });
 
   // Tests pour description (optionnelle)
-  it('devrait échouer si description n\'est pas une chaîne', async () => {
+  it("devrait échouer si description n'est pas une chaîne", async () => {
     dto.description = 123 as any;
     const dtoObj = plainToInstance(CreateDisabilityDto, dto);
     const errors = await validate(dtoObj);
     expect(errors.length).toBeGreaterThan(0);
     expect(errors[0].constraints).toHaveProperty('isString');
   });
-}); 
+});

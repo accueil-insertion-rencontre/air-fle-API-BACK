@@ -11,7 +11,7 @@ describe('UpdateUserDto', () => {
       firstname: 'Jean',
       lastname: 'Dupont',
       email: 'jean.dupont@example.com',
-      role_id: '550e8400-e29b-41d4-a716-446655440000'
+      role_id: '550e8400-e29b-41d4-a716-446655440000',
     };
   });
 
@@ -55,7 +55,7 @@ describe('UpdateUserDto', () => {
   });
 
   // Tests pour l'email optionnel
-  it('devrait échouer si l\'email est invalide', async () => {
+  it("devrait échouer si l'email est invalide", async () => {
     dto.email = 'not-an-email';
     const dtoObj = plainToInstance(UpdateUserDto, dto);
     const errors = await validate(dtoObj);
@@ -89,7 +89,7 @@ describe('UpdateUserDto', () => {
   });
 
   // Tests pour le role_id optionnel
-  it('devrait échouer si le role_id n\'est pas un UUID valide', async () => {
+  it("devrait échouer si le role_id n'est pas un UUID valide", async () => {
     dto.role_id = 'not-a-uuid';
     const dtoObj = plainToInstance(UpdateUserDto, dto);
     const errors = await validate(dtoObj);
@@ -101,11 +101,11 @@ describe('UpdateUserDto', () => {
   it('devrait ignorer les champs non définis dans le DTO', async () => {
     const extendedDto = {
       ...dto,
-      unknownField: 'this should be ignored'
+      unknownField: 'this should be ignored',
     };
-    const dtoObj = plainToInstance(UpdateUserDto, extendedDto, { 
-      excludeExtraneousValues: true 
+    const dtoObj = plainToInstance(UpdateUserDto, extendedDto, {
+      excludeExtraneousValues: true,
     });
     expect((dtoObj as any).unknownField).toBeUndefined();
   });
-}); 
+});

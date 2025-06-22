@@ -12,7 +12,7 @@ describe('CreateExamDto', () => {
       label: 'Examen final A1',
       taked_at: new Date('2023-09-15T10:00:00Z'),
       note: 'B1 - 14/20',
-      student_id: validUUID
+      student_id: validUUID,
     };
   });
 
@@ -38,7 +38,7 @@ describe('CreateExamDto', () => {
     expect(errors[0].constraints).toHaveProperty('isString');
   });
 
-  it('devrait échouer si label n\'est pas une chaîne', async () => {
+  it("devrait échouer si label n'est pas une chaîne", async () => {
     dto.label = 123 as any;
     const dtoObj = plainToInstance(CreateExamDto, dto);
     const errors = await validate(dtoObj);
@@ -62,7 +62,7 @@ describe('CreateExamDto', () => {
     expect(errors.length).toBe(0);
   });
 
-  it('devrait échouer si taked_at n\'est pas un format de date valide', async () => {
+  it("devrait échouer si taked_at n'est pas un format de date valide", async () => {
     const testDto = { ...dto, taked_at: 'not-a-date' };
     const dtoObj = plainToInstance(CreateExamDto, testDto);
     const errors = await validate(dtoObj);
@@ -78,7 +78,7 @@ describe('CreateExamDto', () => {
     expect(errors.length).toBe(0);
   });
 
-  it('devrait échouer si note n\'est pas une chaîne', async () => {
+  it("devrait échouer si note n'est pas une chaîne", async () => {
     dto.note = 123 as any;
     const dtoObj = plainToInstance(CreateExamDto, dto);
     const errors = await validate(dtoObj);
@@ -102,11 +102,11 @@ describe('CreateExamDto', () => {
     expect(errors[0].constraints).toHaveProperty('isUuid');
   });
 
-  it('devrait échouer si student_id n\'est pas un UUID valide', async () => {
+  it("devrait échouer si student_id n'est pas un UUID valide", async () => {
     dto.student_id = 'not-a-uuid';
     const dtoObj = plainToInstance(CreateExamDto, dto);
     const errors = await validate(dtoObj);
     expect(errors.length).toBeGreaterThan(0);
     expect(errors[0].constraints).toHaveProperty('isUuid');
   });
-}); 
+});

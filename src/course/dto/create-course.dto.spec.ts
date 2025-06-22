@@ -13,7 +13,7 @@ describe('CreateCourseDto', () => {
       start_hour: new Date('2023-09-01T09:00:00Z'),
       end_hour: new Date('2023-09-01T11:00:00Z'),
       intitule: 'Français débutant - Module A1',
-      group_id: validUUID
+      group_id: validUUID,
     };
   });
 
@@ -38,7 +38,7 @@ describe('CreateCourseDto', () => {
     expect(errors.length).toBe(0);
   });
 
-  it('devrait échouer si day n\'est pas un format de date valide', async () => {
+  it("devrait échouer si day n'est pas un format de date valide", async () => {
     const testDto = { ...dto, day: 'not-a-date' };
     const dtoObj = plainToInstance(CreateCourseDto, testDto);
     const errors = await validate(dtoObj);
@@ -61,7 +61,7 @@ describe('CreateCourseDto', () => {
     expect(errors.length).toBe(0);
   });
 
-  it('devrait échouer si start_hour n\'est pas un format de date valide', async () => {
+  it("devrait échouer si start_hour n'est pas un format de date valide", async () => {
     const testDto = { ...dto, start_hour: 'not-a-date' };
     const dtoObj = plainToInstance(CreateCourseDto, testDto);
     const errors = await validate(dtoObj);
@@ -84,7 +84,7 @@ describe('CreateCourseDto', () => {
     expect(errors.length).toBe(0);
   });
 
-  it('devrait échouer si end_hour n\'est pas un format de date valide', async () => {
+  it("devrait échouer si end_hour n'est pas un format de date valide", async () => {
     const testDto = { ...dto, end_hour: 'not-a-date' };
     const dtoObj = plainToInstance(CreateCourseDto, testDto);
     const errors = await validate(dtoObj);
@@ -107,7 +107,7 @@ describe('CreateCourseDto', () => {
     expect(errors.length).toBe(0);
   });
 
-  it('devrait échouer si intitule n\'est pas une chaîne', async () => {
+  it("devrait échouer si intitule n'est pas une chaîne", async () => {
     dto.intitule = 123 as any;
     const dtoObj = plainToInstance(CreateCourseDto, dto);
     const errors = await validate(dtoObj);
@@ -131,11 +131,11 @@ describe('CreateCourseDto', () => {
     expect(errors[0].constraints).toHaveProperty('isUuid');
   });
 
-  it('devrait échouer si group_id n\'est pas un UUID valide', async () => {
+  it("devrait échouer si group_id n'est pas un UUID valide", async () => {
     dto.group_id = 'not-a-uuid';
     const dtoObj = plainToInstance(CreateCourseDto, dto);
     const errors = await validate(dtoObj);
     expect(errors.length).toBeGreaterThan(0);
     expect(errors[0].constraints).toHaveProperty('isUuid');
   });
-}); 
+});

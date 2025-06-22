@@ -74,7 +74,7 @@ describe('UpdateSessionDto', () => {
   it('should be invalid if label exceeds maximum length', async () => {
     // Créer une chaîne de 101 caractères (au-delà de la limite de 100)
     const longLabel = 'a'.repeat(101);
-    
+
     const dto = plainToInstance(UpdateSessionDto, {
       label: longLabel,
     });
@@ -95,4 +95,4 @@ describe('UpdateSessionDto', () => {
     expect(errors[0].property).toBe('label');
     expect(errors[0].constraints).toHaveProperty('isString');
   });
-}); 
+});

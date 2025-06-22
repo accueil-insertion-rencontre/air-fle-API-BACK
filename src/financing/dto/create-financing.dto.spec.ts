@@ -8,7 +8,7 @@ describe('CreateFinancingDto', () => {
 
   beforeEach(() => {
     dto = {
-      type: 'Pôle Emploi'
+      type: 'Pôle Emploi',
     };
   });
 
@@ -34,11 +34,11 @@ describe('CreateFinancingDto', () => {
     expect(errors.length).toBe(0); // IsString ne vérifie pas si la chaîne est vide
   });
 
-  it('devrait échouer si type n\'est pas une chaîne', async () => {
+  it("devrait échouer si type n'est pas une chaîne", async () => {
     dto.type = 123 as any;
     const dtoObj = plainToInstance(CreateFinancingDto, dto);
     const errors = await validate(dtoObj);
     expect(errors.length).toBeGreaterThan(0);
     expect(errors[0].constraints).toHaveProperty('isString');
   });
-}); 
+});

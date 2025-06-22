@@ -5,9 +5,9 @@ import { Escape } from 'class-sanitizer';
 export class CreateExitReasonDto {
   @ApiProperty({
     description: 'Raison de sortie',
-    example: 'Fin de formation'
+    example: 'Fin de formation',
   })
   @IsString()
   @Escape()
   reason: string;
-} 
+}

@@ -13,7 +13,7 @@ describe('CreateAddressDto', () => {
       city: 'Paris',
       complement: 'Appartement 4B',
       qpv: 'Centre',
-      country: 'France'
+      country: 'France',
     };
   });
 
@@ -39,7 +39,7 @@ describe('CreateAddressDto', () => {
     expect(errors[0].constraints).toHaveProperty('isString');
   });
 
-  it('devrait échouer si street n\'est pas une chaîne', async () => {
+  it("devrait échouer si street n'est pas une chaîne", async () => {
     dto.street = 123 as any;
     const dtoObj = plainToInstance(CreateAddressDto, dto);
     const errors = await validate(dtoObj);
@@ -62,7 +62,7 @@ describe('CreateAddressDto', () => {
     const testDto = { ...dto, zipcode: '75001' };
     const dtoObj = plainToInstance(CreateAddressDto, testDto);
     const errors = await validate(dtoObj);
-    
+
     // Aucune erreur car '75001' est converti en nombre 75001
     expect(errors.length).toBe(0);
     expect(typeof dtoObj.zipcode).toBe('number');
@@ -72,7 +72,7 @@ describe('CreateAddressDto', () => {
     const testDto = { ...dto, zipcode: 'abc' };
     const dtoObj = plainToInstance(CreateAddressDto, testDto);
     const errors = await validate(dtoObj);
-    
+
     // Doit échouer car 'abc' ne peut pas être converti en nombre valide
     expect(errors.length).toBeGreaterThan(0);
     expect(errors[0].constraints).toHaveProperty('isInt');
@@ -87,7 +87,7 @@ describe('CreateAddressDto', () => {
     expect(errors[0].constraints).toHaveProperty('isString');
   });
 
-  it('devrait échouer si city n\'est pas une chaîne', async () => {
+  it("devrait échouer si city n'est pas une chaîne", async () => {
     dto.city = 123 as any;
     const dtoObj = plainToInstance(CreateAddressDto, dto);
     const errors = await validate(dtoObj);
@@ -110,7 +110,7 @@ describe('CreateAddressDto', () => {
     expect(errors.length).toBe(0);
   });
 
-  it('devrait échouer si complement n\'est pas une chaîne ou null', async () => {
+  it("devrait échouer si complement n'est pas une chaîne ou null", async () => {
     dto.complement = 123 as any;
     const dtoObj = plainToInstance(CreateAddressDto, dto);
     const errors = await validate(dtoObj);
@@ -140,4 +140,4 @@ describe('CreateAddressDto', () => {
     const errors = await validate(dtoObj);
     expect(errors.length).toBe(0);
   });
-}); 
+});

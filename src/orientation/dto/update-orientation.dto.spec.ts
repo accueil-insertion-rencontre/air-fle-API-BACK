@@ -7,7 +7,7 @@ describe('UpdateOrientationDto', () => {
   it('should validate with correct data', async () => {
     const dto = plainToInstance(UpdateOrientationDto, {
       type: 'Académique',
-      description: 'Orientation vers une formation académique'
+      description: 'Orientation vers une formation académique',
     });
 
     const errors = await validate(dto);
@@ -23,7 +23,7 @@ describe('UpdateOrientationDto', () => {
 
   it('should validate with partial data (only type)', async () => {
     const dto = plainToInstance(UpdateOrientationDto, {
-      type: 'Académique'
+      type: 'Académique',
     });
 
     const errors = await validate(dto);
@@ -32,7 +32,7 @@ describe('UpdateOrientationDto', () => {
 
   it('should validate with partial data (only description)', async () => {
     const dto = plainToInstance(UpdateOrientationDto, {
-      description: 'Orientation vers une formation académique'
+      description: 'Orientation vers une formation académique',
     });
 
     const errors = await validate(dto);
@@ -42,7 +42,7 @@ describe('UpdateOrientationDto', () => {
   describe('type validation', () => {
     it('should validate with correct type', async () => {
       const dto = plainToInstance(UpdateOrientationDto, {
-        type: 'Professionnelle'
+        type: 'Professionnelle',
       });
 
       const errors = await validate(dto);
@@ -51,7 +51,7 @@ describe('UpdateOrientationDto', () => {
 
     it('should fail when type is empty string', async () => {
       const dto = plainToInstance(UpdateOrientationDto, {
-        type: ''
+        type: '',
       });
 
       const errors = await validate(dto);
@@ -62,7 +62,7 @@ describe('UpdateOrientationDto', () => {
 
     it('should fail when type is not a string', async () => {
       const dto = plainToInstance(UpdateOrientationDto, {
-        type: 123
+        type: 123,
       });
 
       const errors = await validate(dto);
@@ -73,7 +73,7 @@ describe('UpdateOrientationDto', () => {
 
     it('should fail when type exceeds max length', async () => {
       const dto = plainToInstance(UpdateOrientationDto, {
-        type: 'a'.repeat(101)
+        type: 'a'.repeat(101),
       });
 
       const errors = await validate(dto);
@@ -86,7 +86,7 @@ describe('UpdateOrientationDto', () => {
   describe('description validation', () => {
     it('should validate with correct description', async () => {
       const dto = plainToInstance(UpdateOrientationDto, {
-        description: 'Orientation vers une formation professionnelle'
+        description: 'Orientation vers une formation professionnelle',
       });
 
       const errors = await validate(dto);
@@ -95,7 +95,7 @@ describe('UpdateOrientationDto', () => {
 
     it('should validate with empty description', async () => {
       const dto = plainToInstance(UpdateOrientationDto, {
-        description: ''
+        description: '',
       });
 
       const errors = await validate(dto);
@@ -104,7 +104,7 @@ describe('UpdateOrientationDto', () => {
 
     it('should fail when description is not a string', async () => {
       const dto = plainToInstance(UpdateOrientationDto, {
-        description: 123
+        description: 123,
       });
 
       const errors = await validate(dto);
@@ -115,7 +115,7 @@ describe('UpdateOrientationDto', () => {
 
     it('should fail when description exceeds max length', async () => {
       const dto = plainToInstance(UpdateOrientationDto, {
-        description: 'a'.repeat(256)
+        description: 'a'.repeat(256),
       });
 
       const errors = await validate(dto);
@@ -124,4 +124,4 @@ describe('UpdateOrientationDto', () => {
       expect(errors[0].constraints).toHaveProperty('maxLength');
     });
   });
-}); 
+});

@@ -8,7 +8,7 @@ describe('CreateExitReasonDto', () => {
 
   beforeEach(() => {
     dto = {
-      reason: 'Fin de formation'
+      reason: 'Fin de formation',
     };
   });
 
@@ -34,11 +34,11 @@ describe('CreateExitReasonDto', () => {
     expect(errors.length).toBe(0); // IsString ne vérifie pas si la chaîne est vide
   });
 
-  it('devrait échouer si reason n\'est pas une chaîne', async () => {
+  it("devrait échouer si reason n'est pas une chaîne", async () => {
     dto.reason = 123 as any;
     const dtoObj = plainToInstance(CreateExitReasonDto, dto);
     const errors = await validate(dtoObj);
     expect(errors.length).toBeGreaterThan(0);
     expect(errors[0].constraints).toHaveProperty('isString');
   });
-}); 
+});

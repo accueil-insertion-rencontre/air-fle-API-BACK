@@ -13,20 +13,20 @@ describe('UpdateFinancingDto', () => {
 
   it('devrait valider un DTO avec type correctement renseigné', async () => {
     const dto = {
-      type: 'Financement personnel'
+      type: 'Financement personnel',
     };
     const dtoObj = plainToInstance(UpdateFinancingDto, dto);
     const errors = await validate(dtoObj);
     expect(errors.length).toBe(0);
   });
 
-  it('devrait échouer si type n\'est pas une chaîne', async () => {
+  it("devrait échouer si type n'est pas une chaîne", async () => {
     const dto = {
-      type: 123
+      type: 123,
     };
     const dtoObj = plainToInstance(UpdateFinancingDto, dto);
     const errors = await validate(dtoObj);
     expect(errors.length).toBeGreaterThan(0);
     expect(errors[0].constraints).toHaveProperty('isString');
   });
-}); 
+});

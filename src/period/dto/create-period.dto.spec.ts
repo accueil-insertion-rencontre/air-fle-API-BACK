@@ -9,7 +9,7 @@ describe('CreatePeriodDto', () => {
       label: 'Semestre 1',
       startedAt: '2023-09-01T00:00:00.000Z',
       endedAt: '2023-12-31T00:00:00.000Z',
-      actual_period: true
+      actual_period: true,
     });
 
     const errors = await validate(dto);
@@ -22,7 +22,7 @@ describe('CreatePeriodDto', () => {
         label: 'Semestre 1',
         startedAt: '2023-09-01T00:00:00.000Z',
         endedAt: '2023-12-31T00:00:00.000Z',
-        actual_period: false
+        actual_period: false,
       });
 
       const errors = await validate(dto);
@@ -33,7 +33,7 @@ describe('CreatePeriodDto', () => {
       const dto = plainToInstance(CreatePeriodDto, {
         startedAt: '2023-09-01T00:00:00.000Z',
         endedAt: '2023-12-31T00:00:00.000Z',
-        actual_period: false
+        actual_period: false,
       });
 
       const errors = await validate(dto);
@@ -47,7 +47,7 @@ describe('CreatePeriodDto', () => {
         label: '',
         startedAt: '2023-09-01T00:00:00.000Z',
         endedAt: '2023-12-31T00:00:00.000Z',
-        actual_period: false
+        actual_period: false,
       });
 
       const errors = await validate(dto);
@@ -61,7 +61,7 @@ describe('CreatePeriodDto', () => {
         label: 123,
         startedAt: '2023-09-01T00:00:00.000Z',
         endedAt: '2023-12-31T00:00:00.000Z',
-        actual_period: false
+        actual_period: false,
       });
 
       const errors = await validate(dto);
@@ -75,7 +75,7 @@ describe('CreatePeriodDto', () => {
         label: 'a'.repeat(101),
         startedAt: '2023-09-01T00:00:00.000Z',
         endedAt: '2023-12-31T00:00:00.000Z',
-        actual_period: false
+        actual_period: false,
       });
 
       const errors = await validate(dto);
@@ -91,7 +91,7 @@ describe('CreatePeriodDto', () => {
         label: 'Semestre 1',
         startedAt: '2023-09-01T00:00:00.000Z',
         endedAt: '2023-12-31T00:00:00.000Z',
-        actual_period: false
+        actual_period: false,
       });
 
       const errors = await validate(dto);
@@ -102,7 +102,7 @@ describe('CreatePeriodDto', () => {
       const dto = plainToInstance(CreatePeriodDto, {
         label: 'Semestre 1',
         endedAt: '2023-12-31T00:00:00.000Z',
-        actual_period: false
+        actual_period: false,
       });
 
       const errors = await validate(dto);
@@ -116,7 +116,7 @@ describe('CreatePeriodDto', () => {
         label: 'Semestre 1',
         startedAt: 'not-a-date',
         endedAt: '2023-12-31T00:00:00.000Z',
-        actual_period: false
+        actual_period: false,
       });
 
       const errors = await validate(dto);
@@ -132,7 +132,7 @@ describe('CreatePeriodDto', () => {
         label: 'Semestre 1',
         startedAt: '2023-09-01T00:00:00.000Z',
         endedAt: '2023-12-31T00:00:00.000Z',
-        actual_period: false
+        actual_period: false,
       });
 
       const errors = await validate(dto);
@@ -143,7 +143,7 @@ describe('CreatePeriodDto', () => {
       const dto = plainToInstance(CreatePeriodDto, {
         label: 'Semestre 1',
         startedAt: '2023-09-01T00:00:00.000Z',
-        actual_period: false
+        actual_period: false,
       });
 
       const errors = await validate(dto);
@@ -157,7 +157,7 @@ describe('CreatePeriodDto', () => {
         label: 'Semestre 1',
         startedAt: '2023-09-01T00:00:00.000Z',
         endedAt: 'not-a-date',
-        actual_period: false
+        actual_period: false,
       });
 
       const errors = await validate(dto);
@@ -173,7 +173,7 @@ describe('CreatePeriodDto', () => {
         label: 'Semestre 1',
         startedAt: '2023-09-01T00:00:00.000Z',
         endedAt: '2023-12-31T00:00:00.000Z',
-        actual_period: true
+        actual_period: true,
       });
 
       const errors = await validate(dto);
@@ -185,7 +185,7 @@ describe('CreatePeriodDto', () => {
         label: 'Semestre 1',
         startedAt: '2023-09-01T00:00:00.000Z',
         endedAt: '2023-12-31T00:00:00.000Z',
-        actual_period: false
+        actual_period: false,
       });
 
       const errors = await validate(dto);
@@ -196,7 +196,7 @@ describe('CreatePeriodDto', () => {
       const dto = plainToInstance(CreatePeriodDto, {
         label: 'Semestre 1',
         startedAt: '2023-09-01T00:00:00.000Z',
-        endedAt: '2023-12-31T00:00:00.000Z'
+        endedAt: '2023-12-31T00:00:00.000Z',
       });
 
       const errors = await validate(dto);
@@ -209,7 +209,7 @@ describe('CreatePeriodDto', () => {
         label: 'Semestre 1',
         startedAt: '2023-09-01T00:00:00.000Z',
         endedAt: '2023-12-31T00:00:00.000Z',
-        actual_period: 'yes' as any
+        actual_period: 'yes' as any,
       });
 
       const errors = await validate(dto);
@@ -218,4 +218,4 @@ describe('CreatePeriodDto', () => {
       expect(errors[0].constraints).toHaveProperty('isBoolean');
     });
   });
-}); 
+});

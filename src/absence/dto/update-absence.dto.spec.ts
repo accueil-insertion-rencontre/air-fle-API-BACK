@@ -8,7 +8,7 @@ describe('UpdateAbsenceDto', () => {
 
   beforeEach(() => {
     dto = {
-      reason: 'Rendez-vous médical'
+      reason: 'Rendez-vous médical',
     };
   });
 
@@ -34,7 +34,7 @@ describe('UpdateAbsenceDto', () => {
   });
 
   // Tests pour student_id optionnel
-  it('devrait échouer si student_id n\'est pas un UUID valide', async () => {
+  it("devrait échouer si student_id n'est pas un UUID valide", async () => {
     dto.student_id = 'not-a-uuid';
     const dtoObj = plainToInstance(UpdateAbsenceDto, dto);
     const errors = await validate(dtoObj);
@@ -43,7 +43,7 @@ describe('UpdateAbsenceDto', () => {
   });
 
   // Tests pour course_id optionnel
-  it('devrait échouer si course_id n\'est pas un UUID valide', async () => {
+  it("devrait échouer si course_id n'est pas un UUID valide", async () => {
     dto.course_id = 'not-a-uuid';
     const dtoObj = plainToInstance(UpdateAbsenceDto, dto);
     const errors = await validate(dtoObj);
@@ -52,11 +52,11 @@ describe('UpdateAbsenceDto', () => {
   });
 
   // Tests pour reason optionnel
-  it('devrait échouer si reason n\'est pas une chaîne de caractères', async () => {
+  it("devrait échouer si reason n'est pas une chaîne de caractères", async () => {
     dto.reason = 123 as any;
     const dtoObj = plainToInstance(UpdateAbsenceDto, dto);
     const errors = await validate(dtoObj);
     expect(errors.length).toBeGreaterThan(0);
     expect(errors[0].constraints).toHaveProperty('isString');
   });
-}); 
+});

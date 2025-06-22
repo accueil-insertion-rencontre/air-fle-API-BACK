@@ -5,11 +5,11 @@ import { Escape } from 'class-sanitizer';
 export class CreateStatusDto {
   @ApiProperty({
     description: 'Libellé du statut',
-    example: 'Actif'
+    example: 'Actif',
   })
   @IsString()
   @IsNotEmpty()
   @MaxLength(100)
   @Escape()
-  label: string;
-} 
+  status_label: string;
+}

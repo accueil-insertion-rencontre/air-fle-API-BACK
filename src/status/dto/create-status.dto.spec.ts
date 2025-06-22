@@ -74,4 +74,4 @@ describe('CreateStatusDto', () => {
       expect(errors.length).toBe(0);
     });
   });
-}); 
+});

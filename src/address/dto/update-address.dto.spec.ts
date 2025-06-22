@@ -13,7 +13,7 @@ describe('UpdateAddressDto', () => {
       city: 'Paris',
       complement: 'Appartement 4B',
       qpv: 'Centre',
-      country: 'France'
+      country: 'France',
     };
   });
 
@@ -52,7 +52,7 @@ describe('UpdateAddressDto', () => {
   });
 
   // Tests de validation des types
-  it('devrait échouer si street n\'est pas une chaîne', async () => {
+  it("devrait échouer si street n'est pas une chaîne", async () => {
     dto.street = 123 as any;
     const dtoObj = plainToInstance(UpdateAddressDto, dto);
     const errors = await validate(dtoObj);
@@ -66,7 +66,7 @@ describe('UpdateAddressDto', () => {
     const testDto = { ...dto, zipcode: '75001' };
     const dtoObj = plainToInstance(UpdateAddressDto, testDto);
     const errors = await validate(dtoObj);
-    
+
     // Aucune erreur car '75001' est converti en nombre 75001
     expect(errors.length).toBe(0);
     expect(typeof dtoObj.zipcode).toBe('number');
@@ -76,13 +76,13 @@ describe('UpdateAddressDto', () => {
     const testDto = { ...dto, zipcode: 'abc' };
     const dtoObj = plainToInstance(UpdateAddressDto, testDto);
     const errors = await validate(dtoObj);
-    
+
     // Doit échouer car 'abc' ne peut pas être converti en nombre valide
     expect(errors.length).toBeGreaterThan(0);
     expect(errors[0].constraints).toHaveProperty('isInt');
   });
 
-  it('devrait échouer si city n\'est pas une chaîne', async () => {
+  it("devrait échouer si city n'est pas une chaîne", async () => {
     dto.city = 123 as any;
     const dtoObj = plainToInstance(UpdateAddressDto, dto);
     const errors = await validate(dtoObj);
@@ -92,13 +92,13 @@ describe('UpdateAddressDto', () => {
 
   // Test de combinaison de champs
   it('devrait valider un DTO avec plusieurs champs', async () => {
-    const partialDto = { 
+    const partialDto = {
       street: '15 avenue des Champs-Élysées',
       city: 'Paris',
-      country: 'France'
+      country: 'France',
     };
     const dtoObj = plainToInstance(UpdateAddressDto, partialDto);
     const errors = await validate(dtoObj);
     expect(errors.length).toBe(0);
   });
-}); 
+});

@@ -9,7 +9,7 @@ describe('UpdatePeriodDto', () => {
       label: 'Semestre 2',
       startedAt: '2024-01-01T00:00:00.000Z',
       endedAt: '2024-06-30T00:00:00.000Z',
-      actual_period: true
+      actual_period: true,
     });
 
     const errors = await validate(dto);
@@ -25,7 +25,7 @@ describe('UpdatePeriodDto', () => {
 
   it('should validate with partial data', async () => {
     const dto = plainToInstance(UpdatePeriodDto, {
-      label: 'Semestre 2'
+      label: 'Semestre 2',
     });
 
     const errors = await validate(dto);
@@ -35,7 +35,7 @@ describe('UpdatePeriodDto', () => {
   describe('label validation', () => {
     it('should validate with correct label', async () => {
       const dto = plainToInstance(UpdatePeriodDto, {
-        label: 'Trimestre 1'
+        label: 'Trimestre 1',
       });
 
       const errors = await validate(dto);
@@ -44,7 +44,7 @@ describe('UpdatePeriodDto', () => {
 
     it('should fail when label is empty string', async () => {
       const dto = plainToInstance(UpdatePeriodDto, {
-        label: ''
+        label: '',
       });
 
       const errors = await validate(dto);
@@ -55,7 +55,7 @@ describe('UpdatePeriodDto', () => {
 
     it('should fail when label is not a string', async () => {
       const dto = plainToInstance(UpdatePeriodDto, {
-        label: 123
+        label: 123,
       });
 
       const errors = await validate(dto);
@@ -66,7 +66,7 @@ describe('UpdatePeriodDto', () => {
 
     it('should fail when label exceeds max length', async () => {
       const dto = plainToInstance(UpdatePeriodDto, {
-        label: 'a'.repeat(101)
+        label: 'a'.repeat(101),
       });
 
       const errors = await validate(dto);
@@ -79,7 +79,7 @@ describe('UpdatePeriodDto', () => {
   describe('startedAt validation', () => {
     it('should validate with correct startedAt', async () => {
       const dto = plainToInstance(UpdatePeriodDto, {
-        startedAt: '2024-01-01T00:00:00.000Z'
+        startedAt: '2024-01-01T00:00:00.000Z',
       });
 
       const errors = await validate(dto);
@@ -88,7 +88,7 @@ describe('UpdatePeriodDto', () => {
 
     it('should fail when startedAt is not a valid date string', async () => {
       const dto = plainToInstance(UpdatePeriodDto, {
-        startedAt: 'not-a-date'
+        startedAt: 'not-a-date',
       });
 
       const errors = await validate(dto);
@@ -101,7 +101,7 @@ describe('UpdatePeriodDto', () => {
   describe('endedAt validation', () => {
     it('should validate with correct endedAt', async () => {
       const dto = plainToInstance(UpdatePeriodDto, {
-        endedAt: '2024-06-30T00:00:00.000Z'
+        endedAt: '2024-06-30T00:00:00.000Z',
       });
 
       const errors = await validate(dto);
@@ -110,7 +110,7 @@ describe('UpdatePeriodDto', () => {
 
     it('should fail when endedAt is not a valid date string', async () => {
       const dto = plainToInstance(UpdatePeriodDto, {
-        endedAt: 'not-a-date'
+        endedAt: 'not-a-date',
       });
 
       const errors = await validate(dto);
@@ -123,7 +123,7 @@ describe('UpdatePeriodDto', () => {
   describe('actual_period validation', () => {
     it('should validate with actual_period set to true', async () => {
       const dto = plainToInstance(UpdatePeriodDto, {
-        actual_period: true
+        actual_period: true,
       });
 
       const errors = await validate(dto);
@@ -132,7 +132,7 @@ describe('UpdatePeriodDto', () => {
 
     it('should validate with actual_period set to false', async () => {
       const dto = plainToInstance(UpdatePeriodDto, {
-        actual_period: false
+        actual_period: false,
       });
 
       const errors = await validate(dto);
@@ -141,7 +141,7 @@ describe('UpdatePeriodDto', () => {
 
     it('should fail when actual_period is not a boolean', async () => {
       const dto = plainToInstance(UpdatePeriodDto, {
-        actual_period: 'yes' as any
+        actual_period: 'yes' as any,
       });
 
       const errors = await validate(dto);
@@ -150,4 +150,4 @@ describe('UpdatePeriodDto', () => {
       expect(errors[0].constraints).toHaveProperty('isBoolean');
     });
   });
-}); 
+});

@@ -25,7 +25,7 @@ describe('CreateFrenchLevelDto', () => {
   it('should validate when all fields are provided', async () => {
     dto.code = 'A1';
     dto.description = 'Niveau débutant';
-    
+
     const errors = await validate(dto);
     expect(errors.length).toBe(0);
   });
@@ -38,12 +38,12 @@ describe('CreateFrenchLevelDto', () => {
   it('should reject if code is not a string', async () => {
     const plain = {
       code: 123,
-      description: 'Niveau débutant'
+      description: 'Niveau débutant',
     };
-    
+
     const dtoObj = plainToInstance(CreateFrenchLevelDto, plain);
     const errors = await validate(dtoObj);
-    
+
     expect(errors.length).toBeGreaterThan(0);
     expect(errors[0].property).toBe('code');
     expect(errors[0].constraints).toHaveProperty('isString');
@@ -51,9 +51,9 @@ describe('CreateFrenchLevelDto', () => {
 
   it('should reject if code exceeds max length', async () => {
     dto.code = 'A'.repeat(11); // Max is 10
-    
+
     const errors = await validate(dto);
-    
+
     expect(errors.length).toBeGreaterThan(0);
     expect(errors[0].property).toBe('code');
     expect(errors[0].constraints).toHaveProperty('maxLength');
@@ -62,12 +62,12 @@ describe('CreateFrenchLevelDto', () => {
   it('should reject if description is not a string', async () => {
     const plain = {
       code: 'A1',
-      description: 123
+      description: 123,
     };
-    
+
     const dtoObj = plainToInstance(CreateFrenchLevelDto, plain);
     const errors = await validate(dtoObj);
-    
+
     expect(errors.length).toBeGreaterThan(0);
     expect(errors[0].property).toBe('description');
     expect(errors[0].constraints).toHaveProperty('isString');
@@ -75,11 +75,11 @@ describe('CreateFrenchLevelDto', () => {
 
   it('should reject if description exceeds max length', async () => {
     dto.description = 'A'.repeat(256); // Max is 255
-    
+
     const errors = await validate(dto);
-    
+
     expect(errors.length).toBeGreaterThan(0);
     expect(errors[0].property).toBe('description');
     expect(errors[0].constraints).toHaveProperty('maxLength');
   });
-}); 
+});

@@ -1,156 +1,271 @@
 import { validate } from 'class-validator';
-import { plainToInstance } from 'class-transformer';
+import { plainToClass } from 'class-transformer';
 import { CreateStudentDto } from './create-student.dto';
-import { describe, it, expect, beforeEach } from 'vitest';
 
 describe('CreateStudentDto', () => {
-  let dto: CreateStudentDto;
+  const validUuid = 'c35fe727-d68e-4b1e-afe1-c5618ccf2cce';
+  const invalidUuid = 'invalid-uuid';
 
-  beforeEach(() => {
-    dto = {
-      firstname: 'Jean',
-      lastname: 'Dupont',
-      birthdate: '1990-01-01T00:00:00.000Z',
-      gender_id: '550e8400-e29b-41d4-a716-446655440000',
-      initial_level_id: '550e8400-e29b-41d4-a716-446655440001',
-      nationality_id: '550e8400-e29b-41d4-a716-446655440002',
-      financing_id: '550e8400-e29b-41d4-a716-446655440003',
-      status_id: '550e8400-e29b-41d4-a716-446655440004'
-    };
+  const validData = {
+    student_firstname: 'Jean',
+    student_lastname: 'Dupont',
+    student_birthdate: new Date('1990-01-01'),
+    gender_uuid: validUuid,
+    french_level_uuid: validUuid,
+    nationality_uuid: validUuid,
+    financing_uuid: validUuid,
+    status_uuid: validUuid,
+    orientation_uuid: validUuid,
+    exit_reason_uuid: validUuid,
+  };
+
+  describe('Validation des champs obligatoires', () => {
+    it('devrait valider avec des données valides', async () => {
+      const dto = plainToClass(CreateStudentDto, validData);
+      const errors = await validate(dto);
+      expect(errors).toHaveLength(0);
+    });
+
+    it('devrait échouer si student_firstname est manquant', async () => {
+      const data = { ...validData };
+      delete data.student_firstname;
+      
+      const dto = plainToClass(CreateStudentDto, data);
+      const errors = await validate(dto);
+      
+      expect(errors).toHaveLength(1);
+      expect(errors[0].property).toBe('student_firstname');
+      expect(errors[0].constraints).toHaveProperty('isNotEmpty');
+    });
+
+    it('devrait échouer si student_lastname est manquant', async () => {
+      const data = { ...validData };
+      delete data.student_lastname;
+      
+      const dto = plainToClass(CreateStudentDto, data);
+      const errors = await validate(dto);
+      
+      expect(errors).toHaveLength(1);
+      expect(errors[0].property).toBe('student_lastname');
+      expect(errors[0].constraints).toHaveProperty('isNotEmpty');
+    });
+
+    it('devrait échouer si student_birthdate est manquant', async () => {
+      const data = { ...validData };
+      delete data.student_birthdate;
+      
+      const dto = plainToClass(CreateStudentDto, data);
+      const errors = await validate(dto);
+      
+      expect(errors).toHaveLength(1);
+      expect(errors[0].property).toBe('student_birthdate');
+      expect(errors[0].constraints).toHaveProperty('isDate');
+    });
+
+    it('devrait échouer si gender_uuid est manquant', async () => {
+      const data = { ...validData };
+      delete data.gender_uuid;
+      
+      const dto = plainToClass(CreateStudentDto, data);
+      const errors = await validate(dto);
+      
+      expect(errors).toHaveLength(1);
+      expect(errors[0].property).toBe('gender_uuid');
+      expect(errors[0].constraints).toHaveProperty('isNotEmpty');
+    });
   });
 
-  it('devrait valider un DTO correct avec seulement les champs obligatoires', async () => {
-    const dtoObj = plainToInstance(CreateStudentDto, dto);
-    const errors = await validate(dtoObj);
-    expect(errors.length).toBe(0);
+  describe('Validation des formats', () => {
+    it('devrait échouer avec un prénom trop long (>50 caractères)', async () => {
+      const data = {
+        ...validData,
+        student_firstname: 'a'.repeat(51),
+      };
+      
+      const dto = plainToClass(CreateStudentDto, data);
+      const errors = await validate(dto);
+      
+      expect(errors).toHaveLength(1);
+      expect(errors[0].property).toBe('student_firstname');
+      expect(errors[0].constraints).toHaveProperty('maxLength');
+    });
+
+    it('devrait échouer avec un nom trop long (>50 caractères)', async () => {
+      const data = {
+        ...validData,
+        student_lastname: 'a'.repeat(51),
+      };
+      
+      const dto = plainToClass(CreateStudentDto, data);
+      const errors = await validate(dto);
+      
+      expect(errors).toHaveLength(1);
+      expect(errors[0].property).toBe('student_lastname');
+      expect(errors[0].constraints).toHaveProperty('maxLength');
+    });
+
+    it('devrait échouer avec un email invalide', async () => {
+      const data = {
+        ...validData,
+        student_mail: 'email-invalide',
+      };
+      
+      const dto = plainToClass(CreateStudentDto, data);
+      const errors = await validate(dto);
+      
+      expect(errors).toHaveLength(1);
+      expect(errors[0].property).toBe('student_mail');
+      expect(errors[0].constraints).toHaveProperty('isEmail');
+    });
+
+    it('devrait échouer avec un UUID invalide pour gender_uuid', async () => {
+      const data = {
+        ...validData,
+        gender_uuid: invalidUuid,
+      };
+      
+      const dto = plainToClass(CreateStudentDto, data);
+      const errors = await validate(dto);
+      
+      expect(errors).toHaveLength(1);
+      expect(errors[0].property).toBe('gender_uuid');
+      expect(errors[0].constraints).toHaveProperty('isUuid');
+    });
+
+    it('devrait échouer avec un UUID invalide pour french_level_uuid', async () => {
+      const data = {
+        ...validData,
+        french_level_uuid: invalidUuid,
+      };
+      
+      const dto = plainToClass(CreateStudentDto, data);
+      const errors = await validate(dto);
+      
+      expect(errors).toHaveLength(1);
+      expect(errors[0].property).toBe('french_level_uuid');
+      expect(errors[0].constraints).toHaveProperty('isUuid');
+    });
+
+    it('devrait échouer avec une date de naissance invalide', async () => {
+      const data = {
+        ...validData,
+        student_birthdate: 'date-invalide' as any,
+      };
+      
+      const dto = plainToClass(CreateStudentDto, data);
+      const errors = await validate(dto);
+      
+      expect(errors).toHaveLength(1);
+      expect(errors[0].property).toBe('student_birthdate');
+      expect(errors[0].constraints).toHaveProperty('isDate');
+    });
   });
 
-  it('devrait valider un DTO correct avec tous les champs optionnels', async () => {
-    dto.placeOfBirth = 'Paris';
-    dto.email = 'jean.dupont@example.com';
-    dto.phone = '+33123456789';
-    dto.date_test_initial = '2023-01-01';
-    dto.commentaire = 'Très motivé';
-    dto.date_entree_france = '2022-01-01';
-    dto.current_level_id = '550e8400-e29b-41d4-a716-446655440005';
-    dto.orientation_id = '550e8400-e29b-41d4-a716-446655440006';
-    dto.exit_reason_id = '550e8400-e29b-41d4-a716-446655440007';
-    
-    const dtoObj = plainToInstance(CreateStudentDto, dto);
-    const errors = await validate(dtoObj);
-    expect(errors.length).toBe(0);
+  describe('Validation des champs optionnels', () => {
+    it('devrait valider avec des champs optionnels valides', async () => {
+      const data = {
+        ...validData,
+        student_mail: 'test@example.com',
+        student_phone: 123456789,
+        student_place_of_birth: 'Paris',
+        student_commentary: 'Très motivé',
+      };
+      
+      const dto = plainToClass(CreateStudentDto, data);
+      const errors = await validate(dto);
+      
+      expect(errors).toHaveLength(0);
+    });
+
+    it('devrait valider sans les champs optionnels', async () => {
+      const dto = plainToClass(CreateStudentDto, validData);
+      const errors = await validate(dto);
+      
+      expect(errors).toHaveLength(0);
+    });
+
+    it('devrait échouer avec un commentaire trop long', async () => {
+      const data = {
+        ...validData,
+        student_commentary: 'a'.repeat(257), // Plus que 256 caractères
+      };
+      
+      const dto = plainToClass(CreateStudentDto, data);
+      const errors = await validate(dto);
+      
+      expect(errors).toHaveLength(1);
+      expect(errors[0].property).toBe('student_commentary');
+      expect(errors[0].constraints).toHaveProperty('maxLength');
+    });
   });
 
-  // Tests pour les champs obligatoires
-  it('devrait échouer si le prénom est manquant', async () => {
-    const { firstname, ...dtoWithoutFirstname } = dto;
-    const dtoObj = plainToInstance(CreateStudentDto, dtoWithoutFirstname);
-    const errors = await validate(dtoObj);
-    expect(errors.length).toBeGreaterThan(0);
-    expect(errors[0].property).toBe('firstname');
-    expect(errors[0].constraints).toHaveProperty('isNotEmpty');
+  describe('Validation des types', () => {
+    it('devrait échouer si student_firstname n\'est pas une string', async () => {
+      const data = {
+        ...validData,
+        student_firstname: 123 as any,
+      };
+      
+      const dto = plainToClass(CreateStudentDto, data);
+      const errors = await validate(dto);
+      
+      expect(errors).toHaveLength(1);
+      expect(errors[0].property).toBe('student_firstname');
+      expect(errors[0].constraints).toHaveProperty('isString');
+    });
+
+    it('devrait échouer si student_lastname n\'est pas une string', async () => {
+      const data = {
+        ...validData,
+        student_lastname: 123 as any,
+      };
+      
+      const dto = plainToClass(CreateStudentDto, data);
+      const errors = await validate(dto);
+      
+      expect(errors).toHaveLength(1);
+      expect(errors[0].property).toBe('student_lastname');
+      expect(errors[0].constraints).toHaveProperty('isString');
+    });
   });
 
-  it('devrait échouer si le nom est manquant', async () => {
-    const { lastname, ...dtoWithoutLastname } = dto;
-    const dtoObj = plainToInstance(CreateStudentDto, dtoWithoutLastname);
-    const errors = await validate(dtoObj);
-    expect(errors.length).toBeGreaterThan(0);
-    expect(errors[0].property).toBe('lastname');
-    expect(errors[0].constraints).toHaveProperty('isNotEmpty');
-  });
+  describe('Tous les UUID obligatoires', () => {
+    const requiredUuidFields = [
+      'gender_uuid',
+      'french_level_uuid', 
+      'nationality_uuid',
+      'financing_uuid',
+      'status_uuid',
+      'orientation_uuid',
+      'exit_reason_uuid'
+    ];
 
-  // Tests pour le prénom
-  it('devrait échouer si le prénom est trop long', async () => {
-    dto.firstname = 'a'.repeat(101);
-    const dtoObj = plainToInstance(CreateStudentDto, dto);
-    const errors = await validate(dtoObj);
-    expect(errors.length).toBeGreaterThan(0);
-    expect(errors[0].property).toBe('firstname');
-    expect(errors[0].constraints).toHaveProperty('maxLength');
-  });
+    requiredUuidFields.forEach(field => {
+      it(`devrait échouer si ${field} est manquant`, async () => {
+        const data = { ...validData };
+        delete data[field];
+        
+        const dto = plainToClass(CreateStudentDto, data);
+        const errors = await validate(dto);
+        
+        expect(errors).toHaveLength(1);
+        expect(errors[0].property).toBe(field);
+        expect(errors[0].constraints).toHaveProperty('isNotEmpty');
+      });
 
-  // Tests pour la date de naissance
-  it('devrait échouer si la date de naissance n\'est pas au format ISO', async () => {
-    dto.birthdate = 'not-a-date';
-    const dtoObj = plainToInstance(CreateStudentDto, dto);
-    const errors = await validate(dtoObj);
-    expect(errors.length).toBeGreaterThan(0);
-    expect(errors[0].property).toBe('birthdate');
-    expect(errors[0].constraints).toHaveProperty('isDateString');
+      it(`devrait échouer si ${field} a un format UUID invalide`, async () => {
+        const data = {
+          ...validData,
+          [field]: invalidUuid,
+        };
+        
+        const dto = plainToClass(CreateStudentDto, data);
+        const errors = await validate(dto);
+        
+        expect(errors).toHaveLength(1);
+        expect(errors[0].property).toBe(field);
+        expect(errors[0].constraints).toHaveProperty('isUuid');
+      });
+    });
   });
-
-  // Tests pour l'email optionnel
-  it('devrait échouer si l\'email est invalide', async () => {
-    dto.email = 'not-an-email';
-    const dtoObj = plainToInstance(CreateStudentDto, dto);
-    const errors = await validate(dtoObj);
-    expect(errors.length).toBeGreaterThan(0);
-    expect(errors[0].property).toBe('email');
-    expect(errors[0].constraints).toHaveProperty('isEmail');
-  });
-
-  // Tests pour le téléphone optionnel
-  it('devrait échouer si le téléphone contient des caractères non autorisés', async () => {
-    dto.phone = '+33abc456789';
-    const dtoObj = plainToInstance(CreateStudentDto, dto);
-    const errors = await validate(dtoObj);
-    expect(errors.length).toBeGreaterThan(0);
-    expect(errors[0].property).toBe('phone');
-    expect(errors[0].constraints).toHaveProperty('matches');
-  });
-
-  // Tests pour le commentaire optionnel
-  it('devrait échouer si le commentaire est trop long', async () => {
-    dto.commentaire = 'a'.repeat(1001);
-    const dtoObj = plainToInstance(CreateStudentDto, dto);
-    const errors = await validate(dtoObj);
-    expect(errors.length).toBeGreaterThan(0);
-    expect(errors[0].property).toBe('commentaire');
-    expect(errors[0].constraints).toHaveProperty('maxLength');
-  });
-
-  // Tests pour les IDs obligatoires
-  it('devrait échouer si gender_id n\'est pas un UUID valide', async () => {
-    dto.gender_id = 'not-a-uuid';
-    const dtoObj = plainToInstance(CreateStudentDto, dto);
-    const errors = await validate(dtoObj);
-    expect(errors.length).toBeGreaterThan(0);
-    expect(errors[0].property).toBe('gender_id');
-    expect(errors[0].constraints).toHaveProperty('isUuid');
-  });
-
-  it('devrait échouer si nationality_id est manquant', async () => {
-    const { nationality_id, ...dtoWithoutNationality } = dto;
-    const dtoObj = plainToInstance(CreateStudentDto, dtoWithoutNationality);
-    const errors = await validate(dtoObj);
-    expect(errors.length).toBeGreaterThan(0);
-    expect(errors[0].property).toBe('nationality_id');
-    expect(errors[0].constraints).toHaveProperty('isNotEmpty');
-  });
-
-  // Tests pour les IDs optionnels
-  it('devrait échouer si current_level_id n\'est pas un UUID valide', async () => {
-    dto.current_level_id = 'not-a-uuid';
-    const dtoObj = plainToInstance(CreateStudentDto, dto);
-    const errors = await validate(dtoObj);
-    expect(errors.length).toBeGreaterThan(0);
-    expect(errors[0].property).toBe('current_level_id');
-    expect(errors[0].constraints).toHaveProperty('isUuid');
-  });
-
-  // Tests pour les caractères spéciaux valides
-  it('devrait valider un prénom avec caractères accentués', async () => {
-    dto.firstname = 'Éléonore';
-    const dtoObj = plainToInstance(CreateStudentDto, dto);
-    const errors = await validate(dtoObj);
-    expect(errors.length).toBe(0);
-  });
-
-  it('devrait valider un nom avec apostrophe', async () => {
-    dto.lastname = 'O\'Connor';
-    const dtoObj = plainToInstance(CreateStudentDto, dto);
-    const errors = await validate(dtoObj);
-    expect(errors.length).toBe(0);
-  });
-}); 
+});

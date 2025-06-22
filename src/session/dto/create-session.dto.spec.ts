@@ -6,7 +6,7 @@ import { plainToInstance } from 'class-transformer';
 describe('CreateSessionDto', () => {
   it('should be valid if all required properties are provided', async () => {
     const dto = plainToInstance(CreateSessionDto, {
-      label: 'Session d\'été 2023',
+      label: "Session d'été 2023",
       startedAt: '2023-06-01T00:00:00.000Z',
       finishedAt: '2023-08-31T00:00:00.000Z',
     });
@@ -27,7 +27,7 @@ describe('CreateSessionDto', () => {
 
   it('should be invalid if startedAt is missing', async () => {
     const dto = plainToInstance(CreateSessionDto, {
-      label: 'Session d\'été 2023',
+      label: "Session d'été 2023",
       finishedAt: '2023-08-31T00:00:00.000Z',
     });
 
@@ -39,7 +39,7 @@ describe('CreateSessionDto', () => {
 
   it('should be invalid if finishedAt is missing', async () => {
     const dto = plainToInstance(CreateSessionDto, {
-      label: 'Session d\'été 2023',
+      label: "Session d'été 2023",
       startedAt: '2023-06-01T00:00:00.000Z',
     });
 
@@ -51,7 +51,7 @@ describe('CreateSessionDto', () => {
 
   it('should be invalid if startedAt is not a valid date', async () => {
     const dto = plainToInstance(CreateSessionDto, {
-      label: 'Session d\'été 2023',
+      label: "Session d'été 2023",
       startedAt: 'invalid-date',
       finishedAt: '2023-08-31T00:00:00.000Z',
     });
@@ -64,7 +64,7 @@ describe('CreateSessionDto', () => {
 
   it('should be invalid if finishedAt is not a valid date', async () => {
     const dto = plainToInstance(CreateSessionDto, {
-      label: 'Session d\'été 2023',
+      label: "Session d'été 2023",
       startedAt: '2023-06-01T00:00:00.000Z',
       finishedAt: 'invalid-date',
     });
@@ -78,7 +78,7 @@ describe('CreateSessionDto', () => {
   it('should be invalid if label exceeds maximum length', async () => {
     // Créer une chaîne de 101 caractères (au-delà de la limite de 100)
     const longLabel = 'a'.repeat(101);
-    
+
     const dto = plainToInstance(CreateSessionDto, {
       label: longLabel,
       startedAt: '2023-06-01T00:00:00.000Z',
@@ -103,4 +103,4 @@ describe('CreateSessionDto', () => {
     expect(errors[0].property).toBe('label');
     expect(errors[0].constraints).toHaveProperty('isString');
   });
-}); 
+});

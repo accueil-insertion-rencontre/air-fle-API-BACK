@@ -5,9 +5,9 @@ import { Escape } from 'class-sanitizer';
 export class CreateFinancingDto {
   @ApiProperty({
     description: 'Type de financement',
-    example: 'Pôle Emploi'
+    example: 'Pôle Emploi',
   })
   @IsString()
   @Escape()
-  type: string;
-} 
+  financing_type: string;
+}

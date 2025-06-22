@@ -10,7 +10,7 @@ describe('CreateAbsenceDto', () => {
     dto = {
       student_id: '550e8400-e29b-41d4-a716-446655440000',
       course_id: '550e8400-e29b-41d4-a716-446655440001',
-      reason: 'Maladie'
+      reason: 'Maladie',
     };
   });
 
@@ -28,7 +28,7 @@ describe('CreateAbsenceDto', () => {
   });
 
   // Tests pour student_id
-  it('devrait échouer si student_id n\'est pas un UUID valide', async () => {
+  it("devrait échouer si student_id n'est pas un UUID valide", async () => {
     dto.student_id = 'not-a-uuid';
     const dtoObj = plainToInstance(CreateAbsenceDto, dto);
     const errors = await validate(dtoObj);
@@ -51,7 +51,7 @@ describe('CreateAbsenceDto', () => {
   });
 
   // Tests pour course_id
-  it('devrait échouer si course_id n\'est pas un UUID valide', async () => {
+  it("devrait échouer si course_id n'est pas un UUID valide", async () => {
     dto.course_id = 'not-a-uuid';
     const dtoObj = plainToInstance(CreateAbsenceDto, dto);
     const errors = await validate(dtoObj);
@@ -74,7 +74,7 @@ describe('CreateAbsenceDto', () => {
   });
 
   // Tests pour reason
-  it('devrait échouer si reason n\'est pas une chaîne de caractères', async () => {
+  it("devrait échouer si reason n'est pas une chaîne de caractères", async () => {
     dto.reason = 123 as any;
     const dtoObj = plainToInstance(CreateAbsenceDto, dto);
     const errors = await validate(dtoObj);
@@ -89,4 +89,4 @@ describe('CreateAbsenceDto', () => {
     const errors = await validate(dtoObj);
     expect(errors.length).toBe(0);
   });
-}); 
+});

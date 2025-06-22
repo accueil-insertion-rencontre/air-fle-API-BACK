@@ -12,7 +12,7 @@ describe('CreateUserDto', () => {
       lastname: 'Dupont',
       email: 'jean.dupont@example.com',
       password: 'password123',
-      role_id: '550e8400-e29b-41d4-a716-446655440000'
+      role_id: '550e8400-e29b-41d4-a716-446655440000',
     };
   });
 
@@ -65,7 +65,7 @@ describe('CreateUserDto', () => {
   });
 
   // Tests pour l'email
-  it('devrait échouer si l\'email est invalide', async () => {
+  it("devrait échouer si l'email est invalide", async () => {
     dto.email = 'not-an-email';
     const dtoObj = plainToInstance(CreateUserDto, dto);
     const errors = await validate(dtoObj);
@@ -73,7 +73,7 @@ describe('CreateUserDto', () => {
     expect(errors[0].constraints).toHaveProperty('isEmail');
   });
 
-  it('devrait échouer si l\'email est trop long', async () => {
+  it("devrait échouer si l'email est trop long", async () => {
     dto.email = `${'a'.repeat(247)}@test.com`;
     const dtoObj = plainToInstance(CreateUserDto, dto);
     const errors = await validate(dtoObj);
@@ -99,7 +99,7 @@ describe('CreateUserDto', () => {
   });
 
   // Tests pour le role_id
-  it('devrait échouer si le role_id n\'est pas un UUID valide', async () => {
+  it("devrait échouer si le role_id n'est pas un UUID valide", async () => {
     dto.role_id = 'not-a-uuid';
     const dtoObj = plainToInstance(CreateUserDto, dto);
     const errors = await validate(dtoObj);
@@ -124,7 +124,7 @@ describe('CreateUserDto', () => {
   });
 
   it('devrait échouer si le mot de passe contient une injection SQL', async () => {
-    dto.password = 'password\' OR 1=1--';
+    dto.password = "password' OR 1=1--";
     const dtoObj = plainToInstance(CreateUserDto, dto);
     const errors = await validate(dtoObj);
     expect(errors.length).toBeGreaterThan(0);
@@ -138,4 +138,4 @@ describe('CreateUserDto', () => {
     expect(errors.length).toBeGreaterThan(0);
     expect(errors[0].constraints).toHaveProperty('matches');
   });
-}); 
+});

@@ -72,4 +72,4 @@ describe('UpdateNationalityDto', () => {
       expect(errors.length).toBe(0);
     });
   });
-}); 
+});
