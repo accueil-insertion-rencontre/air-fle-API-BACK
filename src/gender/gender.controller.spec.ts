@@ -111,4 +111,4 @@ describe('GenderController', () => {
       expect(mockGenderService.delete).toHaveBeenCalledWith('1');
     });
   });
-}); 
+});
