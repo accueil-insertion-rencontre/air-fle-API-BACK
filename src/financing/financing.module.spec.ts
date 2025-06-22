@@ -34,4 +34,4 @@ describe('FinancingModule', () => {
     const service = module.get<FinancingService>(FinancingService);
     expect(service).toBeDefined();
   });
-}); 
+});
