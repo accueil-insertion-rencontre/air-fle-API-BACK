@@ -32,7 +32,7 @@ describe('TaskController', () => {
     // Créer le controller directement avec les mocks
     controller = new TaskController(
       mockTaskService as TaskService,
-      mockSubtaskService as SubtaskService
+      mockSubtaskService as SubtaskService,
     );
   });
 
@@ -45,21 +45,27 @@ describe('TaskController', () => {
       const createTaskDto = {
         title: 'Nouvelle tâche',
         description: 'Description de la tâche',
-        priority: 'HIGH' as any
+        priority: 'HIGH' as any,
       };
       const userId = 'user-1';
       const expectedTask = {
         id: 'task-1',
         ...createTaskDto,
         user_id: userId,
-        status: 'pending'
+        status: 'pending',
       };
 
       mockTaskService.create.mockResolvedValue(expectedTask);
 
-      const result = await controller.createTask({ user: { id: userId } } as any, createTaskDto);
+      const result = await controller.createTask(
+        { user: { id: userId } } as any,
+        createTaskDto,
+      );
 
-      expect(mockTaskService.create).toHaveBeenCalledWith(userId, createTaskDto);
+      expect(mockTaskService.create).toHaveBeenCalledWith(
+        userId,
+        createTaskDto,
+      );
       expect(result).toEqual(expectedTask);
     });
   });
@@ -70,20 +76,22 @@ describe('TaskController', () => {
       const expectedResult = {
         tasks: [
           { id: 'task-1', title: 'Tâche 1', status: 'pending' },
-          { id: 'task-2', title: 'Tâche 2', status: 'completed' }
+          { id: 'task-2', title: 'Tâche 2', status: 'completed' },
         ],
         globalStats: {
           totalTasks: 2,
           completedTasks: 1,
           inProgressTasks: 0,
           pendingTasks: 1,
-          completionPercentage: 50
-        }
+          completionPercentage: 50,
+        },
       };
 
       mockTaskService.getAllTasksWithStats.mockResolvedValue(expectedResult);
 
-      const result = await controller.findAllTasks({ user: { id: userId } } as any);
+      const result = await controller.findAllTasks({
+        user: { id: userId },
+      } as any);
 
       expect(mockTaskService.getAllTasksWithStats).toHaveBeenCalledWith(userId);
       expect(result).toEqual(expectedResult);
@@ -98,12 +106,15 @@ describe('TaskController', () => {
         id: taskId,
         title: 'Tâche spécifique',
         user_id: userId,
-        subtasks: []
+        subtasks: [],
       };
 
       mockTaskService.findOne.mockResolvedValue(expectedTask);
 
-      const result = await controller.findOneTask({ user: { id: userId } } as any, taskId);
+      const result = await controller.findOneTask(
+        { user: { id: userId } } as any,
+        taskId,
+      );
 
       expect(mockTaskService.findOne).toHaveBeenCalledWith(taskId);
       expect(result).toEqual(expectedTask);
@@ -116,17 +127,17 @@ describe('TaskController', () => {
       const userId = 'user-1';
       const updateTaskDto = {
         title: 'Titre mis à jour',
-        status: 'completed' as any
+        status: 'completed' as any,
       };
       const existingTask = {
         id: taskId,
         title: 'Ancien titre',
         user_id: userId,
-        subtasks: []
+        subtasks: [],
       };
       const updatedTask = {
         ...existingTask,
-        ...updateTaskDto
+        ...updateTaskDto,
       };
 
       mockTaskService.findOne.mockResolvedValue(existingTask);
@@ -135,11 +146,14 @@ describe('TaskController', () => {
       const result = await controller.updateTask(
         { user: { id: userId } } as any,
         taskId,
-        updateTaskDto
+        updateTaskDto,
       );
 
       expect(mockTaskService.findOne).toHaveBeenCalledWith(taskId);
-      expect(mockTaskService.update).toHaveBeenCalledWith(taskId, updateTaskDto);
+      expect(mockTaskService.update).toHaveBeenCalledWith(
+        taskId,
+        updateTaskDto,
+      );
       expect(result).toEqual(updatedTask);
     });
   });
@@ -152,13 +166,16 @@ describe('TaskController', () => {
         id: taskId,
         title: 'Tâche à supprimer',
         user_id: userId,
-        subtasks: []
+        subtasks: [],
       };
 
       mockTaskService.findOne.mockResolvedValue(existingTask);
       mockTaskService.delete.mockResolvedValue(existingTask);
 
-      const result = await controller.deleteTask({ user: { id: userId } } as any, taskId);
+      const result = await controller.deleteTask(
+        { user: { id: userId } } as any,
+        taskId,
+      );
 
       expect(mockTaskService.findOne).toHaveBeenCalledWith(taskId);
       expect(mockTaskService.delete).toHaveBeenCalledWith(taskId);
@@ -172,18 +189,18 @@ describe('TaskController', () => {
       const userId = 'user-1';
       const createSubtaskDto = {
         title: 'Nouvelle sous-tâche',
-        description: 'Description sous-tâche'
+        description: 'Description sous-tâche',
       };
       const parentTask = {
         id: taskId,
         user_id: userId,
-        subtasks: []
+        subtasks: [],
       };
       const expectedSubtask = {
         id: 'subtask-1',
         ...createSubtaskDto,
         task_id: taskId,
-        status: 'pending'
+        status: 'pending',
       };
 
       mockTaskService.findOne.mockResolvedValue(parentTask);
@@ -192,27 +209,40 @@ describe('TaskController', () => {
       const result = await controller.createSubtask(
         { user: { id: userId } } as any,
         taskId,
-        createSubtaskDto
+        createSubtaskDto,
       );
 
       expect(mockTaskService.findOne).toHaveBeenCalledWith(taskId);
-      expect(mockSubtaskService.create).toHaveBeenCalledWith(taskId, createSubtaskDto);
+      expect(mockSubtaskService.create).toHaveBeenCalledWith(
+        taskId,
+        createSubtaskDto,
+      );
       expect(result).toEqual(expectedSubtask);
     });
   });
 
   describe('findAllSubtasks', () => {
-    it('devrait retourner toutes les sous-tâches d\'une tâche', async () => {
+    it("devrait retourner toutes les sous-tâches d'une tâche", async () => {
       const taskId = 'task-1';
       const userId = 'user-1';
       const parentTask = {
         id: taskId,
         user_id: userId,
-        subtasks: []
+        subtasks: [],
       };
       const expectedSubtasks = [
-        { id: 'sub-1', title: 'Sous-tâche 1', status: 'pending', task_id: taskId },
-        { id: 'sub-2', title: 'Sous-tâche 2', status: 'completed', task_id: taskId }
+        {
+          id: 'sub-1',
+          title: 'Sous-tâche 1',
+          status: 'pending',
+          task_id: taskId,
+        },
+        {
+          id: 'sub-2',
+          title: 'Sous-tâche 2',
+          status: 'completed',
+          task_id: taskId,
+        },
       ];
 
       mockTaskService.findOne.mockResolvedValue(parentTask);
@@ -220,7 +250,7 @@ describe('TaskController', () => {
 
       const result = await controller.findAllSubtasks(
         { user: { id: userId } } as any,
-        taskId
+        taskId,
       );
 
       expect(mockTaskService.findOne).toHaveBeenCalledWith(taskId);
@@ -235,17 +265,17 @@ describe('TaskController', () => {
       const userId = 'user-1';
       const updateSubtaskDto = {
         title: 'Sous-tâche mise à jour',
-        status: 'completed' as any
+        status: 'completed' as any,
       };
       const existingSubtask = {
         id: subtaskId,
         title: 'Ancienne sous-tâche',
         status: 'pending',
-        task: { user_id: userId }
+        task: { user_id: userId },
       };
       const updatedSubtask = {
         ...existingSubtask,
-        ...updateSubtaskDto
+        ...updateSubtaskDto,
       };
 
       mockSubtaskService.findOne.mockResolvedValue(existingSubtask);
@@ -254,28 +284,31 @@ describe('TaskController', () => {
       const result = await controller.updateSubtask(
         { user: { id: userId } } as any,
         subtaskId,
-        updateSubtaskDto
+        updateSubtaskDto,
       );
 
       expect(mockSubtaskService.findOne).toHaveBeenCalledWith(subtaskId);
-      expect(mockSubtaskService.update).toHaveBeenCalledWith(subtaskId, updateSubtaskDto);
+      expect(mockSubtaskService.update).toHaveBeenCalledWith(
+        subtaskId,
+        updateSubtaskDto,
+      );
       expect(result).toEqual(updatedSubtask);
     });
   });
 
   describe('toggleSubtaskStatus', () => {
-    it('devrait basculer le statut d\'une sous-tâche', async () => {
+    it("devrait basculer le statut d'une sous-tâche", async () => {
       const subtaskId = 'subtask-1';
       const userId = 'user-1';
       const existingSubtask = {
         id: subtaskId,
         title: 'Sous-tâche test',
         status: 'pending',
-        task: { user_id: userId }
+        task: { user_id: userId },
       };
       const toggledSubtask = {
         ...existingSubtask,
-        status: 'completed'
+        status: 'completed',
       };
 
       mockSubtaskService.findOne.mockResolvedValue(existingSubtask);
@@ -283,7 +316,7 @@ describe('TaskController', () => {
 
       const result = await controller.toggleSubtaskStatus(
         { user: { id: userId } } as any,
-        subtaskId
+        subtaskId,
       );
 
       expect(mockSubtaskService.findOne).toHaveBeenCalledWith(subtaskId);
@@ -300,7 +333,7 @@ describe('TaskController', () => {
         id: subtaskId,
         title: 'Sous-tâche à supprimer',
         status: 'completed',
-        task: { user_id: userId }
+        task: { user_id: userId },
       };
 
       mockSubtaskService.findOne.mockResolvedValue(existingSubtask);
@@ -308,7 +341,7 @@ describe('TaskController', () => {
 
       const result = await controller.deleteSubtask(
         { user: { id: userId } } as any,
-        subtaskId
+        subtaskId,
       );
 
       expect(mockSubtaskService.findOne).toHaveBeenCalledWith(subtaskId);
@@ -318,27 +351,27 @@ describe('TaskController', () => {
   });
 
   describe('getTaskStatistics', () => {
-    it('devrait retourner les statistiques d\'une tâche', async () => {
+    it("devrait retourner les statistiques d'une tâche", async () => {
       const taskId = 'task-1';
       const userId = 'user-1';
       const existingTask = {
         id: taskId,
         title: 'Tâche test',
         user_id: userId,
-        subtasks: []
+        subtasks: [],
       };
       const expectedStats = {
         task: {
           id: taskId,
           title: 'Tâche test',
-          status: 'in_progress'
+          status: 'in_progress',
         },
         subtasks: {
           total: 3,
           completed: 2,
           pending: 1,
-          completionPercentage: 66.67
-        }
+          completionPercentage: 66.67,
+        },
       };
 
       mockTaskService.findOne.mockResolvedValue(existingTask);
@@ -346,7 +379,7 @@ describe('TaskController', () => {
 
       const result = await controller.getTaskStatistics(
         { user: { id: userId } } as any,
-        taskId
+        taskId,
       );
 
       expect(mockTaskService.findOne).toHaveBeenCalledWith(taskId);
@@ -354,4 +387,4 @@ describe('TaskController', () => {
       expect(result).toEqual(expectedStats);
     });
   });
-}); 
+});
