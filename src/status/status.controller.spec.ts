@@ -111,4 +111,4 @@ describe('StatusController', () => {
       expect(mockStatusService.delete).toHaveBeenCalledWith('1');
     });
   });
-}); 
+});
