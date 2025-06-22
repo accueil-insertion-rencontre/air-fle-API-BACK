@@ -33,7 +33,7 @@ describe('SessionController', () => {
   describe('create', () => {
     it('should create a new session', async () => {
       const createSessionDto: CreateSessionDto = {
-        label: 'Session d\'été 2023',
+        label: "Session d'été 2023",
         startedAt: new Date('2023-06-01'),
         finishedAt: new Date('2023-08-31'),
       };
@@ -57,7 +57,7 @@ describe('SessionController', () => {
         data: [
           {
             id: '1',
-            label: 'Session d\'été 2023',
+            label: "Session d'été 2023",
             startedAt: new Date('2023-06-01'),
             finishedAt: new Date('2023-08-31'),
             createdAt: new Date(),
@@ -80,22 +80,24 @@ describe('SessionController', () => {
       const groupId = '1';
       const periodId = '2';
 
-      expect(await controller.findAll(skip, take, date, groupId, periodId)).toBe(result);
-      
+      expect(
+        await controller.findAll(skip, take, date, groupId, periodId),
+      ).toBe(result);
+
       // Ne pas vérifier la structure exacte des paramètres, mais vérifier que la fonction a été appelée
       expect(mockSessionService.findAll).toHaveBeenCalled();
-      
+
       // Vérifier les valeurs clés individuellement
       const callArgs = mockSessionService.findAll.mock.calls[0][0];
       expect(callArgs.skip).toBe(0);
       expect(callArgs.take).toBe(10);
       expect(callArgs.orderBy).toEqual({ startedAt: 'desc' });
-      
+
       // Vérifier que la structure where contient les éléments attendus
       expect(callArgs.where.startedAt).toBeDefined();
       expect(callArgs.where.startedAt.gte instanceof Date).toBe(true);
       expect(callArgs.where.startedAt.lt instanceof Date).toBe(true);
-      
+
       expect(callArgs.where.groups).toBeDefined();
       expect(callArgs.where.groups.some).toBeDefined();
       expect(callArgs.where.groups.some.periods).toBeDefined();
@@ -108,7 +110,7 @@ describe('SessionController', () => {
     it('should return a session by id', async () => {
       const result = {
         id: '1',
-        label: 'Session d\'été 2023',
+        label: "Session d'été 2023",
         startedAt: new Date('2023-06-01'),
         finishedAt: new Date('2023-08-31'),
         createdAt: new Date(),
@@ -125,11 +127,11 @@ describe('SessionController', () => {
   describe('update', () => {
     it('should update a session', async () => {
       const updateSessionDto: UpdateSessionDto = {
-        label: 'Session d\'été 2023 (mise à jour)',
+        label: "Session d'été 2023 (mise à jour)",
       };
       const result = {
         id: '1',
-        label: 'Session d\'été 2023 (mise à jour)',
+        label: "Session d'été 2023 (mise à jour)",
         startedAt: new Date('2023-06-01'),
         finishedAt: new Date('2023-08-31'),
         createdAt: new Date(),
@@ -139,7 +141,10 @@ describe('SessionController', () => {
       mockSessionService.update.mockResolvedValue(result);
 
       expect(await controller.update('1', updateSessionDto)).toBe(result);
-      expect(mockSessionService.update).toHaveBeenCalledWith('1', updateSessionDto);
+      expect(mockSessionService.update).toHaveBeenCalledWith(
+        '1',
+        updateSessionDto,
+      );
     });
   });
 
