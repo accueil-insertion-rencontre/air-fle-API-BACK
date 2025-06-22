@@ -2,32 +2,43 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { Disability, Prisma } from '@prisma/client';
 
+// Type pour un handicap avec ses relations
+type DisabilityWithRelations = Prisma.DisabilityGetPayload<{
+  include: {
+    students: {
+      include: {
+        student: true;
+      };
+    };
+  };
+}>;
+
 @Injectable()
 export class DisabilityService {
   constructor(private prisma: PrismaService) {}
 
-  async findAll(): Promise<Disability[]> {
+  async findAll(): Promise<DisabilityWithRelations[]> {
     return this.prisma.disability.findMany({
       include: {
         students: {
           include: {
-            student: true
-          }
-        }
-      }
+            student: true,
+          },
+        },
+      },
     });
   }
 
-  async findOne(id: string): Promise<Disability | null> {
+  async findOne(id: string): Promise<DisabilityWithRelations | null> {
     const disability = await this.prisma.disability.findUnique({
-      where: { id },
+      where: { disability_uuid: id },
       include: {
         students: {
           include: {
-            student: true
-          }
-        }
-      }
+            student: true,
+          },
+        },
+      },
     });
 
     if (!disability) {
@@ -37,23 +48,36 @@ export class DisabilityService {
     return disability;
   }
 
-  async create(data: Prisma.DisabilityCreateInput): Promise<Disability> {
+  async create(
+    data: Prisma.DisabilityCreateInput,
+  ): Promise<DisabilityWithRelations> {
     return this.prisma.disability.create({
       data,
       include: {
-        students: true
-      }
+        students: {
+          include: {
+            student: true,
+          },
+        },
+      },
     });
   }
 
-  async update(id: string, data: Prisma.DisabilityUpdateInput): Promise<Disability> {
+  async update(
+    id: string,
+    data: Prisma.DisabilityUpdateInput,
+  ): Promise<DisabilityWithRelations> {
     try {
       return await this.prisma.disability.update({
-        where: { id },
+        where: { disability_uuid: id },
         data,
         include: {
-          students: true
-        }
+          students: {
+            include: {
+              student: true,
+            },
+          },
+        },
       });
     } catch (error) {
       if (error.code === 'P2025') {
@@ -63,10 +87,17 @@ export class DisabilityService {
     }
   }
 
-  async remove(id: string): Promise<Disability> {
+  async delete(id: string): Promise<DisabilityWithRelations> {
     try {
       return await this.prisma.disability.delete({
-        where: { id },
+        where: { disability_uuid: id },
+        include: {
+          students: {
+            include: {
+              student: true,
+            },
+          },
+        },
       });
     } catch (error) {
       if (error.code === 'P2025') {
