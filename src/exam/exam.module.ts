@@ -10,4 +10,4 @@ import { LearnerHistoryModule } from '../learner-history/learner-history.module'
   providers: [ExamService],
   exports: [ExamService],
 })
-export class ExamModule {} 
+export class ExamModule {}
