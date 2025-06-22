@@ -36,7 +36,7 @@ describe('SessionService', () => {
       const mockSessions = [
         {
           id: '1',
-          label: 'Session d\'été 2023',
+          label: "Session d'été 2023",
           startedAt: new Date('2023-06-01'),
           finishedAt: new Date('2023-08-31'),
           createdAt: new Date(),
@@ -78,7 +78,7 @@ describe('SessionService', () => {
     it('should return a session by id', async () => {
       const mockSession = {
         id: '1',
-        label: 'Session d\'été 2023',
+        label: "Session d'été 2023",
         startedAt: new Date('2023-06-01'),
         finishedAt: new Date('2023-08-31'),
         createdAt: new Date(),
@@ -102,14 +102,16 @@ describe('SessionService', () => {
       mockPrismaService.session.findUnique.mockResolvedValue(null);
 
       await expect(service.findOne('999')).rejects.toThrow(NotFoundException);
-      await expect(service.findOne('999')).rejects.toThrow('Session with ID 999 not found');
+      await expect(service.findOne('999')).rejects.toThrow(
+        'Session with ID 999 not found',
+      );
     });
   });
 
   describe('create', () => {
     it('should create a new session', async () => {
       const createDto = {
-        label: 'Session d\'hiver 2023',
+        label: "Session d'hiver 2023",
         startedAt: new Date('2023-12-01'),
         finishedAt: new Date('2023-12-31'),
       };
@@ -137,11 +139,11 @@ describe('SessionService', () => {
   describe('update', () => {
     it('should update a session', async () => {
       const updateDto = {
-        label: 'Session d\'été 2023 (mise à jour)',
+        label: "Session d'été 2023 (mise à jour)",
       };
       const mockSession = {
         id: '1',
-        label: 'Session d\'été 2023 (mise à jour)',
+        label: "Session d'été 2023 (mise à jour)",
         startedAt: new Date('2023-06-01'),
         finishedAt: new Date('2023-08-31'),
         createdAt: new Date(),
@@ -167,8 +169,12 @@ describe('SessionService', () => {
       const mockError = { code: 'P2025' };
       mockPrismaService.session.update.mockRejectedValue(mockError);
 
-      await expect(service.update('999', updateDto)).rejects.toThrow(NotFoundException);
-      await expect(service.update('999', updateDto)).rejects.toThrow('Session with ID 999 not found');
+      await expect(service.update('999', updateDto)).rejects.toThrow(
+        NotFoundException,
+      );
+      await expect(service.update('999', updateDto)).rejects.toThrow(
+        'Session with ID 999 not found',
+      );
     });
   });
 
@@ -188,7 +194,9 @@ describe('SessionService', () => {
       mockPrismaService.session.delete.mockRejectedValue(mockError);
 
       await expect(service.remove('999')).rejects.toThrow(NotFoundException);
-      await expect(service.remove('999')).rejects.toThrow('Session with ID 999 not found');
+      await expect(service.remove('999')).rejects.toThrow(
+        'Session with ID 999 not found',
+      );
     });
   });
 });
