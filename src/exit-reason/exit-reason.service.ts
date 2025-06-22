@@ -1,6 +1,6 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { ExitReason, Prisma } from '@prisma/client';
+import { Prisma, ExitReason } from '@prisma/client';
 
 @Injectable()
 export class ExitReasonService {
@@ -12,26 +12,31 @@ export class ExitReasonService {
 
   async findOne(id: string): Promise<ExitReason | null> {
     return this.prisma.exitReason.findUnique({
-      where: { id },
+      where: { exit_reason_uuid: id },
     });
   }
 
-  async create(data: Prisma.ExitReasonCreateInput): Promise<ExitReason> {
+  async create(
+    createExitReasonData: Prisma.ExitReasonCreateInput,
+  ): Promise<ExitReason> {
     return this.prisma.exitReason.create({
-      data,
+      data: createExitReasonData,
     });
   }
 
-  async update(id: string, data: Prisma.ExitReasonUpdateInput): Promise<ExitReason> {
+  async update(
+    id: string,
+    updateExitReasonData: Prisma.ExitReasonUpdateInput,
+  ): Promise<ExitReason> {
     return this.prisma.exitReason.update({
-      where: { id },
-      data,
+      where: { exit_reason_uuid: id },
+      data: updateExitReasonData,
     });
   }
 
   async delete(id: string): Promise<ExitReason> {
     return this.prisma.exitReason.delete({
-      where: { id },
+      where: { exit_reason_uuid: id },
     });
   }
-} 
+}
