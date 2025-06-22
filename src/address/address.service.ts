@@ -12,7 +12,7 @@ export class AddressService {
 
   async findOne(id: string): Promise<Address | null> {
     return this.prisma.address.findUnique({
-      where: { id },
+      where: { address_uuid: id },
     });
   }
 
@@ -24,14 +24,14 @@ export class AddressService {
 
   async update(id: string, data: Prisma.AddressUpdateInput): Promise<Address> {
     return this.prisma.address.update({
-      where: { id },
+      where: { address_uuid: id },
       data,
     });
   }
 
   async delete(id: string): Promise<Address> {
     return this.prisma.address.delete({
-      where: { id },
+      where: { address_uuid: id },
     });
   }
-} 
+}
