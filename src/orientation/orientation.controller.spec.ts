@@ -67,7 +67,7 @@ describe('OrientationController', () => {
     it('should create a new orientation', async () => {
       const createDto: CreateOrientationDto = {
         type: 'Académique',
-        description: 'Orientation vers une formation académique'
+        description: 'Orientation vers une formation académique',
       };
       const result = {
         id: '2',
@@ -86,7 +86,7 @@ describe('OrientationController', () => {
   describe('update', () => {
     it('should update an orientation', async () => {
       const updateDto: UpdateOrientationDto = {
-        description: 'Orientation mise à jour'
+        description: 'Orientation mise à jour',
       };
       const result = {
         id: '3',
@@ -98,7 +98,10 @@ describe('OrientationController', () => {
       mockOrientationService.update.mockResolvedValue(result);
 
       expect(await controller.update('3', updateDto)).toBe(result);
-      expect(mockOrientationService.update).toHaveBeenCalledWith('3', updateDto);
+      expect(mockOrientationService.update).toHaveBeenCalledWith(
+        '3',
+        updateDto,
+      );
     });
   });
 
@@ -117,4 +120,4 @@ describe('OrientationController', () => {
       expect(mockOrientationService.delete).toHaveBeenCalledWith('1');
     });
   });
-}); 
+});
