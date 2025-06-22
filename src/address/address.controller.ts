@@ -1,101 +1,106 @@
-import { Controller, Get, Post, Put, Delete, Body, Param, UseGuards } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  UseGuards,
+} from '@nestjs/common';
 import { AddressService } from './address.service';
-import { Address } from '@prisma/client';
-import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiProperty, ApiParam, ApiBody } from '@nestjs/swagger';
 import { CreateAddressDto } from './dto/create-address.dto';
 import { UpdateAddressDto } from './dto/update-address.dto';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../auth/guards/roles.guard';
+import { Roles } from '../auth/decorators/roles.decorator';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiBearerAuth,
+  ApiParam,
+  ApiBody,
+} from '@nestjs/swagger';
 import { Prisma } from '@prisma/client';
 
-// DTO pour Swagger
-class AddressDto {
-  @ApiProperty({ description: 'Identifiant unique', example: 'abc-123' })
-  id: string;
-
-  @ApiProperty({ description: 'Rue', example: '12 rue de Paris' })
-  street: string;
-
-  @ApiProperty({ description: 'Complément d\'adresse', required: false, nullable: true, example: 'Appartement 4B' })
-  complement: string | null;
-
-  @ApiProperty({ description: 'Code postal', example: 75001, type: Number })
-  zipcode: number;
-
-  @ApiProperty({ description: 'Ville', example: 'Paris' })
-  city: string;
-
-  @ApiProperty({ description: 'Pays', default: 'France', example: 'France' })
-  country: string;
-}
-
+@Controller('addresses')
+@UseGuards(JwtAuthGuard, RolesGuard)
 @ApiTags('addresses')
 @ApiBearerAuth()
-@Controller('addresses')
-@UseGuards(JwtAuthGuard)
 export class AddressController {
   constructor(private readonly addressService: AddressService) {}
 
+  @Post()
+  @Roles('admin', 'teacher')
+  @ApiOperation({ summary: 'Créer une nouvelle adresse' })
+  @ApiResponse({ status: 201, description: 'Adresse créée avec succès' })
+  @ApiResponse({ status: 400, description: 'Données invalides' })
+  @ApiBody({ type: CreateAddressDto })
+  create(@Body() createAddressDto: CreateAddressDto) {
+    // Conversion du DTO en format Prisma
+    const prismaData: Prisma.AddressCreateInput = {
+      adress_street: createAddressDto.street,
+      adress_compladress: createAddressDto.complement,
+      adress_zipcode: createAddressDto.zipcode,
+      adress_city: createAddressDto.city,
+      // Note: Il n'y a pas de champ country dans le schéma Prisma
+    };
+
+    return this.addressService.create(prismaData);
+  }
+
   @Get()
+  @Roles('admin', 'teacher')
   @ApiOperation({ summary: 'Récupérer toutes les adresses' })
-  @ApiResponse({ status: 200, description: 'Retourne toutes les adresses', type: [AddressDto] })
-  async findAll(): Promise<Address[]> {
+  @ApiResponse({
+    status: 200,
+    description: 'Liste des adresses récupérée avec succès',
+  })
+  findAll() {
     return this.addressService.findAll();
   }
 
   @Get(':id')
-  @ApiOperation({ summary: 'Récupérer une adresse par son ID' })
-  @ApiResponse({ status: 200, description: 'Retourne l\'adresse', type: AddressDto })
-  @ApiResponse({ status: 404, description: 'Adresse introuvable' })
-  @ApiParam({ name: 'id', description: 'ID de l\'adresse' })
-  async findOne(@Param('id') id: string): Promise<Address | null> {
+  @Roles('admin', 'teacher')
+  @ApiOperation({ summary: 'Récupérer une adresse par ID' })
+  @ApiResponse({ status: 200, description: 'Adresse récupérée avec succès' })
+  @ApiResponse({ status: 404, description: 'Adresse non trouvée' })
+  @ApiParam({ name: 'id', description: "ID de l'adresse" })
+  findOne(@Param('id') id: string) {
     return this.addressService.findOne(id);
   }
 
-  @Post()
-  @ApiOperation({ summary: 'Créer une nouvelle adresse' })
-  @ApiResponse({ status: 201, description: 'Adresse créée avec succès', type: AddressDto })
-  @ApiBody({ type: CreateAddressDto })
-  async create(@Body() createAddressDto: CreateAddressDto): Promise<Address> {
-    // Conversion du DTO en format Prisma
-    const prismaData: Prisma.AddressCreateInput = {
-      street: createAddressDto.street,
-      complement: createAddressDto.complement,
-      zipcode: createAddressDto.zipcode,
-      city: createAddressDto.city,
-      country: createAddressDto.country || 'France'
-    };
-    
-    return this.addressService.create(prismaData);
-  }
-
-  @Put(':id')
+  @Patch(':id')
+  @Roles('admin', 'teacher')
   @ApiOperation({ summary: 'Mettre à jour une adresse' })
-  @ApiResponse({ status: 200, description: 'Adresse mise à jour avec succès', type: AddressDto })
-  @ApiResponse({ status: 404, description: 'Adresse introuvable' })
-  @ApiParam({ name: 'id', description: 'ID de l\'adresse' })
+  @ApiResponse({ status: 200, description: 'Adresse mise à jour avec succès' })
+  @ApiResponse({ status: 404, description: 'Adresse non trouvée' })
+  @ApiParam({ name: 'id', description: "ID de l'adresse" })
   @ApiBody({ type: UpdateAddressDto })
-  async update(
-    @Param('id') id: string,
-    @Body() updateAddressDto: UpdateAddressDto,
-  ): Promise<Address> {
-    // Conversion du DTO en format Prisma
+  update(@Param('id') id: string, @Body() updateAddressDto: UpdateAddressDto) {
     const prismaData: Prisma.AddressUpdateInput = {};
-    
-    if (updateAddressDto.street !== undefined) prismaData.street = updateAddressDto.street;
-    if (updateAddressDto.complement !== undefined) prismaData.complement = updateAddressDto.complement;
-    if (updateAddressDto.zipcode !== undefined) prismaData.zipcode = updateAddressDto.zipcode;
-    if (updateAddressDto.city !== undefined) prismaData.city = updateAddressDto.city;
-    if (updateAddressDto.country !== undefined) prismaData.country = updateAddressDto.country;
-    
+
+    if (updateAddressDto.street !== undefined)
+      prismaData.adress_street = updateAddressDto.street;
+    if (updateAddressDto.complement !== undefined)
+      prismaData.adress_compladress = updateAddressDto.complement;
+    if (updateAddressDto.zipcode !== undefined)
+      prismaData.adress_zipcode = updateAddressDto.zipcode;
+    if (updateAddressDto.city !== undefined)
+      prismaData.adress_city = updateAddressDto.city;
+    // Note: Pas de mise à jour du country car le champ n'existe pas dans le schéma
+
     return this.addressService.update(id, prismaData);
   }
 
   @Delete(':id')
+  @Roles('admin', 'teacher')
   @ApiOperation({ summary: 'Supprimer une adresse' })
-  @ApiResponse({ status: 200, description: 'Adresse supprimée avec succès', type: AddressDto })
-  @ApiResponse({ status: 404, description: 'Adresse introuvable' })
-  @ApiParam({ name: 'id', description: 'ID de l\'adresse' })
-  async delete(@Param('id') id: string): Promise<Address> {
+  @ApiResponse({ status: 200, description: 'Adresse supprimée avec succès' })
+  @ApiResponse({ status: 404, description: 'Adresse non trouvée' })
+  @ApiParam({ name: 'id', description: "ID de l'adresse" })
+  remove(@Param('id') id: string) {
     return this.addressService.delete(id);
   }
-} 
+}
