@@ -14,7 +14,7 @@ describe('AbsenceService', () => {
     course_id: 'course-id',
     reason: 'Maladie',
     student: { id: 'student-id', firstname: 'John', lastname: 'Doe' },
-    course: { course_id: 'course-id', intitule: 'Français A1' }
+    course: { course_id: 'course-id', intitule: 'Français A1' },
   };
 
   const prismaMock = {
@@ -24,8 +24,8 @@ describe('AbsenceService', () => {
       findUnique: vi.fn(),
       update: vi.fn(),
       delete: vi.fn(),
-      count: vi.fn()
-    }
+      count: vi.fn(),
+    },
   };
 
   beforeEach(async () => {
@@ -44,13 +44,13 @@ describe('AbsenceService', () => {
       const createData: Prisma.AbsenceCreateInput = {
         student: { connect: { id: 'student-id' } },
         course: { connect: { course_id: 'course-id' } },
-        reason: 'Maladie'
+        reason: 'Maladie',
       };
 
       prismaMock.absence.create.mockResolvedValue(mockAbsence);
 
       const result = await service.create(createData);
-      
+
       expect(prismaMock.absence.create).toHaveBeenCalledWith({
         data: createData,
         include: {
@@ -67,14 +67,14 @@ describe('AbsenceService', () => {
       const params = {
         skip: 0,
         take: 10,
-        where: { student_id: 'student-id' }
+        where: { student_id: 'student-id' },
       };
 
       prismaMock.absence.findMany.mockResolvedValue([mockAbsence]);
       prismaMock.absence.count.mockResolvedValue(1);
 
       const result = await service.findAll(params);
-      
+
       expect(prismaMock.absence.findMany).toHaveBeenCalledWith({
         skip: params.skip,
         take: params.take,
@@ -86,7 +86,7 @@ describe('AbsenceService', () => {
         },
       });
       expect(prismaMock.absence.count).toHaveBeenCalledWith({
-        where: params.where
+        where: params.where,
       });
       expect(result).toEqual({
         data: [mockAbsence],
@@ -104,7 +104,7 @@ describe('AbsenceService', () => {
       prismaMock.absence.findUnique.mockResolvedValue(mockAbsence);
 
       const result = await service.findOne('absence-id');
-      
+
       expect(prismaMock.absence.findUnique).toHaveBeenCalledWith({
         where: { id: 'absence-id' },
         include: {
@@ -115,11 +115,11 @@ describe('AbsenceService', () => {
       expect(result).toEqual(mockAbsence);
     });
 
-    it('devrait lancer une exception si l\'absence n\'existe pas', async () => {
+    it("devrait lancer une exception si l'absence n'existe pas", async () => {
       prismaMock.absence.findUnique.mockResolvedValue(null);
 
       await expect(service.findOne('nonexistent-id')).rejects.toThrow(
-        new NotFoundException('Absence with ID nonexistent-id not found')
+        new NotFoundException('Absence with ID nonexistent-id not found'),
       );
     });
   });
@@ -127,16 +127,16 @@ describe('AbsenceService', () => {
   describe('update', () => {
     it('devrait mettre à jour une absence', async () => {
       const updateData: Prisma.AbsenceUpdateInput = {
-        reason: 'Rendez-vous médical'
+        reason: 'Rendez-vous médical',
       };
 
       prismaMock.absence.update.mockResolvedValue({
         ...mockAbsence,
-        reason: 'Rendez-vous médical'
+        reason: 'Rendez-vous médical',
       });
 
       const result = await service.update('absence-id', updateData);
-      
+
       expect(prismaMock.absence.update).toHaveBeenCalledWith({
         where: { id: 'absence-id' },
         data: updateData,
@@ -148,14 +148,14 @@ describe('AbsenceService', () => {
       expect(result.reason).toBe('Rendez-vous médical');
     });
 
-    it('devrait lancer une exception si l\'absence n\'existe pas', async () => {
+    it("devrait lancer une exception si l'absence n'existe pas", async () => {
       const prismaError = new Error('Record not found');
       (prismaError as any).code = 'P2025';
-      
+
       prismaMock.absence.update.mockRejectedValue(prismaError);
 
       await expect(service.update('nonexistent-id', {})).rejects.toThrow(
-        new NotFoundException('Absence with ID nonexistent-id not found')
+        new NotFoundException('Absence with ID nonexistent-id not found'),
       );
     });
   });
@@ -165,21 +165,21 @@ describe('AbsenceService', () => {
       prismaMock.absence.delete.mockResolvedValue(mockAbsence);
 
       const result = await service.remove('absence-id');
-      
+
       expect(prismaMock.absence.delete).toHaveBeenCalledWith({
         where: { id: 'absence-id' },
       });
       expect(result).toEqual(mockAbsence);
     });
 
-    it('devrait lancer une exception si l\'absence n\'existe pas', async () => {
+    it("devrait lancer une exception si l'absence n'existe pas", async () => {
       const prismaError = new Error('Record not found');
       (prismaError as any).code = 'P2025';
-      
+
       prismaMock.absence.delete.mockRejectedValue(prismaError);
 
       await expect(service.remove('nonexistent-id')).rejects.toThrow(
-        new NotFoundException('Absence with ID nonexistent-id not found')
+        new NotFoundException('Absence with ID nonexistent-id not found'),
       );
     });
   });
