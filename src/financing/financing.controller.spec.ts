@@ -9,7 +9,7 @@ describe('FinancingController', () => {
 
   const mockFinancing = {
     id: 'financing-id',
-    type: 'Pôle Emploi'
+    type: 'Pôle Emploi',
   };
 
   const financingServiceMock = {
@@ -17,13 +17,15 @@ describe('FinancingController', () => {
     findOne: vi.fn(),
     create: vi.fn(),
     update: vi.fn(),
-    delete: vi.fn()
+    delete: vi.fn(),
   };
 
   beforeEach(async () => {
-    controller = new FinancingController(financingServiceMock as unknown as FinancingService);
+    controller = new FinancingController(
+      financingServiceMock as unknown as FinancingService,
+    );
     financingService = financingServiceMock as unknown as FinancingService;
-    
+
     // Reset les mocks après chaque test
     vi.clearAllMocks();
   });
@@ -53,12 +55,14 @@ describe('FinancingController', () => {
       expect(result).toEqual(mockFinancing);
     });
 
-    it('devrait retourner null si le financement n\'existe pas', async () => {
+    it("devrait retourner null si le financement n'existe pas", async () => {
       financingServiceMock.findOne.mockResolvedValue(null);
 
       const result = await controller.findOne('nonexistent-id');
 
-      expect(financingServiceMock.findOne).toHaveBeenCalledWith('nonexistent-id');
+      expect(financingServiceMock.findOne).toHaveBeenCalledWith(
+        'nonexistent-id',
+      );
       expect(result).toBeNull();
     });
   });
@@ -66,14 +70,16 @@ describe('FinancingController', () => {
   describe('create', () => {
     it('devrait créer un nouveau financement', async () => {
       const createFinancingData = {
-        type: 'Pôle Emploi'
+        type: 'Pôle Emploi',
       };
 
       financingServiceMock.create.mockResolvedValue(mockFinancing);
 
       const result = await controller.create(createFinancingData);
 
-      expect(financingServiceMock.create).toHaveBeenCalledWith(createFinancingData);
+      expect(financingServiceMock.create).toHaveBeenCalledWith(
+        createFinancingData,
+      );
       expect(result).toEqual(mockFinancing);
     });
   });
@@ -81,19 +87,25 @@ describe('FinancingController', () => {
   describe('update', () => {
     it('devrait mettre à jour un financement', async () => {
       const updateFinancingData = {
-        type: 'Financement personnel'
+        type: 'Financement personnel',
       };
 
       const updatedFinancing = {
         ...mockFinancing,
-        type: 'Financement personnel'
+        type: 'Financement personnel',
       };
 
       financingServiceMock.update.mockResolvedValue(updatedFinancing);
 
-      const result = await controller.update('financing-id', updateFinancingData);
+      const result = await controller.update(
+        'financing-id',
+        updateFinancingData,
+      );
 
-      expect(financingServiceMock.update).toHaveBeenCalledWith('financing-id', updateFinancingData);
+      expect(financingServiceMock.update).toHaveBeenCalledWith(
+        'financing-id',
+        updateFinancingData,
+      );
       expect(result.type).toBe('Financement personnel');
     });
   });
@@ -108,4 +120,4 @@ describe('FinancingController', () => {
       expect(result).toEqual(mockFinancing);
     });
   });
-}); 
+});
