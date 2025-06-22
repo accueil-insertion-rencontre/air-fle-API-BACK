@@ -14,7 +14,7 @@ describe('AddressController', () => {
     complement: 'Appartement 4B',
     zipcode: 75001,
     city: 'Paris',
-    country: 'France'
+    country: 'France',
   };
 
   const addressServiceMock = {
@@ -22,12 +22,14 @@ describe('AddressController', () => {
     findOne: vi.fn(),
     create: vi.fn(),
     update: vi.fn(),
-    delete: vi.fn()
+    delete: vi.fn(),
   };
 
   beforeEach(async () => {
-    controller = new AddressController(addressServiceMock as unknown as AddressService);
-    
+    controller = new AddressController(
+      addressServiceMock as unknown as AddressService,
+    );
+
     // Reset les mocks après chaque test
     vi.clearAllMocks();
   });
@@ -57,7 +59,7 @@ describe('AddressController', () => {
       expect(result).toEqual(mockAddress);
     });
 
-    it('devrait retourner null si l\'adresse n\'existe pas', async () => {
+    it("devrait retourner null si l'adresse n'existe pas", async () => {
       addressServiceMock.findOne.mockResolvedValue(null);
 
       const result = await controller.findOne('nonexistent-id');
@@ -74,7 +76,7 @@ describe('AddressController', () => {
         complement: 'Appartement 4B',
         zipcode: 75001,
         city: 'Paris',
-        country: 'France'
+        country: 'France',
       };
 
       addressServiceMock.create.mockResolvedValue(mockAddress);
@@ -89,19 +91,22 @@ describe('AddressController', () => {
   describe('update', () => {
     it('devrait mettre à jour une adresse', async () => {
       const updateAddressDto: UpdateAddressDto = {
-        city: 'Lyon'
+        city: 'Lyon',
       };
 
       const updatedAddress = {
         ...mockAddress,
-        city: 'Lyon'
+        city: 'Lyon',
       };
 
       addressServiceMock.update.mockResolvedValue(updatedAddress);
 
       const result = await controller.update('address-id', updateAddressDto);
 
-      expect(addressServiceMock.update).toHaveBeenCalledWith('address-id', updateAddressDto);
+      expect(addressServiceMock.update).toHaveBeenCalledWith(
+        'address-id',
+        updateAddressDto,
+      );
       expect(result.city).toBe('Lyon');
     });
   });
@@ -116,4 +121,4 @@ describe('AddressController', () => {
       expect(result).toEqual(mockAddress);
     });
   });
-}); 
+});
