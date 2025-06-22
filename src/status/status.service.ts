@@ -1,6 +1,6 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { Status, Prisma } from '@prisma/client';
+import { Prisma, Status } from '@prisma/client';
 
 @Injectable()
 export class StatusService {
@@ -12,26 +12,29 @@ export class StatusService {
 
   async findOne(id: string): Promise<Status | null> {
     return this.prisma.status.findUnique({
-      where: { id },
+      where: { status_uuid: id },
     });
   }
 
-  async create(data: Prisma.StatusCreateInput): Promise<Status> {
+  async create(createStatusData: Prisma.StatusCreateInput): Promise<Status> {
     return this.prisma.status.create({
-      data,
+      data: createStatusData,
     });
   }
 
-  async update(id: string, data: Prisma.StatusUpdateInput): Promise<Status> {
+  async update(
+    id: string,
+    updateStatusData: Prisma.StatusUpdateInput,
+  ): Promise<Status> {
     return this.prisma.status.update({
-      where: { id },
-      data,
+      where: { status_uuid: id },
+      data: updateStatusData,
     });
   }
 
   async delete(id: string): Promise<Status> {
     return this.prisma.status.delete({
-      where: { id },
+      where: { status_uuid: id },
     });
   }
-} 
+}
