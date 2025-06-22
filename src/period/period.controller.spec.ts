@@ -67,7 +67,7 @@ describe('PeriodController', () => {
         label: 'Semestre 2',
         startedAt: '2023-01-01T00:00:00.000Z',
         endedAt: '2023-06-30T00:00:00.000Z',
-        actual_period: false
+        actual_period: false,
       };
       const result = {
         id: '2',
@@ -114,4 +114,4 @@ describe('PeriodController', () => {
       expect(mockPeriodService.delete).toHaveBeenCalledWith('1');
     });
   });
-}); 
+});
