@@ -13,7 +13,7 @@ describe('ExamController', () => {
     taked_at: new Date('2023-09-15T10:00:00Z'),
     note: 'B1 - 14/20',
     student_id: 'student-id',
-    student: { id: 'student-id', firstname: 'John', lastname: 'Doe' }
+    student: { id: 'student-id', firstname: 'John', lastname: 'Doe' },
   };
 
   const examServiceMock = {
@@ -21,13 +21,13 @@ describe('ExamController', () => {
     findOne: vi.fn(),
     create: vi.fn(),
     update: vi.fn(),
-    delete: vi.fn()
+    delete: vi.fn(),
   };
 
   beforeEach(async () => {
     controller = new ExamController(examServiceMock as unknown as ExamService);
     examService = examServiceMock as unknown as ExamService;
-    
+
     // Reset les mocks après chaque test
     vi.clearAllMocks();
   });
@@ -57,7 +57,7 @@ describe('ExamController', () => {
       expect(result).toEqual(mockExam);
     });
 
-    it('devrait retourner null si l\'examen n\'existe pas', async () => {
+    it("devrait retourner null si l'examen n'existe pas", async () => {
       examServiceMock.findOne.mockResolvedValue(null);
 
       const result = await controller.findOne('nonexistent-id');
@@ -73,7 +73,7 @@ describe('ExamController', () => {
         label: 'Examen final A1',
         taked_at: new Date('2023-09-15T10:00:00Z'),
         note: 'B1 - 14/20',
-        student: { connect: { id: 'student-id' } }
+        student: { connect: { id: 'student-id' } },
       };
 
       examServiceMock.create.mockResolvedValue(mockExam);
@@ -89,20 +89,23 @@ describe('ExamController', () => {
     it('devrait mettre à jour un examen', async () => {
       const updateExamData = {
         label: 'Examen final A2',
-        note: 'A2 - 16/20'
+        note: 'A2 - 16/20',
       };
 
       const updatedExam = {
         ...mockExam,
         label: 'Examen final A2',
-        note: 'A2 - 16/20'
+        note: 'A2 - 16/20',
       };
 
       examServiceMock.update.mockResolvedValue(updatedExam);
 
       const result = await controller.update('exam-id', updateExamData);
 
-      expect(examServiceMock.update).toHaveBeenCalledWith('exam-id', updateExamData);
+      expect(examServiceMock.update).toHaveBeenCalledWith(
+        'exam-id',
+        updateExamData,
+      );
       expect(result.label).toBe('Examen final A2');
       expect(result.note).toBe('A2 - 16/20');
     });
@@ -118,4 +121,4 @@ describe('ExamController', () => {
       expect(result).toEqual(mockExam);
     });
   });
-}); 
+});
