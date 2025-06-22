@@ -93,7 +93,10 @@ describe('NationalityController', () => {
       mockNationalityService.update.mockResolvedValue(result);
 
       expect(await controller.update('3', updateDto)).toBe(result);
-      expect(mockNationalityService.update).toHaveBeenCalledWith('3', updateDto);
+      expect(mockNationalityService.update).toHaveBeenCalledWith(
+        '3',
+        updateDto,
+      );
     });
   });
 
@@ -111,4 +114,4 @@ describe('NationalityController', () => {
       expect(mockNationalityService.delete).toHaveBeenCalledWith('1');
     });
   });
-}); 
+});
