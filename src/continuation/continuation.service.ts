@@ -1,59 +1,133 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { Continuation, Prisma } from '@prisma/client';
+import { Prisma, Continuation } from '@prisma/client';
+import { LearnerHistoryService } from '../learner-history/learner-history.service';
+
+// Type pour une continuation avec ses relations
+type ContinuationWithRelations = Prisma.ContinuationGetPayload<{
+  include: {
+    student: true;
+  };
+}>;
 
 @Injectable()
 export class ContinuationService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private learnerHistoryService: LearnerHistoryService,
+  ) {}
 
-  async findAll(): Promise<Continuation[]> {
+  async findAll(studentId: string): Promise<ContinuationWithRelations[]> {
     return this.prisma.continuation.findMany({
+      where: { student_uuid: studentId },
       include: {
-        student: true
-      }
+        student: true,
+      },
     });
   }
 
-  async findOne(id: string): Promise<Continuation | null> {
+  async findOne(id: string): Promise<ContinuationWithRelations | null> {
     return this.prisma.continuation.findUnique({
-      where: { id },
+      where: { continuation_uuid: id },
       include: {
-        student: true
-      }
+        student: true,
+      },
     });
   }
 
-  async findByStudent(studentId: string): Promise<Continuation | null> {
-    return this.prisma.continuation.findUnique({
-      where: { student_id: studentId },
+  async create(
+    createContinuationData: Prisma.ContinuationCreateInput,
+  ): Promise<ContinuationWithRelations> {
+    const continuation = await this.prisma.continuation.create({
+      data: createContinuationData,
       include: {
-        student: true
-      }
+        student: true,
+      },
     });
+
+    // Enregistrer dans l'historique
+    await this.learnerHistoryService.recordChange({
+      studentId: continuation.student_uuid,
+      entityType: 'continuation',
+      entityId: continuation.continuation_uuid,
+      actionType: 'created',
+      changeType: 'continuation_creation',
+      description: `Nouvelle continuation créée`,
+      newData: {
+        temporality: continuation.continuation_temporality,
+        commentary: continuation.continuation_commentary,
+      },
+    });
+
+    return continuation;
   }
 
-  async create(data: Prisma.ContinuationCreateInput): Promise<Continuation> {
-    return this.prisma.continuation.create({
-      data,
+  async update(
+    id: string,
+    updateContinuationData: Prisma.ContinuationUpdateInput,
+  ): Promise<ContinuationWithRelations> {
+    // Récupérer la continuation avant modification pour l'historique
+    const currentContinuation = await this.findOne(id);
+    if (!currentContinuation) {
+      throw new NotFoundException(`Continuation avec l'ID ${id} non trouvée`);
+    }
+
+    const continuation = await this.prisma.continuation.update({
+      where: { continuation_uuid: id },
+      data: updateContinuationData,
       include: {
-        student: true
-      }
+        student: true,
+      },
     });
+
+    // Enregistrer dans l'historique
+    await this.learnerHistoryService.recordChange({
+      studentId: continuation.student_uuid,
+      entityType: 'continuation',
+      entityId: continuation.continuation_uuid,
+      actionType: 'updated',
+      changeType: 'continuation_modification',
+      description: `Continuation modifiée`,
+      previousData: {
+        temporality: currentContinuation.continuation_temporality,
+        commentary: currentContinuation.continuation_commentary,
+      },
+      newData: {
+        temporality: continuation.continuation_temporality,
+        commentary: continuation.continuation_commentary,
+      },
+    });
+
+    return continuation;
   }
 
-  async update(id: string, data: Prisma.ContinuationUpdateInput): Promise<Continuation> {
-    return this.prisma.continuation.update({
-      where: { id },
-      data,
-      include: {
-        student: true
-      }
-    });
-  }
+  async delete(id: string): Promise<ContinuationWithRelations> {
+    const continuation = await this.findOne(id);
+    if (!continuation) {
+      throw new NotFoundException(`Continuation avec l'ID ${id} non trouvée`);
+    }
 
-  async delete(id: string): Promise<Continuation> {
-    return this.prisma.continuation.delete({
-      where: { id },
+    const deletedContinuation = await this.prisma.continuation.delete({
+      where: { continuation_uuid: id },
+      include: {
+        student: true,
+      },
     });
+
+    // Enregistrer dans l'historique
+    await this.learnerHistoryService.recordChange({
+      studentId: deletedContinuation.student_uuid,
+      entityType: 'continuation',
+      entityId: deletedContinuation.continuation_uuid,
+      actionType: 'deleted',
+      changeType: 'continuation_deletion',
+      description: `Continuation supprimée`,
+      previousData: {
+        temporality: deletedContinuation.continuation_temporality,
+        commentary: deletedContinuation.continuation_commentary,
+      },
+    });
+
+    return deletedContinuation;
   }
-} 
+}
