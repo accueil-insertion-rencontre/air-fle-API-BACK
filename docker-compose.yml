@@ -63,6 +63,7 @@ services:
         condition: service_healthy
     volumes:
       - ./src:/app/src
+      - ./test:/app/test
       - ./prisma:/app/prisma
       - ./package.json:/app/package.json
       - ./tsconfig.json:/app/tsconfig.json
