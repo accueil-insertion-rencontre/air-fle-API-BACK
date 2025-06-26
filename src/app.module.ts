@@ -24,6 +24,7 @@ import { ExamModule } from './exam/exam.module';
 import { ContinuationModule } from './continuation/continuation.module';
 import { TaskModule } from './task/task.module';
 import { DisabilityModule } from './disability/disability.module';
+import { DocumentModule } from './document/document.module';
 
 @Module({
   imports: [
@@ -53,6 +54,7 @@ import { DisabilityModule } from './disability/disability.module';
     ContinuationModule,
     TaskModule,
     DisabilityModule,
+    DocumentModule,
   ],
   controllers: [AppController],
   providers: [AppService],
