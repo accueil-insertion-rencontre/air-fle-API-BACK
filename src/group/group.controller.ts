@@ -10,7 +10,6 @@ import {
   Query,
 } from '@nestjs/common';
 import { GroupService } from './group.service';
-import { Group } from '@prisma/client';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
@@ -25,7 +24,7 @@ import {
 } from '@nestjs/swagger';
 import { CreateGroupDto } from './dto/create-group.dto';
 import { UpdateGroupDto } from './dto/update-group.dto';
-import { Prisma } from '@prisma/client';
+import { GroupFilters } from './interfaces/group.interface';
 
 @ApiTags('groups')
 @ApiBearerAuth()
@@ -40,16 +39,10 @@ export class GroupController {
   @ApiResponse({ status: 201, description: 'Groupe créé avec succès' })
   @ApiBody({ type: CreateGroupDto })
   async create(@Body() createGroupDto: CreateGroupDto) {
-    const prismaData: Prisma.GroupCreateInput = {
+    return this.groupService.createGroup({
       group_label: createGroupDto.group_label,
-      session: {
-        connect: {
-          session_uuid: createGroupDto.session_uuid,
-        },
-      },
-    };
-
-    return this.groupService.create(prismaData);
+      session_uuid: createGroupDto.session_uuid,
+    });
   }
 
   @Get()
@@ -72,21 +65,17 @@ export class GroupController {
     @Query('session_uuid') session_uuid?: string,
     @Query('period_uuid') period_uuid?: string,
   ) {
-    const where: Prisma.GroupWhereInput = {};
-
+    const filters: GroupFilters = {};
+    
     if (session_uuid) {
-      where.session_uuid = session_uuid;
+      filters.session_uuid = session_uuid;
     }
-
+    
     if (period_uuid) {
-      where.periods = {
-        some: {
-          period_uuid: period_uuid,
-        },
-      };
+      filters.period_uuid = period_uuid;
     }
 
-    return this.groupService.findAll({ where });
+    return this.groupService.findAll(filters);
   }
 
   @Get(':id')
@@ -95,7 +84,7 @@ export class GroupController {
   @ApiResponse({ status: 404, description: 'Groupe non trouvé' })
   @ApiParam({ name: 'id', description: 'UUID du groupe' })
   async findOne(@Param('id') id: string) {
-    return this.groupService.findOne(id);
+    return this.groupService.findById(id);
   }
 
   @Put(':id')
@@ -109,21 +98,10 @@ export class GroupController {
     @Param('id') id: string,
     @Body() updateGroupDto: UpdateGroupDto,
   ) {
-    const prismaData: Prisma.GroupUpdateInput = {};
-
-    if (updateGroupDto.group_label !== undefined) {
-      prismaData.group_label = updateGroupDto.group_label;
-    }
-
-    if (updateGroupDto.session_uuid) {
-      prismaData.session = {
-        connect: {
-          session_uuid: updateGroupDto.session_uuid,
-        },
-      };
-    }
-
-    return this.groupService.update(id, prismaData);
+    return this.groupService.updateGroup(id, {
+      group_label: updateGroupDto.group_label,
+      session_uuid: updateGroupDto.session_uuid,
+    });
   }
 
   @Delete(':id')
@@ -133,7 +111,7 @@ export class GroupController {
   @ApiResponse({ status: 404, description: 'Groupe non trouvé' })
   @ApiParam({ name: 'id', description: 'UUID du groupe' })
   async remove(@Param('id') id: string) {
-    return this.groupService.remove(id);
+    return this.groupService.deleteGroup(id);
   }
 
   @Post(':id/students/:student_uuid')
@@ -162,5 +140,14 @@ export class GroupController {
     @Param('student_uuid') student_uuid: string,
   ) {
     return this.groupService.removeStudent(groupId, student_uuid);
+  }
+
+  @Get(':id/students')
+  @ApiOperation({ summary: 'Récupérer les étudiants du groupe' })
+  @ApiResponse({ status: 200, description: 'Étudiants récupérés avec succès' })
+  @ApiResponse({ status: 404, description: 'Groupe non trouvé' })
+  @ApiParam({ name: 'id', description: 'UUID du groupe' })
+  async getStudents(@Param('id') groupId: string) {
+    return this.groupService.getStudentsByGroup(groupId);
   }
 }
