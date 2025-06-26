@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Inject } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { LearnerHistory, Prisma } from '@prisma/client';
 
@@ -16,7 +16,7 @@ export interface LearnerHistoryChange {
 
 @Injectable()
 export class LearnerHistoryService {
-  constructor(private prisma: PrismaService) {}
+  constructor(@Inject(PrismaService) private prisma: PrismaService) {}
 
   /**
    * Enregistre un changement dans l'historique d'un apprenant
