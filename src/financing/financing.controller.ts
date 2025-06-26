@@ -7,6 +7,9 @@ import {
   Param,
   Delete,
   UseGuards,
+  Inject,
+  UsePipes,
+  ValidationPipe,
 } from '@nestjs/common';
 import { FinancingService } from './financing.service';
 import { CreateFinancingDto } from './dto/create-financing.dto';
@@ -29,10 +32,11 @@ import { Prisma } from '@prisma/client';
 @ApiTags('financings')
 @ApiBearerAuth()
 export class FinancingController {
-  constructor(private readonly financingService: FinancingService) {}
+  constructor(@Inject(FinancingService) private readonly financingService: FinancingService) {}
 
   @Post()
   @Roles('admin', 'teacher')
+  @UsePipes(new ValidationPipe({ transform: true, whitelist: true, forbidNonWhitelisted: true }))
   @ApiOperation({ summary: 'Créer un nouveau financement' })
   @ApiResponse({ status: 201, description: 'Financement créé avec succès' })
   @ApiResponse({ status: 400, description: 'Données invalides' })
