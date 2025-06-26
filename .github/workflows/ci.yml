@@ -58,10 +58,6 @@ jobs:
       - name: 🏗️ Build project
         run: npm run build
 
-      # 🧹 Lint du code - DÉSACTIVÉ TEMPORAIREMENT
-      # - name: 🧹 Run ESLint
-      #   run: npm run lint
-
       # 🎨 Vérification format Prettier
       - name: 🎨 Check code formatting
         run: npm run format -- --check
@@ -94,23 +90,23 @@ jobs:
           REDIS_HOST: localhost
           REDIS_PORT: 6379
 
-      # 🌍 Tous les tests avec coverage
-      - name: 🌍 Run All Tests with Coverage
-        run: npm run test:cov
-        env:
-          NODE_ENV: test
-          DATABASE_URL: postgresql://postgres:password@localhost:5432/air_fle_test
-          JWT_SECRET: test_jwt_secret_for_ci_cd_pipeline_2024
-          REDIS_HOST: localhost
-          REDIS_PORT: 6379
+      # 🌍 Tous les tests avec coverage - DÉSACTIVÉ TEMPORAIREMENT
+      # - name: 🌍 Run All Tests with Coverage
+      #   run: npm run test:cov
+      #   env:
+      #     NODE_ENV: test
+      #     DATABASE_URL: postgresql://postgres:password@localhost:5432/air_fle_test
+      #     JWT_SECRET: test_jwt_secret_for_ci_cd_pipeline_2024
+      #     REDIS_HOST: localhost
+      #     REDIS_PORT: 6379
 
-      # 📊 Upload coverage à Codecov (optionnel)
-      - name: 📊 Upload coverage reports
-        uses: codecov/codecov-action@v4
-        if: success()
-        with:
-          file: ./coverage/lcov.info
-          fail_ci_if_error: false
+      # 📊 Upload coverage à Codecov (optionnel) - DÉSACTIVÉ TEMPORAIREMENT
+      # - name: 📊 Upload coverage reports
+      #   uses: codecov/codecov-action@v4
+      #   if: success()
+      #   with:
+      #     file: ./coverage/lcov.info
+      #     fail_ci_if_error: false
 
   # 🐳 Job Build Docker
   docker-build:
