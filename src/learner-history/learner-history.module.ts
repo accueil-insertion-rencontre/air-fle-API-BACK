@@ -9,4 +9,4 @@ import { LearnerHistoryController } from './learner-history.controller';
   providers: [LearnerHistoryService],
   exports: [LearnerHistoryService], // Export pour utilisation dans d'autres modules
 })
-export class LearnerHistoryModule {} 
+export class LearnerHistoryModule {}

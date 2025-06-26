@@ -1,72 +1,105 @@
-import { Controller, Get, Post, Put, Delete, Body, Param, UseGuards } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  UseGuards,
+  Inject,
+  UsePipes,
+  ValidationPipe,
+} from '@nestjs/common';
 import { FinancingService } from './financing.service';
-import { Financing } from '@prisma/client';
-import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse, ApiParam, ApiBody } from '@nestjs/swagger';
 import { CreateFinancingDto } from './dto/create-financing.dto';
 import { UpdateFinancingDto } from './dto/update-financing.dto';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../auth/guards/roles.guard';
+import { Roles } from '../auth/decorators/roles.decorator';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiBearerAuth,
+  ApiParam,
+  ApiBody,
+} from '@nestjs/swagger';
 import { Prisma } from '@prisma/client';
 
+@Controller('financings')
+@UseGuards(JwtAuthGuard, RolesGuard)
 @ApiTags('financings')
 @ApiBearerAuth()
-@Controller('financings')
-@UseGuards(JwtAuthGuard)
 export class FinancingController {
-  constructor(private readonly financingService: FinancingService) {}
+  constructor(@Inject(FinancingService) private readonly financingService: FinancingService) {}
+
+  @Post()
+  @Roles('admin', 'teacher')
+  @UsePipes(new ValidationPipe({ transform: true, whitelist: true, forbidNonWhitelisted: true }))
+  @ApiOperation({ summary: 'Créer un nouveau financement' })
+  @ApiResponse({ status: 201, description: 'Financement créé avec succès' })
+  @ApiResponse({ status: 400, description: 'Données invalides' })
+  @ApiBody({ type: CreateFinancingDto })
+  create(@Body() createFinancingDto: CreateFinancingDto) {
+    const prismaData: Prisma.FinancingCreateInput = {
+      financing_type: createFinancingDto.financing_type,
+    };
+
+    return this.financingService.create(prismaData);
+  }
 
   @Get()
-  @ApiOperation({ summary: 'Récupérer tous les types de financement' })
-  @ApiResponse({ status: 200, description: 'Liste des financements récupérée avec succès' })
-  async findAll(): Promise<Financing[]> {
+  @Roles('admin', 'teacher')
+  @ApiOperation({ summary: 'Récupérer tous les financements' })
+  @ApiResponse({
+    status: 200,
+    description: 'Liste des financements récupérée avec succès',
+  })
+  findAll() {
     return this.financingService.findAll();
   }
 
   @Get(':id')
-  @ApiOperation({ summary: 'Récupérer un type de financement par ID' })
+  @Roles('admin', 'teacher')
+  @ApiOperation({ summary: 'Récupérer un financement par ID' })
   @ApiResponse({ status: 200, description: 'Financement récupéré avec succès' })
   @ApiResponse({ status: 404, description: 'Financement non trouvé' })
-  @ApiParam({ name: 'id', description: 'ID du financement' })
-  async findOne(@Param('id') id: string): Promise<Financing | null> {
+  @ApiParam({ name: 'id', description: 'UUID du financement' })
+  findOne(@Param('id') id: string) {
     return this.financingService.findOne(id);
   }
 
-  @Post()
-  @ApiOperation({ summary: 'Créer un nouveau type de financement' })
-  @ApiResponse({ status: 201, description: 'Financement créé avec succès' })
-  @ApiBody({ type: CreateFinancingDto })
-  async create(@Body() createFinancingDto: CreateFinancingDto): Promise<Financing> {
-    // Conversion du DTO en format Prisma
-    const prismaData: Prisma.FinancingCreateInput = {
-      type: createFinancingDto.type
-    };
-    
-    return this.financingService.create(prismaData);
-  }
-
-  @Put(':id')
-  @ApiOperation({ summary: 'Mettre à jour un type de financement' })
-  @ApiResponse({ status: 200, description: 'Financement mis à jour avec succès' })
+  @Patch(':id')
+  @Roles('admin', 'teacher')
+  @ApiOperation({ summary: 'Mettre à jour un financement' })
+  @ApiResponse({
+    status: 200,
+    description: 'Financement mis à jour avec succès',
+  })
   @ApiResponse({ status: 404, description: 'Financement non trouvé' })
-  @ApiParam({ name: 'id', description: 'ID du financement' })
+  @ApiParam({ name: 'id', description: 'UUID du financement' })
   @ApiBody({ type: UpdateFinancingDto })
-  async update(
+  update(
     @Param('id') id: string,
     @Body() updateFinancingDto: UpdateFinancingDto,
-  ): Promise<Financing> {
-    // Conversion du DTO en format Prisma
-    const prismaData: Prisma.FinancingUpdateInput = {
-      type: updateFinancingDto.type
-    };
-    
+  ) {
+    const prismaData: Prisma.FinancingUpdateInput = {};
+
+    if (updateFinancingDto.financing_type !== undefined) {
+      prismaData.financing_type = updateFinancingDto.financing_type;
+    }
+
     return this.financingService.update(id, prismaData);
   }
 
   @Delete(':id')
-  @ApiOperation({ summary: 'Supprimer un type de financement' })
+  @Roles('admin', 'teacher')
+  @ApiOperation({ summary: 'Supprimer un financement' })
   @ApiResponse({ status: 200, description: 'Financement supprimé avec succès' })
   @ApiResponse({ status: 404, description: 'Financement non trouvé' })
-  @ApiParam({ name: 'id', description: 'ID du financement' })
-  async delete(@Param('id') id: string): Promise<Financing> {
+  @ApiParam({ name: 'id', description: 'UUID du financement' })
+  remove(@Param('id') id: string) {
     return this.financingService.delete(id);
   }
-} 
+}

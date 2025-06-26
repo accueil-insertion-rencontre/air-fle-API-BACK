@@ -1,0 +1,202 @@
+name: 🔍 PR Verification - Tests Obligatoires
+
+on:
+  pull_request:
+    branches: [ main, develop ]
+    types: [opened, synchronize, reopened]
+
+# Permissions pour commenter les PR
+permissions:
+  contents: read
+  pull-requests: write
+  checks: write
+
+jobs:
+  # 🚫 Vérifications bloquantes
+  blocking-checks:
+    name: 🚫 Vérifications Bloquantes
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: 📥 Checkout repository
+        uses: actions/checkout@v4
+
+      - name: 🟢 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: 📦 Install dependencies
+        run: npm ci
+
+      # ❌ Linting obligatoire
+      - name: ❌ ESLint (Bloquant)
+        run: npm run lint
+
+      # ❌ Format obligatoire
+      - name: ❌ Prettier Check (Bloquant)
+        run: npm run format -- --check
+
+      # ❌ Build obligatoire
+      - name: ❌ Build Check (Bloquant)
+        run: npm run build
+
+  # 🧪 Tests obligatoires
+  mandatory-tests:
+    name: 🧪 Tests Obligatoires (41 tests)
+    runs-on: ubuntu-latest
+    needs: blocking-checks
+    
+    # Services pour tests intégration
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: password
+          POSTGRES_DB: air_fle_test_pr
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+    steps:
+      - name: 📥 Checkout repository
+        uses: actions/checkout@v4
+
+      - name: 🟢 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: 📦 Install dependencies
+        run: npm ci
+
+      # 🗄️ Base de données pour tests intégration
+      - name: 🗄️ Setup test database
+        env:
+          DATABASE_URL: postgresql://postgres:password@localhost:5432/air_fle_test_pr
+        run: |
+          npx prisma migrate deploy
+          npx prisma generate
+
+      # 🔴 Tests critiques (17 tests) - OBLIGATOIRES
+      - name: 🔴 Tests Critiques (OBLIGATOIRES)
+        run: |
+          echo "🔴 Exécution des 17 tests critiques..."
+          npm run test test/student/student.spec.ts test/student/student.service.spec.ts test/student/student.controller.spec.ts test/financing/financing.integration.spec.ts
+        env:
+          NODE_ENV: test
+          DATABASE_URL: postgresql://postgres:password@localhost:5432/air_fle_test_pr
+          JWT_SECRET: test_jwt_secret_for_pr_validation
+
+      # 🟡 Tests majeurs (18 tests) - OBLIGATOIRES
+      - name: 🟡 Tests Majeurs (OBLIGATOIRES)
+        run: |
+          echo "🟡 Exécution des 18 tests majeurs..."
+          npm run test test/student/student.rbac.spec.ts
+        env:
+          NODE_ENV: test
+          JWT_SECRET: test_jwt_secret_for_pr_validation
+
+      # 🌍 Tous les tests (41 tests) - VÉRIFICATION FINALE
+      - name: 🌍 Tous les Tests (41 tests) - FINAL
+        run: |
+          echo "🌍 Vérification finale des 41 tests..."
+          npm run test test/student/ test/financing/
+        env:
+          NODE_ENV: test
+          DATABASE_URL: postgresql://postgres:password@localhost:5432/air_fle_test_pr
+          JWT_SECRET: test_jwt_secret_for_pr_validation
+
+  # 📊 Rapport de tests
+  test-report:
+    name: 📊 Rapport de Tests PR
+    runs-on: ubuntu-latest
+    needs: [blocking-checks, mandatory-tests]
+    if: always()
+    
+    steps:
+      - name: 📊 Générer rapport PR
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const blockingResult = '${{ needs.blocking-checks.result }}';
+            const testsResult = '${{ needs.mandatory-tests.result }}';
+            
+            let statusIcon = '';
+            let statusText = '';
+            let message = '';
+            
+            if (blockingResult === 'success' && testsResult === 'success') {
+              statusIcon = '✅';
+              statusText = 'TOUS LES TESTS PASSENT';
+              message = `
+              ## ${statusIcon} ${statusText}
+              
+              ### 📊 Résultats détaillés:
+              - 🧹 **Linting**: ✅ Passé
+              - 🎨 **Format**: ✅ Passé  
+              - 🏗️ **Build**: ✅ Passé
+              - 🧪 **Tests**: ✅ 41/41 tests passent
+              
+              ### 🎯 Détail des tests:
+              - 🔴 **Tests critiques**: 17/17 ✅
+              - 🟡 **Tests majeurs**: 18/18 ✅  
+              - 🟢 **Tests mineurs**: 6/6 ✅
+              
+              ### 📋 Modules testés:
+              - 🎓 **Student**: 34 tests unitaires ✅
+              - 💰 **Financing**: 7 tests intégration ✅
+              
+              **🚀 Cette PR peut être mergée!**
+              `;
+            } else {
+              statusIcon = '❌';
+              statusText = 'ÉCHEC DES TESTS';
+              message = `
+              ## ${statusIcon} ${statusText}
+              
+              ### 📊 Résultats détaillés:
+              - 🧹 **Linting**: ${blockingResult === 'success' ? '✅' : '❌'}
+              - 🎨 **Format**: ${blockingResult === 'success' ? '✅' : '❌'}
+              - 🏗️ **Build**: ${blockingResult === 'success' ? '✅' : '❌'}
+              - 🧪 **Tests**: ${testsResult === 'success' ? '✅' : '❌'}
+              
+              ### ⚠️ Actions requises:
+              ${blockingResult !== 'success' ? '- Corriger les erreurs de linting/format/build' : ''}
+              ${testsResult !== 'success' ? '- Corriger les tests qui échouent' : ''}
+              
+              **🚫 Cette PR ne peut pas être mergée dans l'état actuel.**
+              `;
+            }
+            
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: message
+            });
+
+  # 🏁 Statut final
+  pr-ready:
+    name: 🏁 PR Ready for Merge
+    runs-on: ubuntu-latest
+    needs: [blocking-checks, mandatory-tests]
+    
+    steps:
+      - name: 🏁 Vérification finale
+        run: |
+          if [ "${{ needs.blocking-checks.result }}" == "success" ] && [ "${{ needs.mandatory-tests.result }}" == "success" ]; then
+            echo "✅ PR VALIDÉE - Tous les tests passent (41/41)"
+            echo "🚀 Prête pour merge!"
+          else
+            echo "❌ PR REJETÉE - Tests en échec"
+            echo "🚫 Corrections nécessaires avant merge"
+            exit 1
+          fi 

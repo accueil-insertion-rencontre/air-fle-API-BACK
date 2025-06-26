@@ -4,28 +4,28 @@ import { Escape } from 'class-sanitizer';
 
 export class CreateAbsenceDto {
   @ApiProperty({
-    description: 'Identifiant de l\'étudiant',
+    description: "UUID de l'étudiant",
     example: 'def456',
-    required: true
+    required: true,
   })
   @IsUUID(4)
-  student_id: string;
+  student_uuid: string;
 
   @ApiProperty({
-    description: 'Identifiant du cours',
+    description: 'UUID du cours',
     example: 'ghi789',
-    required: true
+    required: true,
   })
   @IsUUID(4)
-  course_id: string;
+  course_uuid: string;
 
   @ApiProperty({
-    description: 'Raison de l\'absence',
+    description: "Raison de l'absence",
     example: 'Maladie',
-    required: false
+    required: false,
   })
   @IsString()
   @IsOptional()
   @Escape()
-  reason?: string;
-} 
+  absence_reason?: string;
+}

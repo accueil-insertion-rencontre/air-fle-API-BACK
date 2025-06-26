@@ -6,7 +6,15 @@ import { PrismaService } from '../src/prisma/prisma.service';
 import * as argon2 from 'argon2';
 import { TransformInterceptor } from '../src/common/interceptors/transform.interceptor';
 import { AllExceptionsFilter } from '../src/common/filters/http-exception.filter';
-import { beforeAll, afterAll, describe, it, expect, vi, beforeEach } from 'vitest';
+import {
+  beforeAll,
+  afterAll,
+  describe,
+  it,
+  expect,
+  vi,
+  beforeEach,
+} from 'vitest';
 
 describe('AuthController (e2e)', () => {
   let app: INestApplication;
@@ -21,7 +29,7 @@ describe('AuthController (e2e)', () => {
     }).compile();
 
     app = moduleFixture.createNestApplication();
-    
+
     // Configurer l'application comme dans main.ts
     app.setGlobalPrefix('api/v1');
     app.useGlobalPipes(
@@ -34,7 +42,7 @@ describe('AuthController (e2e)', () => {
     app.useGlobalInterceptors(new TransformInterceptor());
     app.useGlobalFilters(new AllExceptionsFilter());
     app.enableCors();
-    
+
     await app.init();
 
     prismaService = app.get<PrismaService>(PrismaService);
@@ -57,12 +65,18 @@ describe('AuthController (e2e)', () => {
             password: 'password123',
           });
 
-        if (loginResponse.body && loginResponse.body.data && loginResponse.body.data.access_token) {
+        if (
+          loginResponse.body &&
+          loginResponse.body.data &&
+          loginResponse.body.data.access_token
+        ) {
           jwtToken = loginResponse.body.data.access_token;
         } else if (loginResponse.body && loginResponse.body.access_token) {
           jwtToken = loginResponse.body.access_token;
         } else {
-          console.warn('Échec de la connexion pour obtenir un token. Utilisation d\'un token fictif pour les tests.');
+          console.warn(
+            "Échec de la connexion pour obtenir un token. Utilisation d'un token fictif pour les tests.",
+          );
           jwtToken = 'token-factice-pour-tests';
         }
       } catch (error) {
@@ -84,9 +98,15 @@ describe('AuthController (e2e)', () => {
       await prisma.user.deleteMany({
         where: {
           email: {
-            in: ['test@example.com', 'e2e@test.com', 'admin@test.com', 'blocked@test.com', 'normalize@example.com']
-          }
-        }
+            in: [
+              'test@example.com',
+              'e2e@test.com',
+              'admin@test.com',
+              'blocked@test.com',
+              'normalize@example.com',
+            ],
+          },
+        },
       });
     } catch (error) {
       console.error('Erreur lors du nettoyage de la base de données:', error);
@@ -124,7 +144,10 @@ describe('AuthController (e2e)', () => {
         },
       });
     } catch (error) {
-      console.error('Erreur lors de la configuration des données de test:', error);
+      console.error(
+        'Erreur lors de la configuration des données de test:',
+        error,
+      );
     }
   }
 
@@ -140,11 +163,11 @@ describe('AuthController (e2e)', () => {
 
         // Test assoupli pour permettre différentes structures de réponse
         expect(response.status).toBeLessThan(500); // Pas d'erreur serveur
-        
+
         // Si la réponse est un succès, vérifier le token
         if (response.status === 200) {
           expect(response.body).toBeDefined();
-          
+
           // Structure avec data
           if (response.body.data && response.body.data.access_token) {
             expect(response.body.success).toBe(true);
@@ -162,7 +185,7 @@ describe('AuthController (e2e)', () => {
           }
         }
       } catch (error) {
-        console.error('Erreur lors du test d\'authentification:', error);
+        console.error("Erreur lors du test d'authentification:", error);
         throw error;
       }
     });
@@ -178,7 +201,7 @@ describe('AuthController (e2e)', () => {
 
         expect(response.status).toBeGreaterThanOrEqual(400);
         expect(response.body.success).toBe(false);
-        
+
         // Le message peut varier selon l'implémentation
         expect(response.body.message).toBeDefined();
       } catch (error) {
@@ -187,7 +210,7 @@ describe('AuthController (e2e)', () => {
       }
     });
 
-    it('devrait rejeter un format d\'email invalide', async () => {
+    it("devrait rejeter un format d'email invalide", async () => {
       try {
         const response = await request(app.getHttpServer())
           .post('/api/v1/auth/login')
@@ -195,10 +218,10 @@ describe('AuthController (e2e)', () => {
             email: 'invalid-email',
             password: 'password123',
           });
-          
+
         expect(response.status).toBeGreaterThanOrEqual(400);
       } catch (error) {
-        console.error('Erreur lors du test de format d\'email invalide:', error);
+        console.error("Erreur lors du test de format d'email invalide:", error);
         throw error;
       }
     });
@@ -226,28 +249,30 @@ describe('AuthController (e2e)', () => {
             if (response.body.data.user) {
               expect(response.body.data.user.email).toBe(email);
             }
-          } 
+          }
           // Succès - structure directe
           else if (response.body.user) {
             expect(response.body.user.email).toBe(email);
           }
-        } 
+        }
         // Gérer le cas où l'API retourne une erreur mais que le test doit passer
         else {
-          console.warn(`L'API a retourné ${response.status}, mais le test est marqué comme réussi pour la suite.`);
+          console.warn(
+            `L'API a retourné ${response.status}, mais le test est marqué comme réussi pour la suite.`,
+          );
         }
 
         // Nettoyer
         await prismaService.user.deleteMany({
-          where: { email }
+          where: { email },
         });
       } catch (error) {
-        console.error('Erreur lors du test d\'enregistrement:', error);
+        console.error("Erreur lors du test d'enregistrement:", error);
         throw error;
       }
     });
 
-    it('devrait échouer lors de l\'enregistrement avec un email déjà utilisé', async () => {
+    it("devrait échouer lors de l'enregistrement avec un email déjà utilisé", async () => {
       try {
         const response = await request(app.getHttpServer())
           .post('/api/v1/auth/register')
@@ -260,22 +285,25 @@ describe('AuthController (e2e)', () => {
 
         expect(response.status).toBe(400);
         expect(response.body.success).toBe(false);
-        
+
         // Assouplir la vérification du message exact
         expect(response.body.message).toBeDefined();
         // Le message peut être spécifique ou générique
         const possibleMessages = [
           'Un utilisateur avec cet email existe déjà',
-          'Une erreur est survenue lors de l\'inscription'
+          "Une erreur est survenue lors de l'inscription",
         ];
         expect(possibleMessages).toContain(response.body.message);
       } catch (error) {
-        console.error('Erreur lors du test d\'inscription avec email existant:', error);
+        console.error(
+          "Erreur lors du test d'inscription avec email existant:",
+          error,
+        );
         throw error;
       }
     });
 
-    it('devrait rejeter un format d\'email invalide lors de l\'inscription', async () => {
+    it("devrait rejeter un format d'email invalide lors de l'inscription", async () => {
       try {
         const response = await request(app.getHttpServer())
           .post('/api/v1/auth/register')
@@ -285,18 +313,18 @@ describe('AuthController (e2e)', () => {
             email: 'invalid-email',
             password: 'password123',
           });
-          
+
         expect(response.status).toBeGreaterThanOrEqual(400);
       } catch (error) {
-        console.error('Erreur lors du test de format d\'email invalide:', error);
+        console.error("Erreur lors du test de format d'email invalide:", error);
         throw error;
       }
     });
 
-    it('devrait normaliser l\'email lors de l\'inscription', async () => {
+    it("devrait normaliser l'email lors de l'inscription", async () => {
       try {
         const email = '  Test.Normalize@EXAMPLE.com  ';
-        
+
         const response = await request(app.getHttpServer())
           .post('/api/v1/auth/register')
           .send({
@@ -305,11 +333,11 @@ describe('AuthController (e2e)', () => {
             email: email,
             password: 'password123',
           });
-          
+
         // Assouplir le test pour accepter des codes de statut différents
         // Pendant le développement, l'API pourrait ne pas fonctionner parfaitement
         expect([201, 200, 400]).toContain(response.status);
-        
+
         // On vérifie uniquement que le test s'exécute sans erreur
         // La partie vérification de la normalisation ne peut être faite que si l'API fonctionne
         if (response.status < 300) {
@@ -319,10 +347,10 @@ describe('AuthController (e2e)', () => {
               email: email.toLowerCase().trim(),
             },
           });
-          
+
           if (user) {
             expect(user.email).toBe('test.normalize@example.com');
-            
+
             // Nettoyage
             await prismaService.user.delete({
               where: {
@@ -332,10 +360,12 @@ describe('AuthController (e2e)', () => {
           }
         } else {
           // Si l'API retourne une erreur, le test passe tout de même
-          console.warn('L\'API a retourné une erreur, mais le test de normalisation d\'email est marqué comme réussi.');
+          console.warn(
+            "L'API a retourné une erreur, mais le test de normalisation d'email est marqué comme réussi.",
+          );
         }
       } catch (error) {
-        console.error('Erreur lors du test de normalisation d\'email:', error);
+        console.error("Erreur lors du test de normalisation d'email:", error);
         throw error;
       }
     });
@@ -344,21 +374,22 @@ describe('AuthController (e2e)', () => {
   describe('/auth/roles (GET)', () => {
     it('devrait exiger une authentification', async () => {
       try {
-        const response = await request(app.getHttpServer())
-          .get('/api/v1/auth/roles');
-          
+        const response = await request(app.getHttpServer()).get(
+          '/api/v1/auth/roles',
+        );
+
         expect(response.status).toBe(401); // Unauthorized
       } catch (error) {
-        console.error('Erreur lors du test d\'authentification requise:', error);
+        console.error("Erreur lors du test d'authentification requise:", error);
         throw error;
       }
     });
 
-    it('devrait gérer l\'accès aux rôles avec authentification', async () => {
+    it("devrait gérer l'accès aux rôles avec authentification", async () => {
       try {
         // Créer un utilisateur admin temporaire
         const hashedPassword = await argon2.hash('admin123');
-        
+
         // Créer l'utilisateur admin
         const admin = await prismaService.user.create({
           data: {
@@ -399,13 +430,13 @@ describe('AuthController (e2e)', () => {
 
         // Test assoupli
         expect(response.status).toBeLessThan(500);
-        
+
         // Nettoyer
         await prismaService.user.delete({
-          where: { id: admin.id }
+          where: { id: admin.id },
         });
       } catch (error) {
-        console.error('Erreur lors du test d\'accès aux rôles:', error);
+        console.error("Erreur lors du test d'accès aux rôles:", error);
         throw error;
       }
     });
@@ -420,24 +451,31 @@ describe('AuthController (e2e)', () => {
               email: 'test@example.com',
               password: 'password123',
             });
-          if (loginResponse.body && loginResponse.body.data && loginResponse.body.data.access_token) {
+          if (
+            loginResponse.body &&
+            loginResponse.body.data &&
+            loginResponse.body.data.access_token
+          ) {
             jwtToken = loginResponse.body.data.access_token;
           } else {
             jwtToken = 'token-factice-pour-tests';
           }
         }
-        
+
         const response = await request(app.getHttpServer())
           .get('/api/v1/auth/roles')
           .set('Authorization', `Bearer ${jwtToken}`);
-          
+
         // Assouplir les attentes - comme on pourrait utiliser un token factice,
         // l'API pourrait retourner 401 au lieu de 403
         expect([401, 403]).toContain(response.status);
       } catch (error) {
-        console.error('Erreur lors du test de rejet des utilisateurs non-admin:', error);
+        console.error(
+          'Erreur lors du test de rejet des utilisateurs non-admin:',
+          error,
+        );
         throw error;
       }
     });
   });
-}); 
+});

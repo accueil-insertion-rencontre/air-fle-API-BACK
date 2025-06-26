@@ -13,7 +13,7 @@ export class CreateContinuationDto {
 
   @ApiProperty({
     description: 'Commentaire sur la continuation',
-    example: 'Continuation approuvée pour l\'année scolaire',
+    example: "Continuation approuvée pour l'année scolaire",
     required: false,
   })
   @IsOptional()
@@ -21,10 +21,10 @@ export class CreateContinuationDto {
   commentary?: string;
 
   @ApiProperty({
-    description: 'ID de l\'étudiant associé à la continuation',
+    description: "ID de l'étudiant associé à la continuation",
     example: '123e4567-e89b-12d3-a456-426614174000',
   })
   @IsNotEmpty()
   @IsUUID()
   studentId: string;
-} 
+}

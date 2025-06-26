@@ -1,19 +1,32 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsString, IsNotEmpty, IsOptional, IsDateString, MaxLength, IsEnum, IsArray, ValidateNested, IsNumber, Min, Max, ArrayMinSize } from 'class-validator';
+import {
+  IsString,
+  IsNotEmpty,
+  IsOptional,
+  IsDateString,
+  MaxLength,
+  IsEnum,
+  IsArray,
+  ValidateNested,
+  IsNumber,
+  Min,
+  Max,
+  ArrayMinSize,
+} from 'class-validator';
 import { Escape } from 'class-sanitizer';
 import { Type } from 'class-transformer';
 import { CreateSubtaskDto } from './create-subtask.dto';
 
 export enum TaskStatus {
   PENDING = 'pending',
-  IN_PROGRESS = 'in_progress', 
-  COMPLETED = 'completed'
+  IN_PROGRESS = 'in_progress',
+  COMPLETED = 'completed',
 }
 
 export class CreateTaskDto {
   @ApiProperty({
     description: 'Titre de la tâche',
-    example: 'Préparation du cours A1'
+    example: 'Préparation du cours A1',
   })
   @IsString()
   @IsNotEmpty()
@@ -24,7 +37,7 @@ export class CreateTaskDto {
   @ApiProperty({
     description: 'Description de la tâche',
     example: 'Préparer le support de cours pour le niveau A1',
-    required: false
+    required: false,
   })
   @IsString()
   @IsOptional()
@@ -33,11 +46,12 @@ export class CreateTaskDto {
   description?: string;
 
   @ApiProperty({
-    description: 'Pourcentage de completion de la tâche (calculé automatiquement)',
+    description:
+      'Pourcentage de completion de la tâche (calculé automatiquement)',
     example: 0,
     minimum: 0,
     maximum: 100,
-    required: false
+    required: false,
   })
   @IsNumber()
   @IsOptional()
@@ -46,18 +60,19 @@ export class CreateTaskDto {
   completionPercentage?: number;
 
   @ApiProperty({
-    description: 'Date d\'échéance de la tâche',
+    description: "Date d'échéance de la tâche",
     example: '2023-12-31T00:00:00.000Z',
-    required: false
+    required: false,
   })
   @IsDateString()
   @IsOptional()
   dueAt?: string | Date;
 
   @ApiProperty({
-    description: 'Liste des sous-tâches à créer avec la tâche (obligatoire - au moins 1)',
+    description:
+      'Liste des sous-tâches à créer avec la tâche (obligatoire - au moins 1)',
     type: [CreateSubtaskDto],
-    required: true
+    required: true,
   })
   @IsArray()
   @IsNotEmpty()
@@ -65,4 +80,4 @@ export class CreateTaskDto {
   @ValidateNested({ each: true })
   @Type(() => CreateSubtaskDto)
   subtasks: CreateSubtaskDto[];
-} 
+}

@@ -24,6 +24,7 @@ import { ExamModule } from './exam/exam.module';
 import { ContinuationModule } from './continuation/continuation.module';
 import { TaskModule } from './task/task.module';
 import { DisabilityModule } from './disability/disability.module';
+import { DocumentModule } from './document/document.module';
 
 @Module({
   imports: [
@@ -31,14 +32,14 @@ import { DisabilityModule } from './disability/disability.module';
       isGlobal: true,
       envFilePath: '.env',
     }),
-    PrismaModule, 
+    PrismaModule,
     StudentModule,
     LearnerHistoryModule,
-    AuthModule, 
-    UserModule, 
-    CourseModule, 
-    SessionModule, 
-    AbsenceModule, 
+    AuthModule,
+    UserModule,
+    CourseModule,
+    SessionModule,
+    AbsenceModule,
     GroupModule,
     NationalityModule,
     FrenchLevelModule,
@@ -52,7 +53,8 @@ import { DisabilityModule } from './disability/disability.module';
     ExamModule,
     ContinuationModule,
     TaskModule,
-    DisabilityModule
+    DisabilityModule,
+    DocumentModule,
   ],
   controllers: [AppController],
   providers: [AppService],

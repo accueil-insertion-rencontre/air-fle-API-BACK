@@ -5,11 +5,11 @@ import { Escape } from 'class-sanitizer';
 export class CreateGenderDto {
   @ApiProperty({
     description: 'Libellé du genre',
-    example: 'Masculin'
+    example: 'Masculin',
   })
   @IsString()
   @IsNotEmpty()
   @MaxLength(50)
   @Escape()
-  label: string;
-} 
+  gender_label: string;
+}

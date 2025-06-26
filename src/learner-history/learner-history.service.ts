@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Inject } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { LearnerHistory, Prisma } from '@prisma/client';
 
@@ -16,7 +16,7 @@ export interface LearnerHistoryChange {
 
 @Injectable()
 export class LearnerHistoryService {
-  constructor(private prisma: PrismaService) {}
+  constructor(@Inject(PrismaService) private prisma: PrismaService) {}
 
   /**
    * Enregistre un changement dans l'historique d'un apprenant
@@ -24,30 +24,30 @@ export class LearnerHistoryService {
   async recordChange(change: LearnerHistoryChange): Promise<LearnerHistory> {
     return this.prisma.learnerHistory.create({
       data: {
-        student_id: change.studentId,
+        student_uuid: change.studentId,
         entity_type: change.entityType,
         entity_id: change.entityId || null,
         action_type: change.actionType,
-        change_type: change.changeType,
-        description: change.description,
+        change_type: change.changeType || null,
         previous_data: change.previousData || null,
         new_data: change.newData || null,
-        changed_by_user_id: change.changedByUserId || null,
+        description: change.description,
+        changed_by_user_uuid: change.changedByUserId || null,
       },
       include: {
         student: {
           select: {
-            firstname: true,
-            lastname: true,
-          }
+            student_firstname: true,
+            student_lastname: true,
+          },
         },
         changed_by: {
           select: {
-            firstname: true,
-            lastname: true,
-          }
-        }
-      }
+            user_firstname: true,
+            user_lastname: true,
+          },
+        },
+      },
     });
   }
 
@@ -56,7 +56,7 @@ export class LearnerHistoryService {
    */
   async getLearnerHistory(
     studentId: string,
-    options?: {
+    options: {
       skip?: number;
       take?: number;
       entityType?: string;
@@ -64,56 +64,78 @@ export class LearnerHistoryService {
       changeType?: string;
       fromDate?: Date;
       toDate?: Date;
-    }
-  ): Promise<LearnerHistory[]> {
+    } = {},
+  ) {
     const where: Prisma.LearnerHistoryWhereInput = {
-      student_id: studentId,
+      student_uuid: studentId,
     };
 
-    if (options?.entityType) {
+    if (options.entityType) {
       where.entity_type = options.entityType;
     }
 
-    if (options?.actionType) {
+    if (options.actionType) {
       where.action_type = options.actionType;
     }
 
-    if (options?.changeType) {
+    if (options.changeType) {
       where.change_type = options.changeType;
     }
 
-    if (options?.fromDate || options?.toDate) {
-      where.change_date = {};
+    if (options.fromDate || options.toDate) {
+      where.changed_at = {};
       if (options.fromDate) {
-        where.change_date.gte = options.fromDate;
+        where.changed_at.gte = options.fromDate;
       }
       if (options.toDate) {
-        where.change_date.lte = options.toDate;
+        where.changed_at.lte = options.toDate;
       }
     }
 
-    return this.prisma.learnerHistory.findMany({
-      where,
-      skip: options?.skip || 0,
-      take: options?.take || 50,
-      orderBy: {
-        change_date: 'desc'
-      },
-      include: {
-        student: {
-          select: {
-            firstname: true,
-            lastname: true,
-          }
+    const [history, total] = await Promise.all([
+      this.prisma.learnerHistory.findMany({
+        where,
+        include: {
+          changed_by: {
+            select: {
+              user_uuid: true,
+              user_firstname: true,
+              user_lastname: true,
+            },
+          },
         },
-        changed_by: {
-          select: {
-            firstname: true,
-            lastname: true,
-          }
-        }
-      }
-    });
+        orderBy: { changed_at: 'desc' },
+        skip: options.skip || 0,
+        take: options.take || 50,
+      }),
+      this.prisma.learnerHistory.count({ where }),
+    ]);
+
+    return {
+      history: history.map((change) => ({
+        id: change.learner_history_uuid,
+        entity_type: change.entity_type,
+        entity_id: change.entity_id,
+        action_type: change.action_type,
+        change_type: change.change_type,
+        description: change.description,
+        previous_data: change.previous_data,
+        new_data: change.new_data,
+        date: change.changed_at,
+        changedBy: change.changed_by
+          ? {
+              id: change.changed_by.user_uuid,
+              firstname: change.changed_by.user_firstname,
+              lastname: change.changed_by.user_lastname,
+            }
+          : null,
+      })),
+      pagination: {
+        total,
+        skip: options.skip || 0,
+        take: options.take || 50,
+      },
+    };
   }
 
   /**
@@ -121,104 +143,77 @@ export class LearnerHistoryService {
    */
   async getHistoryByEntityType(
     studentId: string,
-    entityType: string
-  ): Promise<LearnerHistory[]> {
+    entityType: string,
+  ): Promise<any> {
     return this.getLearnerHistory(studentId, { entityType });
   }
 
   /**
    * Récupère la progression des niveaux
    */
-  async getLevelProgressHistory(studentId: string): Promise<any[]> {
-    const levelChanges = await this.prisma.learnerHistory.findMany({
+  async getProgressionHistory(studentId: string) {
+    const history = await this.prisma.learnerHistory.findMany({
       where: {
-        student_id: studentId,
+        student_uuid: studentId,
         entity_type: 'student',
-        change_type: 'level_change'
+        change_type: 'level_change',
       },
       orderBy: {
-        change_date: 'asc'
+        changed_at: 'desc',
       },
       include: {
         changed_by: {
           select: {
-            firstname: true,
-            lastname: true,
-          }
-        }
-      }
+            user_firstname: true,
+            user_lastname: true,
+          },
+        },
+      },
     });
 
-    return levelChanges.map(change => ({
-      date: change.change_date,
-      level: change.new_data,
-      previousLevel: change.previous_data,
-      changedBy: change.changed_by,
-      description: change.description
+    return history.map((change) => ({
+      id: change.learner_history_uuid,
+      description: change.description,
+      previous_data: change.previous_data,
+      new_data: change.new_data,
+      date: change.changed_at,
+      changedBy: change.changed_by
+        ? {
+            firstname: change.changed_by.user_firstname,
+            lastname: change.changed_by.user_lastname,
+          }
+        : null,
     }));
   }
 
   /**
    * Récupère l'historique des examens
    */
-  async getExamHistory(studentId: string): Promise<any[]> {
-    const examHistory = await this.prisma.learnerHistory.findMany({
-      where: {
-        student_id: studentId,
-        entity_type: 'exam'
-      },
-      orderBy: {
-        change_date: 'desc'
-      },
-      include: {
-        changed_by: {
-          select: {
-            firstname: true,
-            lastname: true,
-          }
-        }
-      }
-    });
+  async getExamHistory(studentId: string): Promise<any> {
+    const entityType = 'exam';
 
-    return examHistory.map(change => ({
-      date: change.change_date,
-      action: change.action_type,
-      exam: change.new_data,
-      previousExam: change.previous_data,
-      description: change.description,
-      changedBy: change.changed_by
-    }));
+    const options = {
+      skip: 0,
+      take: 50,
+      entityType,
+    };
+
+    return this.getLearnerHistory(studentId, options);
   }
 
   /**
    * Récupère l'historique des absences
    */
-  async getAbsenceHistory(studentId: string): Promise<any[]> {
-    const absenceHistory = await this.prisma.learnerHistory.findMany({
-      where: {
-        student_id: studentId,
-        entity_type: 'absence'
-      },
-      orderBy: {
-        change_date: 'desc'
-      },
-      include: {
-        changed_by: {
-          select: {
-            firstname: true,
-            lastname: true,
-          }
-        }
-      }
-    });
+  async getAbsenceHistory(studentId: string): Promise<any> {
+    const entityType = 'absence';
 
-    return absenceHistory.map(change => ({
-      date: change.change_date,
-      action: change.action_type,
-      absence: change.new_data,
-      description: change.description,
-      changedBy: change.changed_by
-    }));
+    const options = {
+      skip: 0,
+      take: 50,
+      entityType,
+    };
+
+    return this.getLearnerHistory(studentId, options);
   }
 
   /**
@@ -227,29 +222,29 @@ export class LearnerHistoryService {
   async getGroupHistory(studentId: string): Promise<any[]> {
     const groupHistory = await this.prisma.learnerHistory.findMany({
       where: {
-        student_id: studentId,
-        entity_type: 'group_assignment'
+        student_uuid: studentId,
+        entity_type: 'group_assignment',
       },
       orderBy: {
-        change_date: 'desc'
+        changed_at: 'desc',
       },
       include: {
         changed_by: {
           select: {
-            firstname: true,
-            lastname: true,
-          }
-        }
-      }
+            user_firstname: true,
+            user_lastname: true,
+          },
+        },
+      },
     });
 
-    return groupHistory.map(change => ({
-      date: change.change_date,
+    return groupHistory.map((change) => ({
+      date: change.changed_at,
       action: change.action_type,
       group: change.new_data,
       previousGroup: change.previous_data,
       description: change.description,
-      changedBy: change.changed_by
+      changedBy: change.changed_by,
     }));
   }
 
@@ -259,29 +254,29 @@ export class LearnerHistoryService {
   async getAddressHistory(studentId: string): Promise<any[]> {
     const addressHistory = await this.prisma.learnerHistory.findMany({
       where: {
-        student_id: studentId,
-        entity_type: 'address'
+        student_uuid: studentId,
+        entity_type: 'address',
       },
       orderBy: {
-        change_date: 'desc'
+        changed_at: 'desc',
       },
       include: {
         changed_by: {
           select: {
-            firstname: true,
-            lastname: true,
-          }
-        }
-      }
+            user_firstname: true,
+            user_lastname: true,
+          },
+        },
+      },
     });
 
-    return addressHistory.map(change => ({
-      date: change.change_date,
+    return addressHistory.map((change) => ({
+      date: change.changed_at,
       action: change.action_type,
       address: change.new_data,
       previousAddress: change.previous_data,
       description: change.description,
-      changedBy: change.changed_by
+      changedBy: change.changed_by,
     }));
   }
 
@@ -291,61 +286,68 @@ export class LearnerHistoryService {
   async getDisabilityHistory(studentId: string): Promise<any[]> {
     const disabilityHistory = await this.prisma.learnerHistory.findMany({
       where: {
-        student_id: studentId,
-        entity_type: 'disability'
+        student_uuid: studentId,
+        entity_type: 'disability',
       },
       orderBy: {
-        change_date: 'desc'
+        changed_at: 'desc',
       },
       include: {
         changed_by: {
           select: {
-            firstname: true,
-            lastname: true,
-          }
-        }
-      }
+            user_firstname: true,
+            user_lastname: true,
+          },
+        },
+      },
     });
 
-    return disabilityHistory.map(change => ({
-      date: change.change_date,
+    return disabilityHistory.map((change) => ({
+      date: change.changed_at,
       action: change.action_type,
       disabilities: change.new_data,
       previousDisabilities: change.previous_data,
       description: change.description,
-      changedBy: change.changed_by
+      changedBy: change.changed_by,
     }));
   }
 
   /**
    * Récupère les statistiques d'activité
    */
-  async getActivityStats(studentId: string): Promise<any> {
-    const allHistory = await this.getLearnerHistory(studentId, { take: 1000 });
-    
-    const statsByEntity = allHistory.reduce((acc, change) => {
-      const key = change.entity_type;
-      if (!acc[key]) {
-        acc[key] = { total: 0, byAction: {} };
-      }
-      acc[key].total++;
-      acc[key].byAction[change.action_type] = (acc[key].byAction[change.action_type] || 0) + 1;
-      return acc;
-    }, {} as Record<string, any>);
+  async getActivityStats(studentId: string) {
+    const [totalHistory, examHistory, absenceHistory, allHistory] =
+      await Promise.all([
+        this.prisma.learnerHistory.count({
+          where: { student_uuid: studentId },
+        }),
+        this.prisma.learnerHistory.count({
+          where: { student_uuid: studentId, entity_type: 'exam' },
+        }),
+        this.prisma.learnerHistory.count({
+          where: { student_uuid: studentId, entity_type: 'absence' },
+        }),
+        this.prisma.learnerHistory.findMany({
+          where: { student_uuid: studentId },
+          orderBy: { changed_at: 'desc' },
+          take: 1,
+        }),
+      ]);
 
-    const recentActivity = allHistory.slice(0, 10);
-    
     return {
-      totalChanges: allHistory.length,
-      lastChange: allHistory.length > 0 ? allHistory[0].change_date : null,
-      statsByEntity,
-      recentActivity: recentActivity.map(change => ({
-        entityType: change.entity_type,
-        actionType: change.action_type,
-        changeType: change.change_type,
-        date: change.change_date,
-        description: change.description
-      }))
+      totalHistory,
+      examHistory,
+      absenceHistory,
+      lastChange: allHistory.length > 0 ? allHistory[0].changed_at : null,
+      lastActivity:
+        allHistory.length > 0
+          ? {
+              description: allHistory[0].description,
+              entity_type: allHistory[0].entity_type,
+              action_type: allHistory[0].action_type,
+              date: allHistory[0].changed_at,
+            }
+          : null,
     };
   }
 
@@ -355,8 +357,8 @@ export class LearnerHistoryService {
   async deleteLearnerHistory(studentId: string): Promise<void> {
     await this.prisma.learnerHistory.deleteMany({
       where: {
-        student_id: studentId
-      }
+        student_uuid: studentId,
+      },
     });
   }
 
@@ -371,7 +373,7 @@ export class LearnerHistoryService {
     description: string,
     previousData?: any,
     newData?: any,
-    changedByUserId?: string
+    changedByUserId?: string,
   ): Promise<LearnerHistory> {
     return this.recordChange({
       studentId,
@@ -381,7 +383,7 @@ export class LearnerHistoryService {
       description,
       previousData,
       newData,
-      changedByUserId
+      changedByUserId,
     });
   }
 
@@ -394,12 +396,12 @@ export class LearnerHistoryService {
     actionType: 'created' | 'updated' | 'deleted',
     examData: any,
     previousData?: any,
-    changedByUserId?: string
+    changedByUserId?: string,
   ): Promise<LearnerHistory> {
     const descriptions = {
       created: `Examen créé: ${examData.label}`,
       updated: `Examen modifié: ${examData.label}`,
-      deleted: `Examen supprimé: ${examData.label}`
+      deleted: `Examen supprimé: ${examData.label}`,
     };
 
     return this.recordChange({
@@ -411,7 +413,7 @@ export class LearnerHistoryService {
       description: descriptions[actionType],
       previousData,
       newData: examData,
-      changedByUserId
+      changedByUserId,
     });
   }
 
@@ -424,12 +426,12 @@ export class LearnerHistoryService {
     actionType: 'created' | 'updated' | 'deleted',
     absenceData: any,
     previousData?: any,
-    changedByUserId?: string
+    changedByUserId?: string,
   ): Promise<LearnerHistory> {
     const descriptions = {
       created: `Absence enregistrée${absenceData.reason ? `: ${absenceData.reason}` : ''}`,
       updated: `Absence modifiée`,
-      deleted: `Absence supprimée`
+      deleted: `Absence supprimée`,
     };
 
     return this.recordChange({
@@ -441,7 +443,7 @@ export class LearnerHistoryService {
       description: descriptions[actionType],
       previousData,
       newData: absenceData,
-      changedByUserId
+      changedByUserId,
     });
   }
 
@@ -453,11 +455,11 @@ export class LearnerHistoryService {
     groupId: string,
     actionType: 'assigned' | 'unassigned',
     groupData: any,
-    changedByUserId?: string
+    changedByUserId?: string,
   ): Promise<LearnerHistory> {
     const descriptions = {
       assigned: `Assigné au groupe: ${groupData.label}`,
-      unassigned: `Retiré du groupe: ${groupData.label}`
+      unassigned: `Retiré du groupe: ${groupData.label}`,
     };
 
     return this.recordChange({
@@ -468,7 +470,7 @@ export class LearnerHistoryService {
       changeType: `group_${actionType}`,
       description: descriptions[actionType],
       newData: groupData,
-      changedByUserId
+      changedByUserId,
     });
   }
 
@@ -481,12 +483,12 @@ export class LearnerHistoryService {
     actionType: 'assigned' | 'unassigned' | 'updated',
     addressData: any,
     previousData?: any,
-    changedByUserId?: string
+    changedByUserId?: string,
   ): Promise<LearnerHistory> {
     const descriptions = {
       assigned: `Adresse ajoutée: ${addressData.street}, ${addressData.city}`,
       unassigned: `Adresse supprimée`,
-      updated: `Adresse modifiée`
+      updated: `Adresse modifiée`,
     };
 
     return this.recordChange({
@@ -498,7 +500,7 @@ export class LearnerHistoryService {
       description: descriptions[actionType],
       previousData,
       newData: addressData,
-      changedByUserId
+      changedByUserId,
     });
   }
 
@@ -511,12 +513,12 @@ export class LearnerHistoryService {
     actionType: 'created' | 'updated' | 'deleted',
     continuationData: any,
     previousData?: any,
-    changedByUserId?: string
+    changedByUserId?: string,
   ): Promise<LearnerHistory> {
     const descriptions = {
       created: `Continuation ajoutée`,
       updated: `Continuation modifiée`,
-      deleted: `Continuation supprimée`
+      deleted: `Continuation supprimée`,
     };
 
     return this.recordChange({
@@ -528,7 +530,116 @@ export class LearnerHistoryService {
       description: descriptions[actionType],
       previousData,
       newData: continuationData,
-      changedByUserId
+      changedByUserId,
     });
   }
-} 
+
+  async getRecentActivity(studentId: string, days: number = 30) {
+    const startDate = new Date();
+    startDate.setDate(startDate.getDate() - days);
+
+    return this.prisma.learnerHistory.findMany({
+      where: {
+        student_uuid: studentId,
+      },
+      orderBy: { changed_at: 'desc' },
+      take: 20,
+    });
+  }
+
+  /**
+   * Récupère l'historique des assignations de groupe
+   */
+  async getGroupAssignmentHistory(studentId: string): Promise<any[]> {
+    const groupHistory = await this.prisma.learnerHistory.findMany({
+      where: {
+        student_uuid: studentId,
+        entity_type: 'group_assignment',
+      },
+      orderBy: {
+        changed_at: 'desc',
+      },
+      include: {
+        changed_by: {
+          select: {
+            user_firstname: true,
+            user_lastname: true,
+          },
+        },
+      },
+    });
+
+    return groupHistory.map((change) => ({
+      date: change.changed_at,
+      action: change.action_type,
+      group: change.new_data,
+      previousGroup: change.previous_data,
+      description: change.description,
+      changedBy: change.changed_by,
+    }));
+  }
+
+  /**
+   * Récupère l'historique des changements de niveau
+   */
+  async getLevelChangeHistory(studentId: string): Promise<any[]> {
+    const levelHistory = await this.prisma.learnerHistory.findMany({
+      where: {
+        student_uuid: studentId,
+        entity_type: 'level_change',
+      },
+      orderBy: {
+        changed_at: 'desc',
+      },
+      include: {
+        changed_by: {
+          select: {
+            user_firstname: true,
+            user_lastname: true,
+          },
+        },
+      },
+    });
+
+    return levelHistory.map((change) => ({
+      date: change.changed_at,
+      action: change.action_type,
+      level: change.new_data,
+      previousLevel: change.previous_data,
+      description: change.description,
+      changedBy: change.changed_by,
+    }));
+  }
+
+  /**
+   * Récupère l'historique des changements de statut
+   */
+  async getStatusChangeHistory(studentId: string): Promise<any[]> {
+    const statusHistory = await this.prisma.learnerHistory.findMany({
+      where: {
+        student_uuid: studentId,
+        entity_type: 'status_change',
+      },
+      orderBy: {
+        changed_at: 'desc',
+      },
+      include: {
+        changed_by: {
+          select: {
+            user_firstname: true,
+            user_lastname: true,
+          },
+        },
+      },
+    });
+
+    return statusHistory.map((change) => ({
+      date: change.changed_at,
+      action: change.action_type,
+      status: change.new_data,
+      previousStatus: change.previous_data,
+      description: change.description,
+      changedBy: change.changed_by,
+    }));
+  }
+}

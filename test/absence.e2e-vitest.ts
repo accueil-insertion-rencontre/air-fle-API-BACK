@@ -25,7 +25,7 @@ describe('AbsenceController (e2e)', () => {
     }).compile();
 
     app = moduleFixture.createNestApplication();
-    
+
     // Configurer l'application comme dans main.ts
     app.setGlobalPrefix('api/v1');
     app.useGlobalPipes(
@@ -38,7 +38,7 @@ describe('AbsenceController (e2e)', () => {
     app.useGlobalInterceptors(new TransformInterceptor());
     app.useGlobalFilters(new AllExceptionsFilter());
     app.enableCors();
-    
+
     await app.init();
 
     prismaService = app.get<PrismaService>(PrismaService);
@@ -226,25 +226,29 @@ describe('AbsenceController (e2e)', () => {
 
       teacherJwtToken = teacherLoginResponse.body.data.access_token;
     } catch (error) {
-      console.error('Erreur lors de l\'obtention des tokens JWT:', error);
+      console.error("Erreur lors de l'obtention des tokens JWT:", error);
     }
   });
 
   afterEach(async () => {
     // Nettoyer les données de test
     if (createdAbsenceId) {
-      await prismaService.absence.delete({
-        where: { id: createdAbsenceId },
-      }).catch(() => { /* Ignorer les erreurs si l'absence n'existe pas */ });
+      await prismaService.absence
+        .delete({
+          where: { id: createdAbsenceId },
+        })
+        .catch(() => {
+          /* Ignorer les erreurs si l'absence n'existe pas */
+        });
     }
 
     await prismaService.user.deleteMany({
       where: {
         OR: [
           { email: 'admin-test@example.com' },
-          { email: 'teacher-test@example.com' }
-        ]
-      }
+          { email: 'teacher-test@example.com' },
+        ],
+      },
     });
 
     await app.close();
@@ -307,10 +311,14 @@ describe('AbsenceController (e2e)', () => {
     expect(response.body.success).toBe(true);
     expect(response.body.data).toBeDefined();
     expect(Array.isArray(response.body.data)).toBe(true);
-    
+
     // Si des résultats sont retournés, vérifier qu'ils correspondent bien à l'étudiant demandé
     if (response.body.data.length > 0) {
-      expect(response.body.data.every(absence => absence.student_id === testStudentId)).toBe(true);
+      expect(
+        response.body.data.every(
+          (absence) => absence.student_id === testStudentId,
+        ),
+      ).toBe(true);
     }
   });
 
@@ -404,10 +412,10 @@ describe('AbsenceController (e2e)', () => {
       .expect(404);
 
     // L'absence a été supprimée, donc on ne doit plus la trouver
-    createdAbsenceId = null;  // Réinitialiser pour éviter une tentative de suppression dans afterEach
+    createdAbsenceId = null; // Réinitialiser pour éviter une tentative de suppression dans afterEach
   });
 
-  it('devrait refuser l\'accès si l\'utilisateur n\'a pas les droits requis', async () => {
+  it("devrait refuser l'accès si l'utilisateur n'a pas les droits requis", async () => {
     // Créer un utilisateur étudiant avec un rôle sans droits d'absence
     const studentRole = await prismaService.role.upsert({
       where: { rolename: 'STUDENT' },
@@ -453,11 +461,11 @@ describe('AbsenceController (e2e)', () => {
       .post('/api/v1/absences')
       .set('Authorization', `Bearer ${studentJwtToken}`)
       .send(createAbsenceDto)
-      .expect(403);  // Forbidden - pas les droits nécessaires
-    
+      .expect(403); // Forbidden - pas les droits nécessaires
+
     // Nettoyer l'utilisateur étudiant
     await prismaService.user.delete({
-      where: { email: 'student-test@example.com' }
+      where: { email: 'student-test@example.com' },
     });
   });
-}); 
+});

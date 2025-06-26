@@ -19,7 +19,7 @@ describe('AppController (e2e)', () => {
     }).compile();
 
     app = moduleFixture.createNestApplication();
-    
+
     // Configurer l'application comme dans main.ts
     app.setGlobalPrefix('api/v1');
     app.useGlobalPipes(
@@ -32,7 +32,7 @@ describe('AppController (e2e)', () => {
     app.useGlobalInterceptors(new TransformInterceptor());
     app.useGlobalFilters(new AllExceptionsFilter());
     app.enableCors();
-    
+
     await app.init();
 
     prismaService = app.get<PrismaService>(PrismaService);
@@ -71,14 +71,24 @@ describe('AppController (e2e)', () => {
         });
 
       // Gérer le cas où loginResponse.body pourrait ne pas avoir la structure attendue
-      if (loginResponse.body && loginResponse.body.data && loginResponse.body.data.access_token) {
+      if (
+        loginResponse.body &&
+        loginResponse.body.data &&
+        loginResponse.body.data.access_token
+      ) {
         jwtToken = loginResponse.body.data.access_token;
       } else if (loginResponse.body && loginResponse.body.access_token) {
         jwtToken = loginResponse.body.access_token;
       } else {
-        console.warn('Aucun token JWT trouvé dans la réponse. Status:', loginResponse.status);
-        console.warn('Corps de la réponse:', JSON.stringify(loginResponse.body));
-        
+        console.warn(
+          'Aucun token JWT trouvé dans la réponse. Status:',
+          loginResponse.status,
+        );
+        console.warn(
+          'Corps de la réponse:',
+          JSON.stringify(loginResponse.body),
+        );
+
         // Créer un token factice pour les tests
         jwtToken = 'token-factice-pour-tests';
       }
@@ -93,8 +103,8 @@ describe('AppController (e2e)', () => {
     // Nettoyer après les tests
     await prismaService.user.deleteMany({
       where: {
-        email: 'app-test@example.com'
-      }
+        email: 'app-test@example.com',
+      },
     });
     await app.close();
   });
@@ -105,10 +115,10 @@ describe('AppController (e2e)', () => {
       const response = await request(app.getHttpServer())
         .get('/api/v1')
         .set('Authorization', `Bearer ${jwtToken}`);
-      
+
       // Comme nous utilisons potentiellement un token factice, acceptons les codes 401 et 200
       expect([200, 401]).toContain(response.status);
-      
+
       // Vérification plus souple de la structure de la réponse
       if (response.status === 200) {
         if (response.body.success === true) {
@@ -123,11 +133,13 @@ describe('AppController (e2e)', () => {
         }
       } else {
         // Si 401, le token factice a été rejeté, ce qui est normal
-        console.log('Token d\'authentification rejeté (401), ce qui est acceptable pour ce test');
+        console.log(
+          "Token d'authentification rejeté (401), ce qui est acceptable pour ce test",
+        );
       }
     } catch (error) {
       console.error('Erreur lors du test GET /api/v1:', error);
       throw error;
     }
   });
-}); 
+});

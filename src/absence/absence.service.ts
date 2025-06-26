@@ -7,7 +7,7 @@ import { Prisma } from '@prisma/client';
 export class AbsenceService {
   constructor(
     private prisma: PrismaService,
-    private learnerHistoryService: LearnerHistoryService
+    private learnerHistoryService: LearnerHistoryService,
   ) {}
 
   async create(data: Prisma.AbsenceCreateInput, createdByUserId?: string) {
@@ -21,16 +21,16 @@ export class AbsenceService {
 
     // Enregistrer l'absence dans l'historique
     await this.learnerHistoryService.recordAbsenceChange(
-      absence.student_id,
-      absence.id,
+      absence.student_uuid,
+      absence.absence_uuid,
       'created',
       {
-        reason: absence.reason,
+        reason: absence.absence_reason,
         course: absence.course,
         date: new Date(),
       },
       undefined,
-      createdByUserId
+      createdByUserId,
     );
 
     return absence;
@@ -69,7 +69,7 @@ export class AbsenceService {
 
   async findOne(id: string) {
     const absence = await this.prisma.absence.findUnique({
-      where: { id },
+      where: { absence_uuid: id },
       include: {
         student: true,
         course: true,
@@ -83,13 +83,17 @@ export class AbsenceService {
     return absence;
   }
 
-  async update(id: string, data: Prisma.AbsenceUpdateInput, updatedByUserId?: string) {
+  async update(
+    id: string,
+    data: Prisma.AbsenceUpdateInput,
+    updatedByUserId?: string,
+  ) {
     // Récupérer l'absence actuelle
     const currentAbsence = await this.findOne(id);
 
     try {
       const updatedAbsence = await this.prisma.absence.update({
-        where: { id },
+        where: { absence_uuid: id },
         data,
         include: {
           student: true,
@@ -99,18 +103,18 @@ export class AbsenceService {
 
       // Enregistrer la modification dans l'historique
       await this.learnerHistoryService.recordAbsenceChange(
-        updatedAbsence.student_id,
-        updatedAbsence.id,
+        updatedAbsence.student_uuid,
+        updatedAbsence.absence_uuid,
         'updated',
         {
-          reason: updatedAbsence.reason,
+          reason: updatedAbsence.absence_reason,
           course: updatedAbsence.course,
         },
         {
-          reason: currentAbsence.reason,
+          reason: currentAbsence.absence_reason,
           course: currentAbsence.course,
         },
-        updatedByUserId
+        updatedByUserId,
       );
 
       return updatedAbsence;
@@ -128,20 +132,20 @@ export class AbsenceService {
 
     try {
       const deletedAbsence = await this.prisma.absence.delete({
-        where: { id },
+        where: { absence_uuid: id },
       });
 
       // Enregistrer la suppression dans l'historique
       await this.learnerHistoryService.recordAbsenceChange(
-        absence.student_id,
-        absence.id,
+        absence.student_uuid,
+        absence.absence_uuid,
         'deleted',
         {
-          reason: absence.reason,
+          reason: absence.absence_reason,
           course: absence.course,
         },
         undefined,
-        deletedByUserId
+        deletedByUserId,
       );
 
       return deletedAbsence;

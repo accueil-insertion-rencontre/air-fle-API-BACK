@@ -6,7 +6,7 @@ export class CreateFrenchLevelDto {
   @ApiProperty({
     description: 'Code du niveau de français',
     example: 'A1',
-    required: false
+    required: false,
   })
   @IsString()
   @IsOptional()
@@ -17,11 +17,11 @@ export class CreateFrenchLevelDto {
   @ApiProperty({
     description: 'Description du niveau de français',
     example: 'Niveau débutant',
-    required: false
+    required: false,
   })
   @IsString()
   @IsOptional()
   @MaxLength(255)
   @Escape()
   description?: string;
-} 
+}

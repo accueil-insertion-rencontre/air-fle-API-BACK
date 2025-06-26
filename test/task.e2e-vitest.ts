@@ -6,7 +6,15 @@ import { PrismaService } from '../src/prisma/prisma.service';
 import * as argon2 from 'argon2';
 import { TransformInterceptor } from '../src/common/interceptors/transform.interceptor';
 import { AllExceptionsFilter } from '../src/common/filters/http-exception.filter';
-import { beforeAll, afterAll, describe, it, expect, vi, beforeEach } from 'vitest';
+import {
+  beforeAll,
+  afterAll,
+  describe,
+  it,
+  expect,
+  vi,
+  beforeEach,
+} from 'vitest';
 
 // Configuration du JWT secret pour les tests
 process.env.JWT_SECRET = 'test-jwt-secret-for-e2e-tests';
@@ -25,14 +33,16 @@ describe('TaskController (e2e)', () => {
       }).compile();
 
       app = moduleFixture.createNestApplication();
-      
+
       // Configuration de base
       app.setGlobalPrefix('api/v1');
-      app.useGlobalPipes(new ValidationPipe({ transform: true, whitelist: true }));
+      app.useGlobalPipes(
+        new ValidationPipe({ transform: true, whitelist: true }),
+      );
       app.useGlobalInterceptors(new TransformInterceptor());
       app.useGlobalFilters(new AllExceptionsFilter());
       app.enableCors();
-      
+
       await app.init();
 
       prismaService = app.get<PrismaService>(PrismaService);
@@ -66,7 +76,7 @@ describe('TaskController (e2e)', () => {
   async function setupTestData() {
     try {
       teacherRole = await prismaService.role.findFirst({
-        where: { rolename: 'teacher' }
+        where: { rolename: 'teacher' },
       });
 
       if (!teacherRole) {
@@ -115,9 +125,8 @@ describe('TaskController (e2e)', () => {
       expect(response.body.success).toBe(true);
     });
 
-    it('devrait refuser l\'accès sans token', async () => {
-      const response = await request(app.getHttpServer())
-        .get('/api/v1/tasks');
+    it("devrait refuser l'accès sans token", async () => {
+      const response = await request(app.getHttpServer()).get('/api/v1/tasks');
 
       expect(response.status).toBe(401);
     });
@@ -134,10 +143,7 @@ describe('TaskController (e2e)', () => {
         title: 'Tâche de test e2e',
         description: 'Description test',
         priority: 'MEDIUM',
-        subtasks: [
-          { title: 'Sous-tâche 1' },
-          { title: 'Sous-tâche 2' }
-        ]
+        subtasks: [{ title: 'Sous-tâche 1' }, { title: 'Sous-tâche 2' }],
       };
 
       const response = await request(app.getHttpServer())
@@ -153,4 +159,4 @@ describe('TaskController (e2e)', () => {
       }
     });
   });
-}); 
+});

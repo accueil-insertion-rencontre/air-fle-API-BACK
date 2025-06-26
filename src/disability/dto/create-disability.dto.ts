@@ -5,19 +5,19 @@ import { Escape } from 'class-sanitizer';
 export class CreateDisabilityDto {
   @ApiProperty({
     description: 'Libellé du handicap',
-    example: 'Moteur'
+    example: 'Moteur',
   })
   @IsString()
   @Escape()
-  label: string;
+  disability_label: string;
 
   @ApiProperty({
     description: 'Description détaillée du handicap',
     example: 'Handicap affectant la mobilité et les fonctions motrices',
-    required: false
+    required: false,
   })
   @IsString()
   @IsOptional()
   @Escape()
-  description?: string;
-} 
+  disability_description?: string;
+}
