@@ -17,19 +17,17 @@ export class StudentService {
   ) {}
 
   async create(data: any, createdByUserId?: string): Promise<Student> {
-    // ✅ Validation métier en méthode privée
+
     this.validateStudentData(data);
 
-    // ✅ Transformation des données DTO en format Prisma
+
     const prismaData = this.transformDtoToPrismaCreateInput(data);
 
-    // ✅ Création avec repository
     const student = await this.studentRepository.create(
       prismaData,
       this.studentRepository.getStandardIncludes(),
     );
 
-    // ✅ Historique délégué proprement
     await this.recordStudentCreation(student, createdByUserId);
 
     return student;
@@ -331,8 +329,8 @@ export class StudentService {
 
   // ✅ Validation métier centralisée
   private validateStudentData(data: any): void {
-    if (data.birthdate) {
-      const age = this.calculateAge(new Date(data.birthdate));
+    if (data.student_birthdate) {
+      const age = this.calculateAge(new Date(data.student_birthdate));
       if (age < 16) {
         throw new BadRequestException("L'étudiant doit avoir au moins 16 ans");
       }
@@ -341,7 +339,7 @@ export class StudentService {
       }
     }
 
-    if (data.email && !this.isValidEmail(data.email)) {
+    if (data.student_mail && !this.isValidEmail(data.student_mail)) {
       throw new BadRequestException('Format email invalide');
     }
   }
