@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsString } from 'class-validator';
+import { IsString, IsNotEmpty } from 'class-validator';
 import { Escape } from 'class-sanitizer';
 
 export class CreateFinancingDto {
@@ -8,6 +8,7 @@ export class CreateFinancingDto {
     example: 'Pôle Emploi',
   })
   @IsString()
+  @IsNotEmpty()
   @Escape()
   financing_type: string;
 }
