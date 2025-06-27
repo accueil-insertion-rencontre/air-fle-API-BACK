@@ -1,4 +1,4 @@
-name: 🚀 CI/CD Pipeline - Tests & Build
+name: CI/CD Pipeline - Tests & Build
 
 on:
   push:
@@ -7,12 +7,12 @@ on:
     branches: [ main, develop ]
 
 jobs:
-  # 🧪 Job Tests
+  # Job Tests
   tests:
-    name: 🧪 Tests (Student + Financing)
+    name: Tests (Student + Financing)
     runs-on: ubuntu-latest
     
-    # 🗄️ Services (PostgreSQL + Redis)
+    # Services (PostgreSQL + Redis)
     services:
       postgres:
         image: postgres:15
@@ -39,31 +39,31 @@ jobs:
           - 6379:6379
 
     steps:
-      # 📥 Checkout du code
-      - name: 📥 Checkout repository
+      # Checkout du code
+      - name: Checkout repository
         uses: actions/checkout@v4
 
-      # 🟢 Setup Node.js
-      - name: 🟢 Setup Node.js
+      # Setup Node.js
+      - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '20'
           cache: 'npm'
 
-      # 📦 Installation des dépendances
-      - name: 📦 Install dependencies
+      # Installation des dépendances
+      - name: Install dependencies
         run: npm ci
 
-      # 🏗️ Build du projet
-      - name: 🏗️ Build project
+      # Build du projet
+      - name: Build project
         run: npm run build
 
-      # 🎨 Vérification format Prettier
-      - name: 🎨 Check code formatting
+      # Vérification format Prettier
+      - name: Check code formatting
         run: npm run format -- --check
 
-      # 🗄️ Setup de la base de données
-      - name: 🗄️ Setup database
+      # Setup de la base de données
+      - name: Setup database
         env:
           DATABASE_URL: postgresql://postgres:password@localhost:5432/air_fle_test
           JWT_SECRET: test_jwt_secret_for_ci_cd_pipeline_2024
@@ -73,15 +73,15 @@ jobs:
           npx prisma migrate deploy
           npx prisma generate
 
-      # 🎓 Tests unitaires Student (34 tests)
-      - name: 🎓 Run Student Unit Tests
+      # Tests unitaires Student (34 tests)
+      - name: Run Student Unit Tests
         run: npm run test test/student/
         env:
           NODE_ENV: test
           JWT_SECRET: test_jwt_secret_for_ci_cd_pipeline_2024
 
-      # 💰 Tests d'intégration Financing (7 tests)  
-      - name: 💰 Run Financing Integration Tests
+      # Tests d'intégration Financing (7 tests)  
+      - name: Run Financing Integration Tests
         run: npm run test test/financing/
         env:
           NODE_ENV: test
@@ -90,38 +90,20 @@ jobs:
           REDIS_HOST: localhost
           REDIS_PORT: 6379
 
-      # 🌍 Tous les tests avec coverage - DÉSACTIVÉ TEMPORAIREMENT
-      # - name: 🌍 Run All Tests with Coverage
-      #   run: npm run test:cov
-      #   env:
-      #     NODE_ENV: test
-      #     DATABASE_URL: postgresql://postgres:password@localhost:5432/air_fle_test
-      #     JWT_SECRET: test_jwt_secret_for_ci_cd_pipeline_2024
-      #     REDIS_HOST: localhost
-      #     REDIS_PORT: 6379
-
-      # 📊 Upload coverage à Codecov (optionnel) - DÉSACTIVÉ TEMPORAIREMENT
-      # - name: 📊 Upload coverage reports
-      #   uses: codecov/codecov-action@v4
-      #   if: success()
-      #   with:
-      #     file: ./coverage/lcov.info
-      #     fail_ci_if_error: false
-
-  # 🐳 Job Build Docker
+  # Job Build Docker
   docker-build:
-    name: 🐳 Docker Build Test
+    name: Docker Build Test
     runs-on: ubuntu-latest
     needs: tests
     
     steps:
-      - name: 📥 Checkout repository
+      - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: 🐳 Build Docker image
+      - name: Build Docker image
         run: docker build -t air-fle-api:test .
 
-      - name: 🧪 Test Docker container
+      - name: Test Docker container
         run: |
           docker run --rm --name test-container \
             -e DATABASE_URL=postgresql://test:test@localhost:5432/test \
@@ -129,29 +111,29 @@ jobs:
             air-fle-api:test \
             npm run test -- --run
 
-  # 📋 Job Résumé
+  # Job Résumé
   ci-summary:
-    name: 📋 CI Summary
+    name: CI Summary
     runs-on: ubuntu-latest
     needs: [tests, docker-build]
     if: always()
     
     steps:
-      - name: 📋 Display CI Results
+      - name: Display CI Results
         run: |
-          echo "🎯 CI/CD Pipeline Results:"
+          echo "CI/CD Pipeline Results:"
           echo "=========================="
-          echo "🧪 Tests Job: ${{ needs.tests.result }}"
-          echo "🐳 Docker Build: ${{ needs.docker-build.result }}"
+          echo "Tests Job: ${{ needs.tests.result }}"
+          echo "Docker Build: ${{ needs.docker-build.result }}"
           echo ""
-          echo "📊 Test Coverage:"
-          echo "🎓 Student Tests: 34 tests unitaires"
-          echo "💰 Financing Tests: 7 tests intégration"
-          echo "🌍 Total: 41 tests fonctionnels"
+          echo "Test Coverage:"
+          echo "Student Tests: 34 tests unitaires"
+          echo "Financing Tests: 7 tests intégration"
+          echo "Total: 41 tests fonctionnels"
           echo ""
           if [ "${{ needs.tests.result }}" == "success" ] && [ "${{ needs.docker-build.result }}" == "success" ]; then
-            echo "✅ Statut Global: SUCCESS - Prêt pour déploiement!"
+            echo "Statut Global: SUCCESS - Prêt pour déploiement!"
           else
-            echo "❌ Statut Global: FAILURE - Corrections nécessaires"
+            echo "Statut Global: FAILURE - Corrections nécessaires"
             exit 1
           fi 
