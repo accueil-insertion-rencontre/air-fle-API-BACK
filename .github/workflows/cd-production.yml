@@ -1,0 +1,82 @@
+name: CD - Production Deployment
+
+# CD Simple - Déploiement sur VPS
+on:
+  # Déclenchement manuel (en attendant le VPS)
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment'
+        required: true
+        default: 'production'
+        type: choice
+        options:
+        - production
+        - staging
+      
+  # Déclenchement automatique (à activer plus tard)
+  # push:
+  #   branches: [ main ]
+
+jobs:
+  # Déploiement simple sur VPS
+  deploy:
+    name: Deploy to VPS
+    runs-on: ubuntu-latest
+    environment: production
+    
+    # DÉSACTIVÉ EN ATTENDANT LE VPS
+    if: false # Mettre à true quand le VPS sera disponible
+    
+    steps:
+      - name: Deploy to Production VPS
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          script: |
+            cd /app/air-fle-api
+            
+            echo "Pull du code..."
+            git pull origin main
+            
+            echo "Redémarrage des containers..."
+            docker-compose -f docker-compose.prod.yml down
+            docker-compose -f docker-compose.prod.yml up -d --build
+            
+            echo "Health check..."
+            sleep 10
+            curl -f http://localhost:3000/health || exit 1
+            
+            echo "Déploiement terminé!"
+
+  # Simulation pour démo (ACTIVÉ)
+  demo-deploy:
+    name: Demo Deployment
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Simulate VPS Deployment
+        run: |
+          echo "SIMULATION CD - Déploiement VPS"
+          echo "=================================="
+          echo ""
+          echo "Étapes du déploiement:"
+          echo "1. Connexion SSH au VPS..."
+          echo "   ssh admin@production-vps.air-fle.com"
+          echo ""
+          echo "2. Pull du code source..."
+          echo "   git pull origin main"
+          echo ""
+          echo "3. Rebuild et redémarrage..."
+          echo "   docker-compose -f docker-compose.prod.yml down"
+          echo "   docker-compose -f docker-compose.prod.yml up -d --build"
+          echo ""
+          echo "4. Vérification santé..."
+          echo "   curl -f http://localhost:3000/health"
+          echo ""
+          echo "Déploiement simulé avec succès!"
+          echo "API disponible sur: https://api.air-fle.com"
+          echo ""
+          echo "NOTE: Pipeline prête, en attente du VPS client" 
