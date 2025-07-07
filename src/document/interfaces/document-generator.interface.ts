@@ -27,4 +27,4 @@ export interface AttendanceRecord {
   status?: {
     status_name: string;
   };
-} 
+}
