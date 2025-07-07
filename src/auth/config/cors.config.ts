@@ -8,10 +8,10 @@ export const corsConfig: CorsOptions = {
 
     // Liste des domaines autorisés
     const allowedOrigins = [
-      'http://localhost:3000',     // Frontend React/Vue local
-      'http://localhost:4200',     // Frontend Angular local
-      'http://localhost:8080',     // Frontend Vue local alternatif
-      'https://your-app.com',      // Domaine de production
+      'http://localhost:3000', // Frontend React/Vue local
+      'http://localhost:4200', // Frontend Angular local
+      'http://localhost:8080', // Frontend Vue local alternatif
+      'https://your-app.com', // Domaine de production
       'https://admin.your-app.com', // Interface admin
     ];
 
@@ -67,4 +67,4 @@ export const corsConfigDev: CorsOptions = {
 // Fonction pour obtenir la configuration selon l'environnement
 export function getCorsConfig(): CorsOptions {
   return process.env.NODE_ENV === 'production' ? corsConfig : corsConfigDev;
-} 
+}
