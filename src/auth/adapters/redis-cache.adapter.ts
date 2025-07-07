@@ -4,7 +4,9 @@ import { ICacheService } from '../interfaces/auth.interface';
 
 @Injectable()
 export class RedisCacheAdapter implements ICacheService {
-  constructor(@Inject(RedisService) private readonly redisService: RedisService) {}
+  constructor(
+    @Inject(RedisService) private readonly redisService: RedisService,
+  ) {}
 
   async get(key: string): Promise<string | null> {
     return await this.redisService.get(key);
@@ -30,4 +32,4 @@ export class RedisCacheAdapter implements ICacheService {
       return false;
     }
   }
-} 
+}
