@@ -126,7 +126,9 @@ export class UserController {
 
   @Patch(':id/status')
   @Roles('admin')
-  @ApiOperation({ summary: 'Activer/désactiver un utilisateur (admin uniquement)' })
+  @ApiOperation({
+    summary: 'Activer/désactiver un utilisateur (admin uniquement)',
+  })
   @ApiResponse({
     status: 200,
     description: 'Statut utilisateur mis à jour avec succès',
@@ -135,7 +137,10 @@ export class UserController {
   @ApiParam({ name: 'id', description: "ID de l'utilisateur" })
   @ApiBody({ type: UpdateUserDto })
   updateStatus(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
-    return this.userService.updateUserStatus(id, updateUserDto.user_isactive ?? true);
+    return this.userService.updateUserStatus(
+      id,
+      updateUserDto.user_isactive ?? true,
+    );
   }
 
   @Delete(':id')
