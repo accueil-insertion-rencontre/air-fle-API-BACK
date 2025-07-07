@@ -1,0 +1,135 @@
+name: CD - Continuous Delivery
+
+on:
+  push:
+    branches: [main, production]
+  workflow_dispatch: # Permet déclenchement manuel
+
+env:
+  DOCKER_REGISTRY: docker.io
+  IMAGE_NAME: air-fle-api
+  NODE_VERSION: '18'
+
+jobs:
+  # Job 1: Tests et Build
+  test-and-build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run tests
+        run: npm run test
+
+      - name: Run linting
+        run: npm run lint
+
+      - name: Build application
+        run: npm run build
+
+  # Job 2: Deploy to VPS
+  deploy-to-vps:
+    needs: test-and-build
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - name: Deploy to VPS
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.VPS_HOST }}c
+          username: ${{ secrets.VPS_USERNAME }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          port: ${{ secrets.VPS_PORT || 22 }}
+          script: |
+            echo "Starting deployment..."
+            
+            # Pull latest image
+            docker pull ${{ env.DOCKER_REGISTRY }}/${{ secrets.DOCKER_USERNAME }}/${{ env.IMAGE_NAME }}:latest
+            
+            # Stop existing containers
+            docker-compose -f docker-compose.prod.yml down || true
+            
+            # Update environment variables
+            export IMAGE_TAG=${{ env.DOCKER_REGISTRY }}/${{ secrets.DOCKER_USERNAME }}/${{ env.IMAGE_NAME }}:latest
+            export DATABASE_URL=${{ secrets.DATABASE_URL }}
+            export JWT_SECRET=${{ secrets.JWT_SECRET }}
+            export REDIS_URL=${{ secrets.REDIS_URL }}
+            
+            # Start new containers
+            docker-compose -f docker-compose.prod.yml up -d
+            
+            # Wait for services to be ready
+            sleep 10
+            
+            # Check if services are running
+            docker-compose -f docker-compose.prod.yml ps
+            
+            echo "Deployment completed!"
+
+  # Job 3: Notification GitHub Issue
+  notify-completion:
+    needs: [test-and-build, deploy-to-vps]
+    runs-on: ubuntu-latest
+    if: always()
+    steps:
+      - name: Create GitHub Issue on failure
+        if: failure()
+        uses: actions/github-script@v6
+        with:
+          script: |
+            github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: `CD Pipeline Failed - ${context.sha.substring(0, 7)}`,
+              body: `## CD Pipeline Failure
+              
+              **Commit:** ${context.sha}
+              **Branch:** ${context.ref}
+              **Author:** ${context.actor}
+              **Workflow:** [${context.workflow}](${context.payload.repository.html_url}/actions/runs/${context.runId})
+              
+              **Failed Jobs:**
+              - Test & Build: ${{ needs.test-and-build.result }}
+              - Deploy to VPS: ${{ needs.deploy-to-vps.result }}
+              
+              Please check the workflow logs for details.`,
+              labels: ['bug', 'cd-pipeline']
+            })
+
+      - name: Comment on PR/Issue on success
+        if: success()
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const message = `## CD Pipeline Success!
+            
+            **Image deployed:** \`${{ env.DOCKER_REGISTRY }}/${{ secrets.DOCKER_USERNAME }}/${{ env.IMAGE_NAME }}:latest\`
+            **Commit:** ${context.sha.substring(0, 7)}
+            **Branch:** ${context.ref}
+            
+            Application successfully deployed to VPS!`;
+            
+            if (context.issue && context.issue.number) {
+              github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body: message
+              });
+            } else {
+              github.rest.repos.createCommitComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                commit_sha: context.sha,
+                body: message
+              });
+            } 

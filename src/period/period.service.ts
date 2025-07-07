@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { Period, Prisma } from '@prisma/client';
+import { Prisma, Period } from '@prisma/client';
 
 @Injectable()
 export class PeriodService {
@@ -12,26 +12,29 @@ export class PeriodService {
 
   async findOne(id: string): Promise<Period | null> {
     return this.prisma.period.findUnique({
-      where: { id },
+      where: { period_uuid: id },
     });
   }
 
-  async create(data: Prisma.PeriodCreateInput): Promise<Period> {
+  async create(createPeriodData: Prisma.PeriodCreateInput): Promise<Period> {
     return this.prisma.period.create({
-      data,
+      data: createPeriodData,
     });
   }
 
-  async update(id: string, data: Prisma.PeriodUpdateInput): Promise<Period> {
+  async update(
+    id: string,
+    updatePeriodData: Prisma.PeriodUpdateInput,
+  ): Promise<Period> {
     return this.prisma.period.update({
-      where: { id },
-      data,
+      where: { period_uuid: id },
+      data: updatePeriodData,
     });
   }
 
   async delete(id: string): Promise<Period> {
     return this.prisma.period.delete({
-      where: { id },
+      where: { period_uuid: id },
     });
   }
-} 
+}

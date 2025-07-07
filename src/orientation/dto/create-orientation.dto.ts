@@ -4,23 +4,23 @@ import { Escape } from 'class-sanitizer';
 
 export class CreateOrientationDto {
   @ApiProperty({
-    description: 'Type d\'orientation',
-    example: 'Professionnelle'
+    description: "Type d'orientation",
+    example: 'Professionnelle',
   })
   @IsString()
   @IsNotEmpty()
   @MaxLength(100)
   @Escape()
-  type: string;
+  orientation_type: string;
 
   @ApiProperty({
-    description: 'Description de l\'orientation',
+    description: "Description de l'orientation",
     example: 'Orientation vers une formation professionnelle',
-    required: false
+    required: false,
   })
   @IsString()
   @IsOptional()
   @MaxLength(255)
   @Escape()
-  description?: string;
-} 
+  orientation_description?: string;
+}

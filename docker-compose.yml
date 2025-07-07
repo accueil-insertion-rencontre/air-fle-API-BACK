@@ -6,6 +6,10 @@ services:
     container_name: postgres-dev
     ports:
       - "5433:5432"
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_DB: ${POSTGRES_DB:-airfle}
     env_file:
       - .env
     volumes:
@@ -13,7 +17,7 @@ services:
     networks:
       - airfle-dev-network
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-airfle}"]
       interval: 5s
       timeout: 3s
       retries: 5
@@ -43,6 +47,13 @@ services:
     container_name: api-dev
     ports:
       - "3000:3000"
+    environment:
+      - DATABASE_URL=${DATABASE_URL:-postgresql://postgres:postgres@postgres-dev:5432/airfle?schema=public}
+      - REDIS_URL=redis://redis-dev:6379
+      - NODE_ENV=${NODE_ENV:-development}
+      - JWT_SECRET=${JWT_SECRET}
+      - JWT_EXPIRES_IN=${JWT_EXPIRES_IN:-1d}
+      - PORT=${PORT:-3000}
     env_file:
       - .env
     depends_on:
@@ -52,6 +63,7 @@ services:
         condition: service_healthy
     volumes:
       - ./src:/app/src
+      - ./test:/app/test
       - ./prisma:/app/prisma
       - ./package.json:/app/package.json
       - ./tsconfig.json:/app/tsconfig.json

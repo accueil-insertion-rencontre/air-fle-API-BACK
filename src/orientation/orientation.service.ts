@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { Orientation, Prisma } from '@prisma/client';
+import { Prisma, Orientation } from '@prisma/client';
 
 @Injectable()
 export class OrientationService {
@@ -12,26 +12,31 @@ export class OrientationService {
 
   async findOne(id: string): Promise<Orientation | null> {
     return this.prisma.orientation.findUnique({
-      where: { id },
+      where: { orientation_uuid: id },
     });
   }
 
-  async create(data: Prisma.OrientationCreateInput): Promise<Orientation> {
+  async create(
+    createOrientationData: Prisma.OrientationCreateInput,
+  ): Promise<Orientation> {
     return this.prisma.orientation.create({
-      data,
+      data: createOrientationData,
     });
   }
 
-  async update(id: string, data: Prisma.OrientationUpdateInput): Promise<Orientation> {
+  async update(
+    id: string,
+    updateOrientationData: Prisma.OrientationUpdateInput,
+  ): Promise<Orientation> {
     return this.prisma.orientation.update({
-      where: { id },
-      data,
+      where: { orientation_uuid: id },
+      data: updateOrientationData,
     });
   }
 
   async delete(id: string): Promise<Orientation> {
     return this.prisma.orientation.delete({
-      where: { id },
+      where: { orientation_uuid: id },
     });
   }
-} 
+}

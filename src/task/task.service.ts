@@ -1,6 +1,6 @@
-import { Injectable, BadRequestException, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { Task, Prisma } from '@prisma/client';
+import { Prisma } from '@prisma/client';
 import { CreateTaskDto } from './dto/create-task.dto';
 import { UpdateTaskDto } from './dto/update-task.dto';
 
@@ -18,93 +18,107 @@ export class TaskService {
 
   async findAll(userId: string): Promise<TaskWithRelations[]> {
     return this.prisma.task.findMany({
-      where: { user_id: userId },
+      where: { user_uuid: userId },
       include: {
         user: true,
         subtasks: {
-          orderBy: { createdAt: 'asc' }
-        }
+          orderBy: { subtask_created_at: 'asc' },
+        },
       },
-      orderBy: { createdAt: 'desc' }
+      orderBy: { task_created_at: 'desc' },
     });
   }
 
   async findOne(id: string): Promise<TaskWithRelations | null> {
     return this.prisma.task.findUnique({
-      where: { id },
+      where: { task_uuid: id },
       include: {
         user: true,
         subtasks: {
-          orderBy: { createdAt: 'asc' }
-        }
-      }
+          orderBy: { subtask_created_at: 'asc' },
+        },
+      },
     });
   }
 
-  async create(userId: string, createTaskDto: CreateTaskDto): Promise<TaskWithRelations> {
+  async create(
+    userId: string,
+    createTaskDto: CreateTaskDto,
+  ): Promise<TaskWithRelations> {
     const { subtasks, ...taskData } = createTaskDto;
 
     return this.prisma.$transaction(async (prisma) => {
       // 1. Créer la tâche
       const task = await prisma.task.create({
         data: {
-          ...taskData,
-          status: 'pending',
-          completionPercentage: 0,
-          user: {
-            connect: { id: userId }
-          }
-        }
+          task_title: taskData.title,
+          task_description: taskData.description,
+          task_status: 0, // pending = 0
+          task_created_at: new Date(),
+          task_updated_at: new Date(),
+          task_due_at: taskData.dueAt,
+          user_uuid: userId,
+        },
       });
 
       // 2. Créer les sous-tâches si elles existent
       if (subtasks && subtasks.length > 0) {
         await Promise.all(
-          subtasks.map(subtask => 
+          subtasks.map((subtask) =>
             prisma.subtask.create({
               data: {
-                ...subtask,
-                status: 'pending',
-                task: {
-                  connect: { id: task.id }
-                }
-              }
-            })
-          )
+                subtask_title: subtask.title,
+                subtask_description: subtask.description,
+                subtask_status: 'pending',
+                subtask_created_at: new Date(),
+                subtask_updated_at: new Date(),
+                task_uuid: task.task_uuid,
+              },
+            }),
+          ),
         );
       }
 
       // 3. Retourner la tâche avec ses sous-tâches
       return prisma.task.findUnique({
-        where: { id: task.id },
+        where: { task_uuid: task.task_uuid },
         include: {
           user: true,
           subtasks: {
-            orderBy: { createdAt: 'asc' }
-          }
-        }
+            orderBy: { subtask_created_at: 'asc' },
+          },
+        },
       }) as Promise<TaskWithRelations>;
     });
   }
 
-  async update(id: string, updateTaskDto: UpdateTaskDto): Promise<TaskWithRelations> {
+  async update(
+    id: string,
+    updateTaskDto: UpdateTaskDto,
+  ): Promise<TaskWithRelations> {
     const task = await this.findOne(id);
     if (!task) {
       throw new NotFoundException('Tâche non trouvée');
     }
 
-    // Le statut et le pourcentage de completion sont calculés automatiquement
-    const { completionPercentage, ...updateData } = updateTaskDto;
-
     return this.prisma.task.update({
-      where: { id },
-      data: updateData,
+      where: { task_uuid: id },
+      data: {
+        task_title: updateTaskDto.title,
+        task_description: updateTaskDto.description,
+        task_status:
+          updateTaskDto.status !== undefined
+            ? Number(updateTaskDto.status)
+            : undefined,
+        task_updated_at: new Date(),
+        task_due_at: updateTaskDto.dueAt,
+      },
       include: {
         user: true,
         subtasks: {
-          orderBy: { createdAt: 'asc' }
-        }
-      }
+          orderBy: { subtask_created_at: 'asc' },
+        },
+      },
     });
   }
 
@@ -115,11 +129,11 @@ export class TaskService {
     }
 
     return this.prisma.task.delete({
-      where: { id },
+      where: { task_uuid: id },
       include: {
         user: true,
-        subtasks: true
-      }
+        subtasks: true,
+      },
     });
   }
 
@@ -133,23 +147,28 @@ export class TaskService {
     }
 
     const totalSubtasks = task.subtasks.length;
-    const completedSubtasks = task.subtasks.filter(subtask => subtask.status === 'completed').length;
-    const pendingSubtasks = task.subtasks.filter(subtask => subtask.status === 'pending').length;
-    
-    const completionPercentage = totalSubtasks > 0 ? (completedSubtasks / totalSubtasks) * 100 : 0;
+    const completedSubtasks = task.subtasks.filter(
+      (subtask) => subtask.subtask_status === 'completed',
+    ).length;
+    const pendingSubtasks = task.subtasks.filter(
+      (subtask) => subtask.subtask_status === 'pending',
+    ).length;
+
+    const completionPercentage =
+      totalSubtasks > 0 ? (completedSubtasks / totalSubtasks) * 100 : 0;
 
     return {
       task: {
-        id: task.id,
-        title: task.title,
-        status: task.status
+        id: task.task_uuid,
+        title: task.task_title,
+        status: task.task_status,
       },
       subtasks: {
         total: totalSubtasks,
         completed: completedSubtasks,
         pending: pendingSubtasks,
-        completionPercentage: Math.round(completionPercentage * 100) / 100
-      }
+        completionPercentage: Math.round(completionPercentage * 100) / 100,
+      },
     };
   }
 
@@ -158,22 +177,28 @@ export class TaskService {
    */
   async getAllTasksWithStats(userId: string): Promise<any> {
     const tasks = await this.findAll(userId);
-    
+
     const tasksWithStats = await Promise.all(
       tasks.map(async (task) => {
-        const stats = await this.getStatistics(task.id);
+        const stats = await this.getStatistics(task.task_uuid);
         return {
           ...task,
-          statistics: stats.subtasks
+          statistics: stats.subtasks,
         };
-      })
+      }),
     );
 
-    // Statistiques globales
+    // Statistiques globales - conversion du status numérique vers string pour comparaison
     const totalTasks = tasks.length;
-    const completedTasks = tasks.filter(task => task.status === 'completed').length;
-    const inProgressTasks = tasks.filter(task => task.status === 'in_progress').length;
-    const pendingTasks = tasks.filter(task => task.status === 'pending').length;
+    const completedTasks = tasks.filter(
+      (task) => Number(task.task_status) === 100,
+    ).length;
+    const inProgressTasks = tasks.filter(
+      (task) => Number(task.task_status) > 0 && Number(task.task_status) < 100,
+    ).length;
+    const pendingTasks = tasks.filter(
+      (task) => Number(task.task_status) === 0,
+    ).length;
 
     return {
       tasks: tasksWithStats,
@@ -182,8 +207,9 @@ export class TaskService {
         completedTasks,
         inProgressTasks,
         pendingTasks,
-        completionPercentage: totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0
-      }
+        completionPercentage:
+          totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0,
+      },
     };
   }
-} 
+}

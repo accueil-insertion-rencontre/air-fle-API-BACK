@@ -1,120 +1,162 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { Prisma, Exam } from '@prisma/client';
 import { LearnerHistoryService } from '../learner-history/learner-history.service';
-import { Exam, Prisma } from '@prisma/client';
+
+// Type pour un examen avec ses relations
+type ExamWithRelations = Prisma.ExamGetPayload<{
+  include: {
+    student: true;
+  };
+}>;
 
 @Injectable()
 export class ExamService {
   constructor(
     private prisma: PrismaService,
-    private learnerHistoryService: LearnerHistoryService
+    private learnerHistoryService: LearnerHistoryService,
   ) {}
 
-  async findAll(): Promise<Exam[]> {
-    return this.prisma.exam.findMany({
-      include: {
-        student: true
-      }
-    });
-  }
-
-  async findOne(id: string): Promise<Exam | null> {
+  async findOne(id: string): Promise<ExamWithRelations | null> {
     return this.prisma.exam.findUnique({
-      where: { id },
+      where: { exam_uuid: id },
       include: {
-        student: true
-      }
+        student: true,
+      },
     });
   }
 
-  async create(data: Prisma.ExamCreateInput, createdByUserId?: string): Promise<Exam> {
+  async findAll(params?: {
+    skip?: number;
+    take?: number;
+    where?: Prisma.ExamWhereInput;
+    orderBy?: Prisma.ExamOrderByWithRelationInput;
+  }): Promise<{
+    data: ExamWithRelations[];
+    meta: { total: number; skip: number; take: number };
+  }> {
+    const { skip, take, where, orderBy } = params || {};
+
+    const [exams, total] = await Promise.all([
+      this.prisma.exam.findMany({
+        skip,
+        take,
+        where,
+        orderBy,
+        include: {
+          student: true,
+        },
+      }),
+      this.prisma.exam.count({ where }),
+    ]);
+
+    return {
+      data: exams,
+      meta: {
+        total,
+        skip: skip || 0,
+        take: take || total,
+      },
+    };
+  }
+
+  async create(
+    createExamData: Prisma.ExamCreateInput,
+  ): Promise<ExamWithRelations> {
     const exam = await this.prisma.exam.create({
-      data,
+      data: createExamData,
       include: {
-        student: true
-      }
+        student: true,
+      },
     });
 
-    // Enregistrer l'examen dans l'historique de l'étudiant
-    if (exam.student_id) {
-      await this.learnerHistoryService.recordExamChange(
-        exam.student_id,
-        exam.id,
-        'created',
-        {
-          id: exam.id,
-          label: exam.label,
-          note: exam.note,
-          taked_at: exam.taked_at,
-        },
-        undefined,
-        createdByUserId
-      );
-    }
+    // Enregistrer dans l'historique
+    await this.learnerHistoryService.recordChange({
+      studentId: exam.student_uuid,
+      entityType: 'exam',
+      entityId: exam.exam_uuid,
+      actionType: 'created',
+      changeType: 'exam_creation',
+      description: `Nouvel examen créé: ${exam.exam_label}`,
+      newData: {
+        label: exam.exam_label,
+        date: exam.exam_taked_at,
+        score: exam.exam_score,
+      },
+    });
 
     return exam;
   }
 
-  async update(id: string, data: Prisma.ExamUpdateInput, updatedByUserId?: string): Promise<Exam> {
-    // Récupérer l'examen actuel pour comparaison
+  async update(
+    id: string,
+    updateExamData: Prisma.ExamUpdateInput,
+  ): Promise<ExamWithRelations> {
+    // Récupérer l'examen avant modification pour l'historique
     const currentExam = await this.findOne(id);
-    
-    const updatedExam = await this.prisma.exam.update({
-      where: { id },
-      data,
+    if (!currentExam) {
+      throw new NotFoundException(`Examen avec l'ID ${id} non trouvé`);
+    }
+
+    const exam = await this.prisma.exam.update({
+      where: { exam_uuid: id },
+      data: updateExamData,
       include: {
-        student: true
-      }
+        student: true,
+      },
     });
 
-    // Enregistrer la modification dans l'historique si les données importantes ont changé
-    if (currentExam && (
-      currentExam.note !== updatedExam.note || 
-      currentExam.label !== updatedExam.label ||
-      currentExam.taked_at.getTime() !== updatedExam.taked_at.getTime()
-    )) {
-      await this.learnerHistoryService.recordExamChange(
-        updatedExam.student_id,
-        updatedExam.id,
-        'updated',
-        {
-          label: updatedExam.label,
-          note: updatedExam.note,
-          taked_at: updatedExam.taked_at,
-        },
-        {
-          label: currentExam.label,
-          note: currentExam.note,
-          taked_at: currentExam.taked_at,
-        },
-        updatedByUserId
-      );
-    }
+    // Enregistrer dans l'historique
+    await this.learnerHistoryService.recordChange({
+      studentId: exam.student_uuid,
+      entityType: 'exam',
+      entityId: exam.exam_uuid,
+      actionType: 'updated',
+      changeType: 'exam_modification',
+      description: `Examen modifié: ${exam.exam_label}`,
+      previousData: {
+        label: currentExam.exam_label,
+        date: currentExam.exam_taked_at,
+        score: currentExam.exam_score,
+      },
+      newData: {
+        label: exam.exam_label,
+        date: exam.exam_taked_at,
+        score: exam.exam_score,
+      },
+    });
 
-    return updatedExam;
+    return exam;
   }
 
-  async delete(id: string, deletedByUserId?: string): Promise<Exam> {
+  async delete(id: string): Promise<ExamWithRelations> {
     const exam = await this.findOne(id);
-    
-    if (exam) {
-      // Enregistrer la suppression dans l'historique
-      await this.learnerHistoryService.recordExamChange(
-        exam.student_id,
-        exam.id,
-        'deleted',
-        {
-          label: exam.label,
-          note: exam.note,
-          taked_at: exam.taked_at,
-        },
-        undefined,
-        deletedByUserId
-      );
+    if (!exam) {
+      throw new NotFoundException(`Examen avec l'ID ${id} non trouvé`);
     }
 
-    return this.prisma.exam.delete({
-      where: { id },
+    const deletedExam = await this.prisma.exam.delete({
+      where: { exam_uuid: id },
+      include: {
+        student: true,
+      },
     });
+
+    // Enregistrer dans l'historique
+    await this.learnerHistoryService.recordChange({
+      studentId: deletedExam.student_uuid,
+      entityType: 'exam',
+      entityId: deletedExam.exam_uuid,
+      actionType: 'deleted',
+      changeType: 'exam_deletion',
+      description: `Examen supprimé: ${deletedExam.exam_label}`,
+      previousData: {
+        label: deletedExam.exam_label,
+        date: deletedExam.exam_taked_at,
+        score: deletedExam.exam_score,
+      },
+    });
+
+    return deletedExam;
   }
-} 
+}

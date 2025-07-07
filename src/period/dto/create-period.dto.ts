@@ -1,39 +1,45 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsString, IsNotEmpty, IsBoolean, IsDateString, MaxLength } from 'class-validator';
+import {
+  IsString,
+  IsNotEmpty,
+  IsBoolean,
+  IsDateString,
+  MaxLength,
+} from 'class-validator';
 import { Escape } from 'class-sanitizer';
 
 export class CreatePeriodDto {
   @ApiProperty({
     description: 'Libellé de la période',
-    example: 'Printemps 2023'
+    example: 'Printemps 2023',
   })
   @IsString()
   @IsNotEmpty()
   @MaxLength(100)
   @Escape()
-  label: string;
+  period_label: string;
 
   @ApiProperty({
     description: 'Date de début de la période',
-    example: '2023-03-01T00:00:00.000Z'
+    example: '2023-03-01T00:00:00.000Z',
   })
   @IsDateString()
   @IsNotEmpty()
-  startedAt: string | Date;
+  period_started_at: string | Date;
 
   @ApiProperty({
     description: 'Date de fin de la période',
-    example: '2023-06-30T00:00:00.000Z'
+    example: '2023-06-30T00:00:00.000Z',
   })
   @IsDateString()
   @IsNotEmpty()
-  endedAt: string | Date;
+  period_ended_at: string | Date;
 
   @ApiProperty({
-    description: 'Indique si c\'est la période actuelle',
+    description: "Indique si c'est la période actuelle",
     example: false,
-    default: false
+    default: false,
   })
   @IsBoolean()
-  actual_period: boolean = false;
-} 
+  period_actual_period: boolean = false;
+}

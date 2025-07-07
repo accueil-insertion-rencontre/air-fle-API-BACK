@@ -10,4 +10,4 @@ import { PrismaModule } from '../prisma/prisma.module';
   providers: [TaskService, SubtaskService],
   exports: [TaskService, SubtaskService],
 })
-export class TaskModule {} 
+export class TaskModule {}

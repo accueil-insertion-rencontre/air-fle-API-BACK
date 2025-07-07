@@ -1,7 +1,10 @@
-import { Injectable } from '@nestjs/common';
-import { PrismaService } from '../prisma/prisma.service';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { LearnerHistoryService } from '../learner-history/learner-history.service';
-import { PrismaClient } from '@prisma/client';
+import { StudentRepository } from './student.repository';
 
 // Type par défaut pour corriger les problèmes de linter
 type Student = any;
@@ -9,41 +12,21 @@ type Student = any;
 @Injectable()
 export class StudentService {
   constructor(
-    private prisma: PrismaService,
-    private learnerHistoryService: LearnerHistoryService
+    private readonly studentRepository: StudentRepository,
+    private readonly learnerHistoryService: LearnerHistoryService,
   ) {}
 
   async create(data: any, createdByUserId?: string): Promise<Student> {
-    const student = await this.prisma.student.create({
-      data,
-      include: {
-        gender: true,
-        currentLevel: true,
-        initialLevel: true,
-        nationality: true,
-        status: true,
-        financing: true,
-        orientation: true,
-      },
-    });
+    this.validateStudentData(data);
 
-    // Enregistrer la création dans l'historique
-    await this.learnerHistoryService.recordChange({
-      studentId: student.id,
-      entityType: 'student',
-      actionType: 'created',
-      changeType: 'student_created',
-      description: `Étudiant créé: ${student.firstname} ${student.lastname}`,
-      newData: {
-        firstname: student.firstname,
-        lastname: student.lastname,
-        birthdate: student.birthdate,
-        initial_level: student.initialLevel,
-        status: student.status,
-        nationality: student.nationality,
-      },
-      changedByUserId: createdByUserId,
-    });
+    const prismaData = this.transformDtoToPrismaCreateInput(data);
+
+    const student = await this.studentRepository.create(
+      prismaData,
+      this.studentRepository.getStandardIncludes(),
+    );
+
+    await this.recordStudentCreation(student, createdByUserId);
 
     return student;
   }
@@ -55,250 +38,427 @@ export class StudentService {
     orderBy?: any;
   }): Promise<Student[]> {
     const { skip, take, where, orderBy } = params || {};
-    return this.prisma.student.findMany({
+    return this.studentRepository.findMany({
       skip,
       take,
       where,
       orderBy,
-      include: {
-        gender: true,
-        currentLevel: true,
-        initialLevel: true,
-        nationality: true,
-        addresses: true,
-        orientation: true,
-        disabilities: {
-          include: {
-            disability: true
-          }
-        },
-      },
+      include: this.studentRepository.getListIncludes(), // ✅ Includes spécialisés pour liste
     });
   }
 
-  async findOne(
-    studentWhereUniqueInput: any,
-  ): Promise<Student | null> {
-    return this.prisma.student.findUnique({
+  async findOne(studentWhereUniqueInput: any): Promise<Student | null> {
+    return this.studentRepository.findUnique({
       where: studentWhereUniqueInput,
-      include: {
-        gender: true,
-        currentLevel: true,
-        initialLevel: true,
-        nationality: true,
-        addresses: true,
-        orientation: true,
-        disabilities: {
-          include: {
-            disability: true
-          }
-        },
-      },
+      include: this.studentRepository.getDetailIncludes(), // ✅ Includes spécialisés pour détail
     });
   }
 
-  async update(params: {
-    where: any;
-    data: any;
-  }, updatedByUserId?: string): Promise<Student> {
+  async update(
+    params: {
+      where: any;
+      data: any;
+    },
+    updatedByUserId?: string,
+  ): Promise<Student> {
     const { where, data } = params;
-    
-    // Récupérer l'état actuel avant modification
-    const currentStudent = await this.prisma.student.findUnique({
+
+    // ✅ 1. Validation
+    this.validateStudentData(data);
+
+    // ✅ 2. Récupération état actuel
+    const currentStudent = await this.studentRepository.findUnique({
       where,
-      include: {
-        gender: true,
-        currentLevel: true,
-        initialLevel: true,
-        nationality: true,
-        status: true,
-        financing: true,
-        orientation: true,
-      },
+      include: this.studentRepository.getStandardIncludes(),
     });
 
     if (!currentStudent) {
-      throw new Error('Étudiant non trouvé');
+      throw new NotFoundException('Étudiant non trouvé');
     }
 
-    // Effectuer la mise à jour
-    const updatedStudent = await this.prisma.student.update({
+    // ✅ 3. Mise à jour
+    const updatedStudent = await this.studentRepository.update({
       data,
       where,
-      include: {
-        gender: true,
-        currentLevel: true,
-        initialLevel: true,
-        nationality: true,
-        status: true,
-        financing: true,
-        orientation: true,
-      },
+      include: this.studentRepository.getStandardIncludes(),
     });
 
-    // Enregistrer les changements dans l'historique
-    await this.trackChanges(currentStudent, updatedStudent, data, updatedByUserId);
+    // ✅ 4. Tracking des changements
+    await this.trackStudentChanges(
+      currentStudent,
+      updatedStudent,
+      data,
+      updatedByUserId,
+    );
 
     return updatedStudent;
   }
 
-  private async trackChanges(
+  // ✅ Tracking des changements organisé
+  private async trackStudentChanges(
     previous: any,
     updated: any,
     updateData: any,
-    updatedByUserId?: string
+    updatedByUserId?: string,
   ): Promise<void> {
-    // Vérifier changement de niveau actuel
-    if (updateData.current_level_id && previous.current_level_id !== updated.current_level_id) {
-      await this.learnerHistoryService.recordStudentChange(
-        updated.id,
-        'level_change',
-        `Niveau modifié de ${previous.currentLevel?.code || 'Non défini'} vers ${updated.currentLevel?.code || 'Non défini'}`,
-        previous.currentLevel,
-        updated.currentLevel,
-        updatedByUserId
+    const changes: Promise<void>[] = [];
+
+    // Changement de niveau
+    if (
+      updateData.french_level_uuid &&
+      previous.french_level_uuid !== updated.french_level_uuid
+    ) {
+      changes.push(
+        this.recordLevelChange(
+          updated.student_uuid,
+          previous.frenchLevel,
+          updated.frenchLevel,
+          updatedByUserId,
+        ),
       );
     }
 
-    // Vérifier changement de statut
-    if (updateData.status_id && previous.status_id !== updated.status_id) {
-      await this.learnerHistoryService.recordStudentChange(
-        updated.id,
-        'status_change',
-        `Statut modifié de "${previous.status?.label || 'Non défini'}" vers "${updated.status?.label || 'Non défini'}"`,
-        previous.status,
-        updated.status,
-        updatedByUserId
+    // Changement de statut
+    if (
+      updateData.status_uuid &&
+      previous.status_uuid !== updated.status_uuid
+    ) {
+      changes.push(
+        this.recordStatusChange(
+          updated.student_uuid,
+          previous.status,
+          updated.status,
+          updatedByUserId,
+        ),
       );
     }
 
-    // Vérifier changement d'informations personnelles
-    const personalInfoChanged = 
-      updateData.firstname || 
-      updateData.lastname || 
-      updateData.email || 
-      updateData.phone || 
-      updateData.birthdate;
-
-    if (personalInfoChanged) {
-      const changedFields = {};
-      const previousFields = {};
-      
-      if (updateData.firstname) {
-        changedFields['firstname'] = updated.firstname;
-        previousFields['firstname'] = previous.firstname;
-      }
-      if (updateData.lastname) {
-        changedFields['lastname'] = updated.lastname;
-        previousFields['lastname'] = previous.lastname;
-      }
-      if (updateData.email) {
-        changedFields['email'] = updated.email;
-        previousFields['email'] = previous.email;
-      }
-      if (updateData.phone) {
-        changedFields['phone'] = updated.phone;
-        previousFields['phone'] = previous.phone;
-      }
-
-      await this.learnerHistoryService.recordStudentChange(
-        updated.id,
-        'personal_info_update',
-        `Informations personnelles modifiées`,
-        previousFields,
-        changedFields,
-        updatedByUserId
+    // Changements d'infos personnelles
+    const personalChanges = this.detectPersonalInfoChanges(
+      previous,
+      updated,
+      updateData,
+    );
+    if (personalChanges.length > 0) {
+      changes.push(
+        this.recordPersonalInfoChanges(
+          updated.student_uuid,
+          personalChanges,
+          updatedByUserId,
+        ),
       );
     }
 
-    // Vérifier changement d'orientation
-    if (updateData.orientation_id && previous.orientation_id !== updated.orientation_id) {
-      await this.learnerHistoryService.recordStudentChange(
-        updated.id,
-        'orientation_change',
-        `Orientation modifiée de "${previous.orientation?.type || 'Aucune'}" vers "${updated.orientation?.type || 'Aucune'}"`,
-        previous.orientation,
-        updated.orientation,
-        updatedByUserId
+    // Changement d'orientation
+    if (
+      updateData.orientation_uuid &&
+      previous.orientation_uuid !== updated.orientation_uuid
+    ) {
+      changes.push(
+        this.recordOrientationChange(
+          updated.student_uuid,
+          previous.orientation,
+          updated.orientation,
+          updatedByUserId,
+        ),
       );
     }
+
+    // Exécuter tous les changements en parallèle
+    await Promise.all(changes);
+  }
+
+  private async recordLevelChange(
+    studentId: string,
+    previousLevel: any,
+    newLevel: any,
+    updatedByUserId?: string,
+  ): Promise<void> {
+    await this.learnerHistoryService.recordStudentChange(
+      studentId,
+      'level_change',
+      `Niveau modifié de ${previousLevel?.code || 'Non défini'} vers ${newLevel?.code || 'Non défini'}`,
+      previousLevel,
+      newLevel,
+      updatedByUserId,
+    );
+  }
+
+  private async recordStatusChange(
+    studentId: string,
+    previousStatus: any,
+    newStatus: any,
+    updatedByUserId?: string,
+  ): Promise<void> {
+    await this.learnerHistoryService.recordStudentChange(
+      studentId,
+      'status_change',
+      `Statut modifié de "${previousStatus?.label || 'Non défini'}" vers "${newStatus?.label || 'Non défini'}"`,
+      previousStatus,
+      newStatus,
+      updatedByUserId,
+    );
+  }
+
+  private async recordOrientationChange(
+    studentId: string,
+    previousOrientation: any,
+    newOrientation: any,
+    updatedByUserId?: string,
+  ): Promise<void> {
+    await this.learnerHistoryService.recordStudentChange(
+      studentId,
+      'orientation_change',
+      `Orientation modifiée de "${previousOrientation?.type || 'Aucune'}" vers "${newOrientation?.type || 'Aucune'}"`,
+      previousOrientation,
+      newOrientation,
+      updatedByUserId,
+    );
+  }
+
+  private detectPersonalInfoChanges(
+    previous: any,
+    updated: any,
+    updateData: any,
+  ): { field: string; from: any; to: any }[] {
+    const changes: { field: string; from: any; to: any }[] = [];
+
+    if (
+      updateData.student_firstname &&
+      previous.student_firstname !== updated.student_firstname
+    ) {
+      changes.push({
+        field: 'firstname',
+        from: previous.student_firstname,
+        to: updated.student_firstname,
+      });
+    }
+
+    if (
+      updateData.student_lastname &&
+      previous.student_lastname !== updated.student_lastname
+    ) {
+      changes.push({
+        field: 'lastname',
+        from: previous.student_lastname,
+        to: updated.student_lastname,
+      });
+    }
+
+    if (
+      updateData.student_mail &&
+      previous.student_mail !== updated.student_mail
+    ) {
+      changes.push({
+        field: 'email',
+        from: previous.student_mail,
+        to: updated.student_mail,
+      });
+    }
+
+    if (
+      updateData.student_phone &&
+      previous.student_phone !== updated.student_phone
+    ) {
+      changes.push({
+        field: 'phone',
+        from: previous.student_phone,
+        to: updated.student_phone,
+      });
+    }
+
+    return changes;
+  }
+
+  private async recordPersonalInfoChanges(
+    studentId: string,
+    changes: any[],
+    updatedByUserId?: string,
+  ): Promise<void> {
+    await this.learnerHistoryService.recordStudentChange(
+      studentId,
+      'personal_info_update',
+      `Informations personnelles mises à jour: ${changes.map((c) => c.field).join(', ')}`,
+      Object.fromEntries(changes.map((c) => [c.field, c.from])),
+      Object.fromEntries(changes.map((c) => [c.field, c.to])),
+      updatedByUserId,
+    );
   }
 
   async remove(where: any, deletedByUserId?: string): Promise<Student> {
     const student = await this.findOne(where);
-    
-    if (student) {
-      // Enregistrer la suppression dans l'historique avant de supprimer
-      await this.learnerHistoryService.recordChange({
-        studentId: student.id,
-        entityType: 'student',
-        actionType: 'deleted',
-        changeType: 'student_deleted',
-        description: `Étudiant supprimé: ${student.firstname} ${student.lastname}`,
-        previousData: {
-          firstname: student.firstname,
-          lastname: student.lastname,
-          email: student.email,
-        },
-        changedByUserId: deletedByUserId,
-      });
+    if (!student) {
+      throw new NotFoundException('Étudiant non trouvé');
     }
 
-    return this.prisma.student.delete({
-      where,
-    });
+    // ✅ Historique délégué
+    await this.recordStudentDeletion(student, deletedByUserId);
+
+    return this.studentRepository.delete(where);
   }
 
   async updateStudentDisabilities(
-    studentId: string, 
-    disabilityIds: string[], 
-    updatedByUserId?: string
+    studentId: string,
+    disabilityIds: string[],
+    updatedByUserId?: string,
   ): Promise<void> {
     // Récupérer les handicaps actuels
-    const currentDisabilities = await this.prisma.studentDisability.findMany({
-      where: { student_id: studentId },
-      include: { disability: true },
-    });
+    const currentDisabilities =
+      await this.studentRepository.findStudentDisabilities(studentId);
 
-    await this.prisma.studentDisability.deleteMany({
-      where: {
-        student_id: studentId
+    // ✅ Mise à jour via repository
+    await this.studentRepository.updateStudentDisabilities(
+      studentId,
+      disabilityIds,
+    );
+
+    // ✅ Historique délégué
+    await this.recordDisabilityChange(
+      studentId,
+      currentDisabilities.map((d) => d.disability),
+      disabilityIds,
+      updatedByUserId,
+    );
+  }
+
+  // ===============================
+  // ✅ MÉTHODES PRIVÉES ORGANISÉES
+  // ===============================
+
+  // ✅ Validation métier centralisée
+  private validateStudentData(data: any): void {
+    if (data.student_birthdate) {
+      const age = this.calculateAge(new Date(data.student_birthdate));
+      if (age < 16) {
+        throw new BadRequestException("L'étudiant doit avoir au moins 16 ans");
       }
-    });
-
-    if (disabilityIds.length > 0) {
-      await this.prisma.student.update({
-        where: {
-          id: studentId
-        },
-        data: {
-          disabilities: {
-            create: disabilityIds.map(disabilityId => ({
-              disability: {
-                connect: { id: disabilityId }
-              }
-            }))
-          }
-        }
-      });
+      if (age > 100) {
+        throw new BadRequestException('Âge invalide');
+      }
     }
 
-    // Récupérer les nouveaux handicaps
-    const newDisabilities = await this.prisma.studentDisability.findMany({
-      where: { student_id: studentId },
-      include: { disability: true },
-    });
+    if (data.student_mail && !this.isValidEmail(data.student_mail)) {
+      throw new BadRequestException('Format email invalide');
+    }
+  }
 
-    // Enregistrer le changement dans l'historique
+  // ✅ Enregistrement historique spécialisé
+  private async recordStudentCreation(
+    student: Student,
+    createdByUserId?: string,
+  ): Promise<void> {
+    await this.learnerHistoryService.recordChange({
+      studentId: student.student_uuid,
+      entityType: 'student',
+      actionType: 'created',
+      changeType: 'student_created',
+      description: `Étudiant créé: ${student.student_firstname} ${student.student_lastname}`,
+      newData: this.extractStudentBasicData(student),
+      changedByUserId: createdByUserId,
+    });
+  }
+
+  private async recordStudentDeletion(
+    student: Student,
+    deletedByUserId?: string,
+  ): Promise<void> {
+    await this.learnerHistoryService.recordChange({
+      studentId: student.student_uuid,
+      entityType: 'student',
+      actionType: 'deleted',
+      changeType: 'student_deleted',
+      description: `Étudiant supprimé: ${student.student_firstname} ${student.student_lastname}`,
+      previousData: this.extractStudentBasicData(student),
+      changedByUserId: deletedByUserId,
+    });
+  }
+
+  private async recordDisabilityChange(
+    studentId: string,
+    previousDisabilities: any[],
+    newDisabilityIds: string[],
+    updatedByUserId?: string,
+  ): Promise<void> {
     await this.learnerHistoryService.recordChange({
       studentId,
-      entityType: 'disability',
+      entityType: 'student_disability',
       actionType: 'updated',
-      changeType: 'disability_updated',
+      changeType: 'disability_update',
       description: `Handicaps mis à jour`,
-      previousData: currentDisabilities.map(d => d.disability),
-      newData: newDisabilities.map(d => d.disability),
+      previousData: previousDisabilities,
+      newData: { disabilityIds: newDisabilityIds },
       changedByUserId: updatedByUserId,
     });
+  }
+
+  // ✅ Utilitaires
+  private calculateAge(birthdate: Date): number {
+    const today = new Date();
+    let age = today.getFullYear() - birthdate.getFullYear();
+    const monthDiff = today.getMonth() - birthdate.getMonth();
+
+    if (
+      monthDiff < 0 ||
+      (monthDiff === 0 && today.getDate() < birthdate.getDate())
+    ) {
+      age--;
+    }
+
+    return age;
+  }
+
+  private isValidEmail(email: string): boolean {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  }
+
+  private extractStudentBasicData(student: Student) {
+    return {
+      firstname: student.student_firstname,
+      lastname: student.student_lastname,
+      birthdate: student.student_birthdate,
+      email: student.student_mail,
+      phone: student.student_phone,
+    };
+  }
+
+  // ✅ Nouvelle méthode pour transformer le DTO en format Prisma
+  private transformDtoToPrismaCreateInput(data: any): any {
+    const prismaData: any = {
+      // Champs directs
+      student_firstname: data.student_firstname,
+      student_lastname: data.student_lastname,
+      student_birthdate: data.student_birthdate,
+      student_place_of_birth: data.student_place_of_birth,
+      student_mail: data.student_mail,
+      student_phone: data.student_phone,
+      student_date_test_initial: data.student_date_test_initial,
+      student_date_entry_france: data.student_date_entry_france,
+      student_commentary: data.student_commentary,
+      student_created_at: data.student_created_at || new Date(),
+      student_updated_at: data.student_updated_at || new Date(),
+      student_date_cir: data.student_date_cir,
+      student_date_residence_permit: data.student_date_residence_permit,
+
+      // Relations obligatoires
+      gender: { connect: { gender_uuid: data.gender_uuid } },
+      frenchLevel: { connect: { french_level_uuid: data.french_level_uuid } },
+      financing: { connect: { financing_uuid: data.financing_uuid } },
+      status: { connect: { status_uuid: data.status_uuid } },
+    };
+
+    // Relations optionnelles
+    if (data.orientation_uuid) {
+      prismaData.orientation = {
+        connect: { orientation_uuid: data.orientation_uuid },
+      };
+    }
+
+    if (data.exit_reason_uuid) {
+      prismaData.exitReason = {
+        connect: { exit_reason_uuid: data.exit_reason_uuid },
+      };
+    }
+
+    return prismaData;
   }
 }

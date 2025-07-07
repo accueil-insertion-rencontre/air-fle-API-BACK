@@ -5,8 +5,14 @@ export const jwtConstants = {
 
 // Vérification de sécurité obligatoire
 if (!process.env.JWT_SECRET) {
-  console.error('❌ ERREUR: JWT_SECRET n\'est pas défini dans les variables d\'environnement.');
-  console.error('❌ L\'application ne peut pas démarrer sans une clé JWT secrète.');
-  console.error('❌ Créez un fichier .env à la racine du projet avec JWT_SECRET=votre_clé_secrète');
+  console.error(
+    "❌ ERREUR: JWT_SECRET n'est pas défini dans les variables d'environnement.",
+  );
+  console.error(
+    "❌ L'application ne peut pas démarrer sans une clé JWT secrète.",
+  );
+  console.error(
+    '❌ Créez un fichier .env à la racine du projet avec JWT_SECRET=votre_clé_secrète',
+  );
   process.exit(1); // Arrête l'application si JWT_SECRET n'est pas défini
-} 
+}

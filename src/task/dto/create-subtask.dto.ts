@@ -1,11 +1,17 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsString, IsNotEmpty, IsOptional, MaxLength, IsIn } from 'class-validator';
+import {
+  IsString,
+  IsNotEmpty,
+  IsOptional,
+  MaxLength,
+  IsIn,
+} from 'class-validator';
 import { Escape } from 'class-sanitizer';
 
 export class CreateSubtaskDto {
   @ApiProperty({
     description: 'Titre de la sous-tâche',
-    example: 'Réviser les verbes irréguliers'
+    example: 'Réviser les verbes irréguliers',
   })
   @IsString()
   @IsNotEmpty()
@@ -16,7 +22,7 @@ export class CreateSubtaskDto {
   @ApiProperty({
     description: 'Description de la sous-tâche',
     example: 'Revoir la liste des verbes irréguliers du niveau A1',
-    required: false
+    required: false,
   })
   @IsString()
   @IsOptional()
@@ -29,9 +35,9 @@ export class CreateSubtaskDto {
     enum: ['pending', 'completed'],
     example: 'pending',
     default: 'pending',
-    required: false
+    required: false,
   })
   @IsIn(['pending', 'completed'])
   @IsOptional()
   status?: 'pending' | 'completed';
-} 
+}
