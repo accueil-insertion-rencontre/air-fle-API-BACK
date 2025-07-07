@@ -11,7 +11,7 @@ export class SecurityService implements ISecurityService {
   async isIPBlocked(ip: string): Promise<boolean> {
     const key = `login_attempts:${ip}`;
     const attempts = await this.cacheService.get(key);
-    
+
     if (!attempts) {
       return false;
     }
@@ -23,13 +23,17 @@ export class SecurityService implements ISecurityService {
   async incrementLoginAttempt(ip: string): Promise<void> {
     const key = `login_attempts:${ip}`;
     const attempts = await this.cacheService.get(key);
-    
+
     if (!attempts) {
       // Première tentative
       await this.cacheService.set(key, '1', SECURITY_CONFIG.LOCK_TIME);
     } else {
       const attemptCount = parseInt(attempts, 10) + 1;
-      await this.cacheService.set(key, attemptCount.toString(), SECURITY_CONFIG.LOCK_TIME);
+      await this.cacheService.set(
+        key,
+        attemptCount.toString(),
+        SECURITY_CONFIG.LOCK_TIME,
+      );
     }
   }
 
@@ -49,11 +53,14 @@ export class SecurityService implements ISecurityService {
     await this.cacheService.set(key, userId, 24 * 60 * 60); // 24h (durée max du token)
   }
 
-  async isTokenIssuedBeforePasswordChange(userId: string, issuedAt: number): Promise<boolean> {
+  async isTokenIssuedBeforePasswordChange(
+    userId: string,
+    issuedAt: number,
+  ): Promise<boolean> {
     try {
       const key = `password_changed:${userId}`;
       const passwordChangeTimestamp = await this.cacheService.get(key);
-      
+
       if (!passwordChangeTimestamp) {
         return false;
       }
@@ -101,14 +108,22 @@ export class SecurityService implements ISecurityService {
   isValidIP(ip: string): boolean {
     const ipv4Regex = /^(\d{1,3}\.){3}\d{1,3}$/;
     const ipv6Regex = /^([0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}$/;
-    
-    return ipv4Regex.test(ip) || ipv6Regex.test(ip) || ip === '::1' || ip === 'localhost';
+
+    return (
+      ipv4Regex.test(ip) ||
+      ipv6Regex.test(ip) ||
+      ip === '::1' ||
+      ip === 'localhost'
+    );
   }
 
   // Détection d'activité suspecte
-  async detectSuspiciousActivity(ip: string, userId?: string): Promise<boolean> {
+  async detectSuspiciousActivity(
+    ip: string,
+    userId?: string,
+  ): Promise<boolean> {
     const attempts = await this.getLoginAttempts(ip);
-    
+
     // Activité suspecte si plus de 3 tentatives en peu de temps
     if (attempts > 3) {
       return true;
@@ -118,26 +133,34 @@ export class SecurityService implements ISecurityService {
     // - Tentatives depuis plusieurs IPs pour le même utilisateur
     // - Pattern d'attaque par force brute
     // - Géolocalisation inhabituelle
-    
+
     return false;
   }
 
   // Rate limiting générique
-  async checkRateLimit(identifier: string, maxRequests: number, windowMs: number): Promise<boolean> {
+  async checkRateLimit(
+    identifier: string,
+    maxRequests: number,
+    windowMs: number,
+  ): Promise<boolean> {
     const key = `rate_limit:${identifier}`;
     const requests = await this.cacheService.get(key);
-    
+
     if (!requests) {
       await this.cacheService.set(key, '1', Math.floor(windowMs / 1000));
       return true;
     }
-    
+
     const requestCount = parseInt(requests, 10);
     if (requestCount >= maxRequests) {
       return false;
     }
-    
-    await this.cacheService.set(key, (requestCount + 1).toString(), Math.floor(windowMs / 1000));
+
+    await this.cacheService.set(
+      key,
+      (requestCount + 1).toString(),
+      Math.floor(windowMs / 1000),
+    );
     return true;
   }
-} 
+}
