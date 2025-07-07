@@ -2,12 +2,11 @@ import {
   Controller,
   Get,
   Post,
-  Put,
-  Delete,
   Body,
-  Param,
-  UseGuards,
   Patch,
+  Param,
+  Delete,
+  UseGuards,
   HttpCode,
   HttpStatus,
 } from '@nestjs/common';
@@ -65,7 +64,8 @@ export class OrientationController {
   ): Promise<Orientation> {
     const prismaData: Prisma.OrientationCreateInput = {
       orientation_type: createOrientationDto.orientation_type,
-      orientation_description: createOrientationDto.orientation_description || '',
+      orientation_description:
+        createOrientationDto.orientation_description || '',
     };
 
     return this.orientationService.create(prismaData);
@@ -92,7 +92,8 @@ export class OrientationController {
       prismaData.orientation_type = updateOrientationDto.orientation_type;
     }
     if (updateOrientationDto.orientation_description !== undefined) {
-      prismaData.orientation_description = updateOrientationDto.orientation_description;
+      prismaData.orientation_description =
+        updateOrientationDto.orientation_description;
     }
 
     return this.orientationService.update(id, prismaData);
