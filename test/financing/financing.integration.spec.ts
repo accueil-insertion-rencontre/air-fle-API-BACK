@@ -14,7 +14,7 @@ import { AllExceptionsFilter } from '../../src/common/filters/http-exception.fil
 // Mock Guards qui laissent passer toutes les requêtes pour les tests
 class MockJwtAuthGuard {
   constructor() {}
-  
+
   canActivate() {
     return true; // Toujours autoriser en mode test
   }
@@ -22,21 +22,22 @@ class MockJwtAuthGuard {
 
 class MockRolesGuard {
   constructor() {}
-  
+
   canActivate() {
     return true; // Toujours autoriser en mode test
   }
 }
 
 // Tests d'intégration Financing - Endpoints HTTP complets
-describe('Tests d\'intégration Financing - Endpoints HTTP', () => {
+describe("Tests d'intégration Financing - Endpoints HTTP", () => {
   let app: INestApplication;
   let prismaService: PrismaService;
   let testFinancingId: string | null = null;
 
   beforeAll(async () => {
     // Variables d'environnement pour les tests
-    process.env.JWT_SECRET = 'votre_clé_secrète_très_sécurisée_pour_production_dev_2024';
+    process.env.JWT_SECRET =
+      'votre_clé_secrète_très_sécurisée_pour_production_dev_2024';
     process.env.NODE_ENV = 'test';
 
     const moduleFixture: TestingModule = await Test.createTestingModule({
@@ -49,14 +50,14 @@ describe('Tests d\'intégration Financing - Endpoints HTTP', () => {
         FinancingModule,
       ],
     })
-    .overrideGuard(JwtAuthGuard)
-    .useClass(MockJwtAuthGuard)
-    .overrideGuard(RolesGuard)
-    .useClass(MockRolesGuard)
-    .compile();
+      .overrideGuard(JwtAuthGuard)
+      .useClass(MockJwtAuthGuard)
+      .overrideGuard(RolesGuard)
+      .useClass(MockRolesGuard)
+      .compile();
 
     app = moduleFixture.createNestApplication();
-    
+
     // Configuration identique à main.ts
     app.setGlobalPrefix('api/v1');
     app.useGlobalPipes(
@@ -71,7 +72,7 @@ describe('Tests d\'intégration Financing - Endpoints HTTP', () => {
     app.enableCors();
 
     await app.init();
-    
+
     prismaService = app.get<PrismaService>(PrismaService);
   });
 
@@ -86,7 +87,7 @@ describe('Tests d\'intégration Financing - Endpoints HTTP', () => {
         // Le financement a peut-être déjà été supprimé
       }
     }
-    
+
     if (app) {
       await app.close();
     }
@@ -94,8 +95,7 @@ describe('Tests d\'intégration Financing - Endpoints HTTP', () => {
 
   // TEST 1: Récupérer la liste des financements
   it('devrait permettre de récupérer la liste des financements', async () => {
-    const res = await request(app.getHttpServer())
-      .get('/api/v1/financings');
+    const res = await request(app.getHttpServer()).get('/api/v1/financings');
 
     // Debug en cas d'erreur
     if (res.status !== 200) {
@@ -105,7 +105,9 @@ describe('Tests d\'intégration Financing - Endpoints HTTP', () => {
     expect(res.status).toBe(200);
     expect(res.body.success).toBe(true);
     expect(Array.isArray(res.body.data)).toBe(true);
-    console.log(`✅ GET /financings: ${res.body.data.length} financements trouvés`);
+    console.log(
+      `✅ GET /financings: ${res.body.data.length} financements trouvés`,
+    );
   });
 
   // TEST 2: Créer un financement
@@ -166,7 +168,7 @@ describe('Tests d\'intégration Financing - Endpoints HTTP', () => {
   // TEST 5: 404 pour financement inexistant
   it('devrait retourner 404 pour un financement inexistant', async () => {
     const fakeUuid = '00000000-0000-0000-0000-000000000000';
-    
+
     const res = await request(app.getHttpServer())
       .get(`/api/v1/financings/${fakeUuid}`)
       .expect(404);
@@ -192,8 +194,10 @@ describe('Tests d\'intégration Financing - Endpoints HTTP', () => {
     await request(app.getHttpServer())
       .get(`/api/v1/financings/${testFinancingId}`)
       .expect(404);
-      
-    console.log(`✅ DELETE /financings/${testFinancingId}: Supprimé avec succès`);
+
+    console.log(
+      `✅ DELETE /financings/${testFinancingId}: Supprimé avec succès`,
+    );
     testFinancingId = null; // Plus besoin de le nettoyer
   });
 
@@ -203,12 +207,12 @@ describe('Tests d\'intégration Financing - Endpoints HTTP', () => {
     const createData = {
       financing_type: 'Test CRUD HTTP Complet',
     };
-    
+
     const createRes = await request(app.getHttpServer())
       .post('/api/v1/financings')
       .send(createData)
       .expect(201);
-    
+
     const createdId = createRes.body.data.financing_uuid;
     expect(createRes.body.data.financing_type).toBe('Test CRUD HTTP Complet');
 
@@ -216,19 +220,19 @@ describe('Tests d\'intégration Financing - Endpoints HTTP', () => {
     const readRes = await request(app.getHttpServer())
       .get(`/api/v1/financings/${createdId}`)
       .expect(200);
-    
+
     expect(readRes.body.data.financing_type).toBe('Test CRUD HTTP Complet');
 
     // 3. Modifier
     const updateData = {
       financing_type: 'Test CRUD HTTP Modifié',
     };
-    
+
     const updateRes = await request(app.getHttpServer())
       .patch(`/api/v1/financings/${createdId}`)
       .send(updateData)
       .expect(200);
-    
+
     expect(updateRes.body.data.financing_type).toBe('Test CRUD HTTP Modifié');
 
     // 4. Supprimer
@@ -243,4 +247,4 @@ describe('Tests d\'intégration Financing - Endpoints HTTP', () => {
 
     console.log(`✅ CRUD complet: Créé, lu, modifié et supprimé ${createdId}`);
   });
-}); 
+});

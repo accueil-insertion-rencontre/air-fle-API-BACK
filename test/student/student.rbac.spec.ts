@@ -1,7 +1,6 @@
 import { describe, it, expect } from 'vitest';
 
 describe('Student RBAC - Tests Simples', () => {
-
   // 🟡 MAJEUR - Autorisation RBAC Admin/Teacher
   it('devrait autoriser Admin pour toutes les opérations', () => {
     const user = { role: 'admin' };
@@ -45,7 +44,8 @@ describe('Student RBAC - Tests Simples', () => {
     const requiredRoles: string[] = []; // Aucun rôle requis
 
     // Si aucun rôle requis, autoriser
-    const isAuthorized = requiredRoles.length === 0 || requiredRoles.includes(user.role);
+    const isAuthorized =
+      requiredRoles.length === 0 || requiredRoles.includes(user.role);
 
     expect(isAuthorized).toBe(true);
   });
@@ -54,14 +54,15 @@ describe('Student RBAC - Tests Simples', () => {
   it('devrait autoriser Admin pour gestion handicaps', () => {
     const user = { role: 'admin' };
     const operation = 'manage_disabilities';
-    
+
     // Selon RBAC.md: Admin peut gérer les handicaps
     const permissions = {
       admin: ['manage_disabilities', 'crud_student'],
-      teacher: ['crud_student'] // Teacher ne peut pas gérer handicaps
+      teacher: ['crud_student'], // Teacher ne peut pas gérer handicaps
     };
 
-    const userPermissions = permissions[user.role as keyof typeof permissions] || [];
+    const userPermissions =
+      permissions[user.role as keyof typeof permissions] || [];
     const hasPermission = userPermissions.includes(operation);
 
     expect(hasPermission).toBe(true);
@@ -70,14 +71,15 @@ describe('Student RBAC - Tests Simples', () => {
   it('devrait refuser Teacher pour gestion handicaps', () => {
     const user = { role: 'teacher' };
     const operation = 'manage_disabilities';
-    
+
     // Selon RBAC.md: Teacher ne peut pas gérer les handicaps
     const permissions = {
       admin: ['manage_disabilities', 'crud_student'],
-      teacher: ['crud_student'] // Teacher ne peut pas gérer handicaps
+      teacher: ['crud_student'], // Teacher ne peut pas gérer handicaps
     };
 
-    const userPermissions = permissions[user.role as keyof typeof permissions] || [];
+    const userPermissions =
+      permissions[user.role as keyof typeof permissions] || [];
     const hasPermission = userPermissions.includes(operation);
 
     expect(hasPermission).toBe(false);
@@ -85,7 +87,7 @@ describe('Student RBAC - Tests Simples', () => {
 
   it('devrait simuler vérification de token JWT', () => {
     const authHeader = 'Bearer valid-jwt-token-12345';
-    
+
     const hasBearer = authHeader.startsWith('Bearer ');
     const token = authHeader.split(' ')[1];
     const isValidFormat = token && token.length > 10;
@@ -100,10 +102,10 @@ describe('Student RBAC - Tests Simples', () => {
       'Bearer',
       'Bearer ',
       'Invalid token-format',
-      'Bearer short'
+      'Bearer short',
     ];
 
-    invalidTokens.forEach(token => {
+    invalidTokens.forEach((token) => {
       const hasBearer = token.startsWith('Bearer ');
       const tokenValue = token.split(' ')[1];
       const isValid = hasBearer && !!tokenValue && tokenValue.length > 10;
@@ -111,4 +113,4 @@ describe('Student RBAC - Tests Simples', () => {
       expect(isValid).toBe(false);
     });
   });
-}); 
+});

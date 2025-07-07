@@ -1,20 +1,20 @@
 import { describe, it, expect } from 'vitest';
 
 describe('StudentService - Tests Simples', () => {
-
   // 🔴 CRITIQUE - Création étudiant valide
   it('devrait valider les données de création', () => {
     const studentData = {
       student_firstname: 'John',
       student_lastname: 'Doe',
       student_mail: 'john.doe@test.com',
-      student_phone: '0123456789'
+      student_phone: '0123456789',
     };
 
     // Simulation de validation
-    const isValid = studentData.student_firstname && 
-                   studentData.student_lastname && 
-                   studentData.student_mail.includes('@');
+    const isValid =
+      studentData.student_firstname &&
+      studentData.student_lastname &&
+      studentData.student_mail.includes('@');
 
     expect(isValid).toBe(true);
     expect(studentData).toHaveProperty('student_firstname');
@@ -27,11 +27,12 @@ describe('StudentService - Tests Simples', () => {
     const studentData = {
       student_firstname: 'John',
       student_lastname: 'Doe',
-      student_mail: 'email-invalide'
+      student_mail: 'email-invalide',
     };
 
-    const emailValid = studentData.student_mail.includes('@') && 
-                      studentData.student_mail.includes('.');
+    const emailValid =
+      studentData.student_mail.includes('@') &&
+      studentData.student_mail.includes('.');
 
     expect(emailValid).toBe(false);
   });
@@ -40,11 +41,11 @@ describe('StudentService - Tests Simples', () => {
   it('devrait simuler la recherche par UUID', () => {
     const students = [
       { student_uuid: 'uuid-123', student_firstname: 'John' },
-      { student_uuid: 'uuid-456', student_firstname: 'Jane' }
+      { student_uuid: 'uuid-456', student_firstname: 'Jane' },
     ];
 
     const searchUuid = 'uuid-123';
-    const found = students.find(s => s.student_uuid === searchUuid);
+    const found = students.find((s) => s.student_uuid === searchUuid);
 
     expect(found).toBeDefined();
     expect(found?.student_uuid).toBe(searchUuid);
@@ -52,12 +53,10 @@ describe('StudentService - Tests Simples', () => {
 
   // 🔴 CRITIQUE - UUID étudiant inexistant
   it('devrait retourner undefined pour UUID inexistant', () => {
-    const students = [
-      { student_uuid: 'uuid-123', student_firstname: 'John' }
-    ];
+    const students = [{ student_uuid: 'uuid-123', student_firstname: 'John' }];
 
     const searchUuid = 'uuid-inexistant';
-    const found = students.find(s => s.student_uuid === searchUuid);
+    const found = students.find((s) => s.student_uuid === searchUuid);
 
     expect(found).toBeUndefined();
   });
@@ -66,16 +65,16 @@ describe('StudentService - Tests Simples', () => {
   it('devrait simuler suppression étudiant', () => {
     const students = [
       { student_uuid: 'uuid-1', name: 'John' },
-      { student_uuid: 'uuid-2', name: 'Jane' }
+      { student_uuid: 'uuid-2', name: 'Jane' },
     ];
 
     const uuidToDelete = 'uuid-1';
     const initialLength = students.length;
-    
+
     // Simulation suppression
-    const index = students.findIndex(s => s.student_uuid === uuidToDelete);
+    const index = students.findIndex((s) => s.student_uuid === uuidToDelete);
     const exists = index !== -1;
-    
+
     expect(exists).toBe(true);
     expect(initialLength).toBe(2);
 
@@ -85,19 +84,25 @@ describe('StudentService - Tests Simples', () => {
     }
 
     expect(students.length).toBe(1);
-    expect(students.find(s => s.student_uuid === uuidToDelete)).toBeUndefined();
+    expect(
+      students.find((s) => s.student_uuid === uuidToDelete),
+    ).toBeUndefined();
   });
 
   // 🟡 MAJEUR - Champs obligatoires manquants
   it('devrait détecter champs manquants', () => {
     const incompleteData = {
-      student_firstname: 'John'
+      student_firstname: 'John',
       // Manque lastname et email
     };
 
-    const requiredFields = ['student_firstname', 'student_lastname', 'student_mail'];
-    const missingFields = requiredFields.filter(field => 
-      !incompleteData[field as keyof typeof incompleteData]
+    const requiredFields = [
+      'student_firstname',
+      'student_lastname',
+      'student_mail',
+    ];
+    const missingFields = requiredFields.filter(
+      (field) => !incompleteData[field as keyof typeof incompleteData],
     );
 
     expect(missingFields.length).toBeGreaterThan(0);
@@ -110,24 +115,26 @@ describe('StudentService - Tests Simples', () => {
     const students = [
       { student_uuid: 'uuid-1', student_firstname: 'John' },
       { student_uuid: 'uuid-2', student_firstname: 'Jane' },
-      { student_uuid: 'uuid-3', student_firstname: 'Bob' }
+      { student_uuid: 'uuid-3', student_firstname: 'Bob' },
     ];
 
     expect(Array.isArray(students)).toBe(true);
     expect(students.length).toBe(3);
-    expect(students.every(s => s.student_uuid && s.student_firstname)).toBe(true);
+    expect(students.every((s) => s.student_uuid && s.student_firstname)).toBe(
+      true,
+    );
   });
 
   // 🟢 MINEUR - Pagination liste étudiants
   it('devrait simuler pagination', () => {
-    const allStudents = Array.from({length: 10}, (_, i) => ({
+    const allStudents = Array.from({ length: 10 }, (_, i) => ({
       student_uuid: `uuid-${i}`,
-      student_firstname: `Student${i}`
+      student_firstname: `Student${i}`,
     }));
 
     const skip = 3;
     const take = 2;
-    
+
     // Simulation pagination
     const page = allStudents.slice(skip, skip + take);
 
@@ -135,4 +142,4 @@ describe('StudentService - Tests Simples', () => {
     expect(page[0].student_uuid).toBe('uuid-3');
     expect(page[1].student_uuid).toBe('uuid-4');
   });
-}); 
+});
