@@ -3,17 +3,6 @@ import { JwtModule } from '@nestjs/jwt';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { PassportModule } from '@nestjs/passport';
 
-// Interfaces
-import {
-  IAuthenticationService,
-  IPasswordService,
-  ISecurityService,
-  IPermissionService,
-  IAuditService,
-  ITokenService,
-  ICacheService,
-} from './interfaces/auth.interface';
-
 // Services
 import { AuthenticationService } from './services/authentication.service';
 import { PasswordService } from './services/password.service';
@@ -49,7 +38,7 @@ import { RedisModule } from '../redis/redis.module';
     ConfigModule,
     JwtModule.registerAsync({
       imports: [ConfigModule],
-      useFactory: async (configService: ConfigService) => ({
+      useFactory: (configService: ConfigService) => ({
         secret: configService.get<string>('JWT_SECRET'),
         signOptions: { expiresIn: '1d' },
       }),
@@ -121,12 +110,10 @@ import { RedisModule } from '../redis/redis.module';
 export class AuthModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
     // Appliquer les middlewares de sécurité dans l'ordre
-    consumer
-      .apply(SecurityMiddleware)
-      .forRoutes('*'); // Tous les endpoints
-    
+    consumer.apply(SecurityMiddleware).forRoutes('*'); // Tous les endpoints
+
     consumer
       .apply(RateLimitMiddleware)
       .forRoutes('auth/*', 'users/*', 'students/*'); // Endpoints sensibles
   }
-} 
+}
