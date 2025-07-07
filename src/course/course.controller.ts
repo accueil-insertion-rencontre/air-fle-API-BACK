@@ -94,12 +94,17 @@ export class CourseController {
     required: false,
     description: 'Filtrer par UUID de groupe',
   })
-  @ApiQuery({ name: 'course_day', required: false, description: 'Filtrer par date' })
-  @ApiQuery({ 
-    name: 'expand', 
-    required: false, 
-    description: 'Champs à étendre (ex: "group.session", "teachers", "group.session,teachers")',
-    example: 'group.session'
+  @ApiQuery({
+    name: 'course_day',
+    required: false,
+    description: 'Filtrer par date',
+  })
+  @ApiQuery({
+    name: 'expand',
+    required: false,
+    description:
+      'Champs à étendre (ex: "group.session", "teachers", "group.session,teachers")',
+    example: 'group.session',
   })
   async findAll(
     @Query('skip') skip?: string,
