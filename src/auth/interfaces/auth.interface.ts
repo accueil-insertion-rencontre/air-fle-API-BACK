@@ -16,7 +16,10 @@ export interface ISecurityService {
   resetLoginAttempt(ip: string): Promise<void>;
   isTokenBlacklisted(token: string): Promise<boolean>;
   blacklistToken(token: string, userId: string): Promise<void>;
-  isTokenIssuedBeforePasswordChange(userId: string, issuedAt: number): Promise<boolean>;
+  isTokenIssuedBeforePasswordChange(
+    userId: string,
+    issuedAt: number,
+  ): Promise<boolean>;
 }
 
 export interface IPermissionService {
@@ -72,4 +75,4 @@ export type SecurityEvent =
 // Configuration des permissions
 export interface PermissionConfig {
   [role: string]: string[];
-} 
+}
