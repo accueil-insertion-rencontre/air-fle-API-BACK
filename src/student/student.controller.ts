@@ -99,11 +99,17 @@ export class StudentController {
     const where: Prisma.StudentWhereInput = {};
 
     if (student_firstname) {
-      where.student_firstname = { contains: student_firstname, mode: 'insensitive' };
+      where.student_firstname = {
+        contains: student_firstname,
+        mode: 'insensitive',
+      };
     }
 
     if (student_lastname) {
-      where.student_lastname = { contains: student_lastname, mode: 'insensitive' };
+      where.student_lastname = {
+        contains: student_lastname,
+        mode: 'insensitive',
+      };
     }
 
     if (student_mail) {
@@ -134,10 +140,14 @@ export class StudentController {
   })
   @ApiParam({ name: 'student_uuid', description: "UUID de l'étudiant" })
   async findOne(@Param('student_uuid') student_uuid: string): Promise<Student> {
-    const student = await this.studentService.findOne({ student_uuid: student_uuid });
+    const student = await this.studentService.findOne({
+      student_uuid: student_uuid,
+    });
 
     if (!student) {
-      throw new NotFoundException(`Étudiant avec l'UUID ${student_uuid} non trouvé`);
+      throw new NotFoundException(
+        `Étudiant avec l'UUID ${student_uuid} non trouvé`,
+      );
     }
 
     return student;
@@ -168,7 +178,9 @@ export class StudentController {
       });
     } catch (error) {
       if (error.code === 'P2025') {
-        throw new NotFoundException(`Étudiant avec l'UUID ${student_uuid} non trouvé`);
+        throw new NotFoundException(
+          `Étudiant avec l'UUID ${student_uuid} non trouvé`,
+        );
       }
       throw error;
     }
@@ -193,7 +205,9 @@ export class StudentController {
       return;
     } catch (error) {
       if (error.code === 'P2025') {
-        throw new NotFoundException(`Étudiant avec l'UUID ${student_uuid} non trouvé`);
+        throw new NotFoundException(
+          `Étudiant avec l'UUID ${student_uuid} non trouvé`,
+        );
       }
       throw error;
     }
@@ -217,7 +231,9 @@ export class StudentController {
   ) {
     const student = await this.studentService.findOne(student_uuid);
     if (!student) {
-      throw new NotFoundException(`Étudiant avec l'UUID ${student_uuid} non trouvé`);
+      throw new NotFoundException(
+        `Étudiant avec l'UUID ${student_uuid} non trouvé`,
+      );
     }
 
     await this.studentService.updateStudentDisabilities(
