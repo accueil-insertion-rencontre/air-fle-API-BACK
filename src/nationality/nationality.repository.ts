@@ -47,7 +47,9 @@ export class NationalityRepository {
     });
   }
 
-  async delete(where: Prisma.NationalityWhereUniqueInput): Promise<Nationality> {
+  async delete(
+    where: Prisma.NationalityWhereUniqueInput,
+  ): Promise<Nationality> {
     return this.prisma.nationality.delete({
       where,
     });
@@ -69,5 +71,4 @@ export class NationalityRepository {
       },
     });
   }
-} 
- 
+}
