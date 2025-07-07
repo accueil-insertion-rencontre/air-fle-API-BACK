@@ -53,6 +53,6 @@ export class GroupStudentManagerService implements IGroupStudentManager {
       },
     });
 
-    return result.map(item => item.student);
+    return result.map((item) => item.student);
   }
-} 
+}

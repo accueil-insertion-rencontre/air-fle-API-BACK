@@ -66,11 +66,11 @@ export class GroupController {
     @Query('period_uuid') period_uuid?: string,
   ) {
     const filters: GroupFilters = {};
-    
+
     if (session_uuid) {
       filters.session_uuid = session_uuid;
     }
-    
+
     if (period_uuid) {
       filters.period_uuid = period_uuid;
     }
