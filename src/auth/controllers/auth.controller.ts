@@ -13,7 +13,6 @@ import {
   Inject,
 } from '@nestjs/common';
 import { LoginDto } from '../dto/login.dto';
-import { RegisterDto } from '../dto/register.dto';
 import {
   ApiTags,
   ApiOperation,
@@ -40,11 +39,11 @@ import { ChangePasswordDto } from '../dto/change-password.dto';
 @Controller('auth')
 export class AuthController {
   constructor(
-    @Inject('IAuthenticationService') 
+    @Inject('IAuthenticationService')
     private readonly authService: IAuthenticationService,
-    @Inject('IPasswordService') 
+    @Inject('IPasswordService')
     private readonly passwordService: IPasswordService,
-    @Inject('IPermissionService') 
+    @Inject('IPermissionService')
     private readonly permissionService: IPermissionService,
   ) {}
 
@@ -147,7 +146,8 @@ export class AuthController {
     await this.passwordService.requestPasswordReset(dto, ip);
     return {
       success: true,
-      message: 'Si votre email est enregistré dans notre système, vous recevrez un lien pour réinitialiser votre mot de passe.',
+      message:
+        'Si votre email est enregistré dans notre système, vous recevrez un lien pour réinitialiser votre mot de passe.',
     };
   }
 
@@ -214,7 +214,8 @@ export class AuthController {
   })
   @ApiResponse({
     status: 400,
-    description: 'Mot de passe actuel incorrect ou nouveau mot de passe invalide',
+    description:
+      'Mot de passe actuel incorrect ou nouveau mot de passe invalide',
     schema: {
       type: 'object',
       properties: {
@@ -242,7 +243,9 @@ export class AuthController {
     };
   }
 
-  @ApiOperation({ summary: 'Récupérer les permissions de l\'utilisateur connecté' })
+  @ApiOperation({
+    summary: "Récupérer les permissions de l'utilisateur connecté",
+  })
   @ApiResponse({
     status: 200,
     description: 'Permissions récupérées avec succès',
@@ -271,7 +274,7 @@ export class AuthController {
     const userId = req.user.user_uuid;
     const permissions = await this.permissionService.getUserPermissions(userId);
     const resources = await this.permissionService.getResourcesForUser(userId);
-    
+
     return {
       userId,
       permissions,
@@ -295,15 +298,21 @@ export class AuthController {
   @Get('check-permission/:permission')
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
-  @ApiParam({ name: 'permission', description: 'Permission à vérifier (ex: user:read)' })
+  @ApiParam({
+    name: 'permission',
+    description: 'Permission à vérifier (ex: user:read)',
+  })
   @HttpCode(HttpStatus.OK)
   async checkPermission(
     @Request() req,
     @Param('permission') permission: string,
   ) {
     const userId = req.user.user_uuid;
-    const hasPermission = await this.permissionService.hasPermission(userId, permission);
-    
+    const hasPermission = await this.permissionService.hasPermission(
+      userId,
+      permission,
+    );
+
     return {
       userId,
       permission,
@@ -333,7 +342,7 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   async getAllPermissions() {
     const permissions = this.permissionService.getAllAvailablePermissions();
-    
+
     return {
       permissions,
       total: permissions.length,
@@ -341,7 +350,9 @@ export class AuthController {
   }
 
   @Get('roles')
-  @ApiOperation({ summary: 'Récupérer tous les rôles disponibles (admin uniquement)' })
+  @ApiOperation({
+    summary: 'Récupérer tous les rôles disponibles (admin uniquement)',
+  })
   @ApiResponse({
     status: 200,
     description: 'Liste des rôles récupérée avec succès',
@@ -357,12 +368,12 @@ export class AuthController {
               permissions: {
                 type: 'array',
                 items: { type: 'string' },
-                example: ['user:read', 'user:write', 'admin:access']
-              }
-            }
-          }
+                example: ['user:read', 'user:write', 'admin:access'],
+              },
+            },
+          },
         },
-        total: { type: 'number', example: 3 }
+        total: { type: 'number', example: 3 },
       },
     },
   })
@@ -371,19 +382,21 @@ export class AuthController {
   @ApiBearerAuth()
   @HttpCode(HttpStatus.OK)
   async getAllRoles() {
-    const rolesWithPermissions = this.permissionService.getAllRolesWithPermissions();
-    
+    const rolesWithPermissions =
+      this.permissionService.getAllRolesWithPermissions();
+
     return {
       roles: rolesWithPermissions,
       total: rolesWithPermissions.length,
     };
   }
 
-
-
   @Get('roles/:roleName/permissions')
-  @ApiOperation({ summary: 'Récupérer les permissions d\'un rôle spécifique' })
-  @ApiParam({ name: 'roleName', description: 'Nom du rôle (admin, teacher, user)' })
+  @ApiOperation({ summary: "Récupérer les permissions d'un rôle spécifique" })
+  @ApiParam({
+    name: 'roleName',
+    description: 'Nom du rôle (admin, teacher, user)',
+  })
   @ApiResponse({
     status: 200,
     description: 'Permissions du rôle récupérées avec succès',
@@ -394,9 +407,9 @@ export class AuthController {
         permissions: {
           type: 'array',
           items: { type: 'string' },
-          example: ['user:read', 'user:write', 'admin:access']
+          example: ['user:read', 'user:write', 'admin:access'],
         },
-        total: { type: 'number', example: 25 }
+        total: { type: 'number', example: 25 },
       },
     },
   })
@@ -406,13 +419,11 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   async getRolePermissions(@Param('roleName') roleName: string) {
     const permissions = this.permissionService.getPermissionsByRole(roleName);
-    
+
     return {
       role: roleName,
       permissions,
       total: permissions.length,
     };
   }
-
-
-} 
+}
