@@ -4,9 +4,7 @@ import { PrismaService } from '../../prisma/prisma.service';
 
 @Injectable()
 export class AuditService implements IAuditService {
-  constructor(
-    private readonly prisma: PrismaService,
-  ) {}
+  constructor(private readonly prisma: PrismaService) {}
 
   async logAuthEvent(
     userId: string | null,
@@ -29,10 +27,11 @@ export class AuditService implements IAuditService {
       // });
 
       // Pour l'instant, on log en console (à remplacer par une vraie table d'audit)
-      console.log(`[AUTH_AUDIT] ${new Date().toISOString()} | ${event} | User: ${userId || 'anonymous'} | IP: ${ip} | ${details}`);
-      
+      console.log(
+        `[AUTH_AUDIT] ${new Date().toISOString()} | ${event} | User: ${userId || 'anonymous'} | IP: ${ip} | ${details}`,
+      );
     } catch (error) {
-      console.error('Erreur lors de l\'enregistrement de l\'audit:', error);
+      console.error("Erreur lors de l'enregistrement de l'audit:", error);
       // Ne pas faire échouer l'opération principale à cause d'un problème d'audit
     }
   }
@@ -44,7 +43,7 @@ export class AuditService implements IAuditService {
       'password_reset_success',
       'logout',
     ];
-    
+
     return successEvents.includes(event);
   }
 
@@ -63,10 +62,13 @@ export class AuditService implements IAuditService {
       //   orderBy: { timestamp: 'desc' },
       //   take: limit,
       // });
-      
+
       return [];
     } catch (error) {
-      console.error('Erreur lors de la récupération des échecs de connexion:', error);
+      console.error(
+        'Erreur lors de la récupération des échecs de connexion:',
+        error,
+      );
       return [];
     }
   }
@@ -75,7 +77,7 @@ export class AuditService implements IAuditService {
     try {
       // TODO: Implémenter avec votre modèle d'audit
       // const startDate = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
-      // 
+      //
       // return await this.prisma.authLog.findMany({
       //   where: {
       //     user_id: userId,
@@ -88,10 +90,13 @@ export class AuditService implements IAuditService {
       //   },
       //   orderBy: { timestamp: 'desc' },
       // });
-      
+
       return [];
     } catch (error) {
-      console.error('Erreur lors de la récupération de l\'historique utilisateur:', error);
+      console.error(
+        "Erreur lors de la récupération de l'historique utilisateur:",
+        error,
+      );
       return [];
     }
   }
@@ -124,10 +129,10 @@ export class AuditService implements IAuditService {
       //     },
       //   },
       // });
-      
+
       return [];
     } catch (error) {
-      console.error('Erreur lors de la recherche d\'IPs suspectes:', error);
+      console.error("Erreur lors de la recherche d'IPs suspectes:", error);
       return [];
     }
   }
@@ -136,7 +141,7 @@ export class AuditService implements IAuditService {
     try {
       // TODO: Implémenter avec votre modèle d'audit
       // const startDate = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
-      // 
+      //
       // const metrics = await this.prisma.authLog.groupBy({
       //   by: ['event_type'],
       //   where: {
@@ -148,7 +153,7 @@ export class AuditService implements IAuditService {
       //     event_type: true,
       //   },
       // });
-      
+
       return {
         totalLogins: 0,
         successfulLogins: 0,
@@ -177,7 +182,7 @@ export class AuditService implements IAuditService {
     try {
       // TODO: Implémenter avec votre modèle d'audit
       // const cutoffDate = new Date(Date.now() - retentionDays * 24 * 60 * 60 * 1000);
-      // 
+      //
       // const result = await this.prisma.authLog.deleteMany({
       //   where: {
       //     timestamp: {
@@ -185,9 +190,9 @@ export class AuditService implements IAuditService {
       //     },
       //   },
       // });
-      // 
+      //
       // return result.count;
-      
+
       console.log(`Nettoyage des logs de plus de ${retentionDays} jours`);
       return 0;
     } catch (error) {
@@ -198,18 +203,22 @@ export class AuditService implements IAuditService {
 
   // Alertes de sécurité
 
-  async shouldTriggerSecurityAlert(event: SecurityEvent, userId: string | null, ip: string): Promise<boolean> {
+  async shouldTriggerSecurityAlert(
+    event: SecurityEvent,
+    userId: string | null,
+    ip: string,
+  ): Promise<boolean> {
     // Logique pour décider si un événement doit déclencher une alerte
     switch (event) {
       case 'login_failed':
         // Alerte si trop d'échecs pour cette IP
         const recentFailures = await this.getRecentFailuresByIP(ip);
         return recentFailures >= 5;
-        
+
       case 'account_locked':
         // Toujours alerter en cas de verrouillage de compte
         return true;
-        
+
       case 'password_reset_requested':
         // Alerte si trop de demandes de reset pour cet utilisateur
         if (userId) {
@@ -217,7 +226,7 @@ export class AuditService implements IAuditService {
           return recentResets >= 3;
         }
         return false;
-        
+
       default:
         return false;
     }
@@ -232,4 +241,4 @@ export class AuditService implements IAuditService {
     // TODO: Implémenter la logique de comptage
     return 0;
   }
-} 
+}
