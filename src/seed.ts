@@ -14,20 +14,20 @@ async function main() {
 
   // Créer les rôles par défaut s'ils n'existent pas déjà
   let adminRole = await prisma.role.findFirst({
-    where: { role_name: 'admin' }
+    where: { role_name: 'admin' },
   });
   if (!adminRole) {
     adminRole = await prisma.role.create({
-      data: { role_name: 'admin' }
+      data: { role_name: 'admin' },
     });
   }
 
   let teacherRole = await prisma.role.findFirst({
-    where: { role_name: 'teacher' }
+    where: { role_name: 'teacher' },
   });
   if (!teacherRole) {
     teacherRole = await prisma.role.create({
-      data: { role_name: 'teacher' }
+      data: { role_name: 'teacher' },
     });
   }
 
@@ -41,12 +41,12 @@ async function main() {
     { gender_label: 'Homme' },
     { gender_label: 'Femme' },
     { gender_label: 'Autre' },
-    { gender_label: 'Non spécifié' }
+    { gender_label: 'Non spécifié' },
   ];
 
   for (const gender of genders) {
     const existingGender = await prisma.gender.findFirst({
-      where: { gender_label: gender.gender_label }
+      where: { gender_label: gender.gender_label },
     });
     if (!existingGender) {
       await prisma.gender.create({
@@ -58,24 +58,60 @@ async function main() {
   // 2. NIVEAUX DE FRANÇAIS (CECR)
   console.log('📚 Création des niveaux de français...');
   const frenchLevels = [
-    { french_level_code: 'A0', french_level_description: 'Débutant absolu - Aucune connaissance' },
-    { french_level_code: 'A1', french_level_description: 'Utilisateur élémentaire - Niveau découverte' },
-    { french_level_code: 'A1+', french_level_description: 'Utilisateur élémentaire - A1 renforcé' },
-    { french_level_code: 'A2', french_level_description: 'Utilisateur élémentaire - Niveau de survie' },
-    { french_level_code: 'A2+', french_level_description: 'Utilisateur élémentaire - A2 renforcé' },
-    { french_level_code: 'B1', french_level_description: 'Utilisateur indépendant - Niveau seuil' },
-    { french_level_code: 'B1+', french_level_description: 'Utilisateur indépendant - B1 renforcé' },
-    { french_level_code: 'B2', french_level_description: 'Utilisateur indépendant - Niveau avancé' },
-    { french_level_code: 'C1', french_level_description: 'Utilisateur expérimenté - Niveau autonome' },
-    { french_level_code: 'C2', french_level_description: 'Utilisateur expérimenté - Niveau maîtrise' },
-    { french_level_code: 'FLE-P', french_level_description: 'Français Langue Étrangère - Professionnel' },
+    {
+      french_level_code: 'A0',
+      french_level_description: 'Débutant absolu - Aucune connaissance',
+    },
+    {
+      french_level_code: 'A1',
+      french_level_description: 'Utilisateur élémentaire - Niveau découverte',
+    },
+    {
+      french_level_code: 'A1+',
+      french_level_description: 'Utilisateur élémentaire - A1 renforcé',
+    },
+    {
+      french_level_code: 'A2',
+      french_level_description: 'Utilisateur élémentaire - Niveau de survie',
+    },
+    {
+      french_level_code: 'A2+',
+      french_level_description: 'Utilisateur élémentaire - A2 renforcé',
+    },
+    {
+      french_level_code: 'B1',
+      french_level_description: 'Utilisateur indépendant - Niveau seuil',
+    },
+    {
+      french_level_code: 'B1+',
+      french_level_description: 'Utilisateur indépendant - B1 renforcé',
+    },
+    {
+      french_level_code: 'B2',
+      french_level_description: 'Utilisateur indépendant - Niveau avancé',
+    },
+    {
+      french_level_code: 'C1',
+      french_level_description: 'Utilisateur expérimenté - Niveau autonome',
+    },
+    {
+      french_level_code: 'C2',
+      french_level_description: 'Utilisateur expérimenté - Niveau maîtrise',
+    },
+    {
+      french_level_code: 'FLE-P',
+      french_level_description: 'Français Langue Étrangère - Professionnel',
+    },
     { french_level_code: 'Alpha', french_level_description: 'Alphabétisation' },
-    { french_level_code: 'Post-Alpha', french_level_description: 'Post-Alphabétisation' }
+    {
+      french_level_code: 'Post-Alpha',
+      french_level_description: 'Post-Alphabétisation',
+    },
   ];
 
   for (const level of frenchLevels) {
     const existingLevel = await prisma.frenchLevel.findFirst({
-      where: { french_level_code: level.french_level_code }
+      where: { french_level_code: level.french_level_code },
     });
     if (!existingLevel) {
       await prisma.frenchLevel.create({
@@ -98,12 +134,12 @@ async function main() {
     { financing_type: 'Mission Locale' },
     { financing_type: 'ASP' },
     { financing_type: 'CCAS' },
-    { financing_type: 'Autre' }
+    { financing_type: 'Autre' },
   ];
 
   for (const financing of financings) {
     const existingFinancing = await prisma.financing.findFirst({
-      where: { financing_type: financing.financing_type }
+      where: { financing_type: financing.financing_type },
     });
     if (!existingFinancing) {
       await prisma.financing.create({
@@ -115,22 +151,55 @@ async function main() {
   // 4. HANDICAPS
   console.log('♿ Création des types de handicaps...');
   const disabilities = [
-    { disability_label: 'Handicap moteur', disability_description: 'Difficultés de déplacement, paralysies' },
-    { disability_label: 'Handicap visuel', disability_description: 'Cécité, malvoyance' },
-    { disability_label: 'Handicap auditif', disability_description: 'Surdité, malentendance' },
-    { disability_label: 'Handicap mental', disability_description: 'Déficience intellectuelle' },
-    { disability_label: 'Handicap psychique', disability_description: 'Troubles psychiatriques' },
-    { disability_label: 'Trouble DYS', disability_description: 'Dyslexie, dyspraxie, dysorthographie' },
-    { disability_label: 'Trouble autistique', disability_description: 'Troubles du spectre autistique' },
-    { disability_label: 'Handicap cognitif', disability_description: 'Troubles de la mémoire, attention' },
-    { disability_label: 'Maladie invalidante', disability_description: 'Maladies chroniques invalidantes' },
-    { disability_label: 'Polyhandicap', disability_description: 'Association de plusieurs handicaps' },
-    { disability_label: 'Autre', disability_description: 'Autre type de handicap non listé' }
+    {
+      disability_label: 'Handicap moteur',
+      disability_description: 'Difficultés de déplacement, paralysies',
+    },
+    {
+      disability_label: 'Handicap visuel',
+      disability_description: 'Cécité, malvoyance',
+    },
+    {
+      disability_label: 'Handicap auditif',
+      disability_description: 'Surdité, malentendance',
+    },
+    {
+      disability_label: 'Handicap mental',
+      disability_description: 'Déficience intellectuelle',
+    },
+    {
+      disability_label: 'Handicap psychique',
+      disability_description: 'Troubles psychiatriques',
+    },
+    {
+      disability_label: 'Trouble DYS',
+      disability_description: 'Dyslexie, dyspraxie, dysorthographie',
+    },
+    {
+      disability_label: 'Trouble autistique',
+      disability_description: 'Troubles du spectre autistique',
+    },
+    {
+      disability_label: 'Handicap cognitif',
+      disability_description: 'Troubles de la mémoire, attention',
+    },
+    {
+      disability_label: 'Maladie invalidante',
+      disability_description: 'Maladies chroniques invalidantes',
+    },
+    {
+      disability_label: 'Polyhandicap',
+      disability_description: 'Association de plusieurs handicaps',
+    },
+    {
+      disability_label: 'Autre',
+      disability_description: 'Autre type de handicap non listé',
+    },
   ];
 
   for (const disability of disabilities) {
     const existingDisability = await prisma.disability.findFirst({
-      where: { disability_label: disability.disability_label }
+      where: { disability_label: disability.disability_label },
     });
     if (!existingDisability) {
       await prisma.disability.create({
@@ -150,12 +219,12 @@ async function main() {
     { status_label: 'Exclus' },
     { status_label: 'Transféré' },
     { status_label: 'Congé maladie' },
-    { status_label: 'Congé maternité' }
+    { status_label: 'Congé maternité' },
   ];
 
   for (const status of statuses) {
     const existingStatus = await prisma.status.findFirst({
-      where: { status_label: status.status_label }
+      where: { status_label: status.status_label },
     });
     if (!existingStatus) {
       await prisma.status.create({
@@ -167,21 +236,51 @@ async function main() {
   // 6. ORIENTATIONS
   console.log('🎯 Création des orientations...');
   const orientations = [
-    { orientation_type: 'Emploi direct', orientation_description: 'Orientation vers l\'emploi' },
-    { orientation_type: 'Formation professionnelle', orientation_description: 'Poursuite en formation pro' },
-    { orientation_type: 'Formation générale', orientation_description: 'Poursuite études générales' },
-    { orientation_type: 'Création d\'entreprise', orientation_description: 'Projet entrepreneurial' },
-    { orientation_type: 'Remise à niveau', orientation_description: 'Consolidation des acquis' },
-    { orientation_type: 'Spécialisation', orientation_description: 'Formation spécialisée' },
-    { orientation_type: 'VAE', orientation_description: 'Validation des Acquis de l\'Expérience' },
-    { orientation_type: 'Autre formation', orientation_description: 'Autre type de formation' },
-    { orientation_type: 'Arrêt temporaire', orientation_description: 'Pause dans le parcours' },
-    { orientation_type: 'Non définie', orientation_description: 'Orientation non encore définie' }
+    {
+      orientation_type: 'Emploi direct',
+      orientation_description: "Orientation vers l'emploi",
+    },
+    {
+      orientation_type: 'Formation professionnelle',
+      orientation_description: 'Poursuite en formation pro',
+    },
+    {
+      orientation_type: 'Formation générale',
+      orientation_description: 'Poursuite études générales',
+    },
+    {
+      orientation_type: "Création d'entreprise",
+      orientation_description: 'Projet entrepreneurial',
+    },
+    {
+      orientation_type: 'Remise à niveau',
+      orientation_description: 'Consolidation des acquis',
+    },
+    {
+      orientation_type: 'Spécialisation',
+      orientation_description: 'Formation spécialisée',
+    },
+    {
+      orientation_type: 'VAE',
+      orientation_description: "Validation des Acquis de l'Expérience",
+    },
+    {
+      orientation_type: 'Autre formation',
+      orientation_description: 'Autre type de formation',
+    },
+    {
+      orientation_type: 'Arrêt temporaire',
+      orientation_description: 'Pause dans le parcours',
+    },
+    {
+      orientation_type: 'Non définie',
+      orientation_description: 'Orientation non encore définie',
+    },
   ];
 
   for (const orientation of orientations) {
     const existingOrientation = await prisma.orientation.findFirst({
-      where: { orientation_type: orientation.orientation_type }
+      where: { orientation_type: orientation.orientation_type },
     });
     if (!existingOrientation) {
       await prisma.orientation.create({
@@ -204,12 +303,12 @@ async function main() {
     { exit_reason: 'Abandon personnel' },
     { exit_reason: 'Autre formation' },
     { exit_reason: 'Retour au pays' },
-    { exit_reason: 'Non assiduité' }
+    { exit_reason: 'Non assiduité' },
   ];
 
   for (const exitReason of exitReasons) {
     const existingExitReason = await prisma.exitReason.findFirst({
-      where: { exit_reason: exitReason.exit_reason }
+      where: { exit_reason: exitReason.exit_reason },
     });
     if (!existingExitReason) {
       await prisma.exitReason.create({
@@ -268,7 +367,7 @@ async function main() {
     { nationality_label: 'Corée du Nord' },
     { nationality_label: 'Corée du Sud' },
     { nationality_label: 'Costa Rica' },
-    { nationality_label: 'Côte d\'Ivoire' },
+    { nationality_label: "Côte d'Ivoire" },
     { nationality_label: 'Croatie' },
     { nationality_label: 'Cuba' },
     { nationality_label: 'Danemark' },
@@ -419,7 +518,7 @@ async function main() {
     { nationality_label: 'Zambie' },
     { nationality_label: 'Zimbabwe' },
     { nationality_label: 'Apatride' },
-    { nationality_label: 'Non spécifiée' }
+    { nationality_label: 'Non spécifiée' },
   ];
 
   // Création par batch pour optimiser les performances
@@ -427,16 +526,16 @@ async function main() {
   for (let i = 0; i < nationalities.length; i += batchSize) {
     const batch = nationalities.slice(i, i + batchSize);
     await Promise.all(
-      batch.map(async nationality => {
+      batch.map(async (nationality) => {
         const existingNationality = await prisma.nationality.findFirst({
-          where: { nationality_label: nationality.nationality_label }
+          where: { nationality_label: nationality.nationality_label },
         });
         if (!existingNationality) {
           await prisma.nationality.create({
             data: nationality,
           });
         }
-      })
+      }),
     );
   }
 
@@ -448,11 +547,11 @@ async function main() {
   // Créer un utilisateur admin par défaut
   // ⚠️ SÉCURITÉ: Mot de passe temporaire - À CHANGER IMMÉDIATEMENT en production !
   const hashedAdminPassword = await argon2.hash('Admin123');
-  
+
   const adminUser = await prisma.user.upsert({
     where: { user_mail: 'admin@airfle.com' },
     update: {
-      user_password: hashedAdminPassword // Mettre à jour le mot de passe pour utiliser Argon2
+      user_password: hashedAdminPassword, // Mettre à jour le mot de passe pour utiliser Argon2
     },
     create: {
       user_firstname: 'Admin',
@@ -467,17 +566,20 @@ async function main() {
     },
   });
 
-  console.log('✅ Utilisateur admin créé:', { id: adminUser.user_uuid, email: adminUser.user_mail });
+  console.log('✅ Utilisateur admin créé:', {
+    id: adminUser.user_uuid,
+    email: adminUser.user_mail,
+  });
   console.log('🔑 Mot de passe admin temporaire: Admin123');
 
   // Créer un utilisateur enseignant par défaut
   // ⚠️ SÉCURITÉ: Mot de passe temporaire - À CHANGER IMMÉDIATEMENT en production !
   const hashedTeacherPassword = await argon2.hash('Teacher123');
-  
+
   const teacherUser = await prisma.user.upsert({
     where: { user_mail: 'teacher@airfle.com' },
     update: {
-      user_password: hashedTeacherPassword // Mettre à jour le mot de passe pour utiliser Argon2
+      user_password: hashedTeacherPassword, // Mettre à jour le mot de passe pour utiliser Argon2
     },
     create: {
       user_firstname: 'Teacher',
@@ -492,9 +594,12 @@ async function main() {
     },
   });
 
-  console.log('✅ Utilisateur enseignant créé:', { id: teacherUser.user_uuid, email: teacherUser.user_mail });
+  console.log('✅ Utilisateur enseignant créé:', {
+    id: teacherUser.user_uuid,
+    email: teacherUser.user_mail,
+  });
   console.log('🔑 Mot de passe teacher temporaire: Teacher123');
-  
+
   console.log('');
   console.log('🎉 SEED TERMINÉ AVEC SUCCÈS !');
   console.log('📊 Données créées :');
@@ -509,8 +614,12 @@ async function main() {
   console.log('   - Nationalités: 198');
   console.log('   - Utilisateurs: 2');
   console.log('');
-  console.log('🚨 IMPORTANT: Changez ces mots de passe dès la première connexion !');
-  console.log('🔒 Utilisez des mots de passe forts et uniques pour chaque environnement.');
+  console.log(
+    '🚨 IMPORTANT: Changez ces mots de passe dès la première connexion !',
+  );
+  console.log(
+    '🔒 Utilisez des mots de passe forts et uniques pour chaque environnement.',
+  );
 }
 
 main()
