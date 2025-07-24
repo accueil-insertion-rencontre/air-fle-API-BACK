@@ -88,6 +88,41 @@ export class StudentController {
     required: false,
     description: "Filtre sur l'email",
   })
+  @ApiQuery({
+    name: 'french_level_uuid',
+    required: false,
+    description: 'Filtre sur le niveau de français',
+  })
+  @ApiQuery({
+    name: 'group_uuid',
+    required: false,
+    description: 'Filtre sur le groupe',
+  })
+  @ApiQuery({
+    name: 'nationality_uuid',
+    required: false,
+    description: 'Filtre sur la nationalité',
+  })
+  @ApiQuery({
+    name: 'status_uuid',
+    required: false,
+    description: 'Filtre sur le statut',
+  })
+  @ApiQuery({
+    name: 'financing_uuid',
+    required: false,
+    description: 'Filtre sur le financement',
+  })
+  @ApiQuery({
+    name: 'orientation_uuid',
+    required: false,
+    description: 'Filtre sur l\'orientation',
+  })
+  @ApiQuery({
+    name: 'search',
+    required: false,
+    description: 'Recherche globale sur prénom, nom ou les deux',
+  })
   async findAll(
     @Query('skip') skip?: string,
     @Query('take') take?: string,
@@ -95,28 +130,98 @@ export class StudentController {
     @Query('student_firstname') student_firstname?: string,
     @Query('student_lastname') student_lastname?: string,
     @Query('student_mail') student_mail?: string,
-  ): Promise<Student[]> {
+    @Query('french_level_uuid') french_level_uuid?: string,
+    @Query('group_uuid') group_uuid?: string,
+    @Query('nationality_uuid') nationality_uuid?: string,
+    @Query('status_uuid') status_uuid?: string,
+    @Query('financing_uuid') financing_uuid?: string,
+    @Query('orientation_uuid') orientation_uuid?: string,
+    @Query('search') search?: string,
+  ): Promise<any> {
     const where: Prisma.StudentWhereInput = {};
 
-    if (student_firstname) {
-      where.student_firstname = {
-        contains: student_firstname,
-        mode: 'insensitive',
-      };
+    if (search) {
+      const searchTerms = search.split(/\s+/).filter(Boolean);
+      where.OR = [
+        ...searchTerms.map(term => ({
+          student_firstname: { contains: term, mode: 'insensitive' as const },
+        })),
+        ...searchTerms.map(term => ({
+          student_lastname: { contains: term, mode: 'insensitive' as const },
+        })),
+        {
+          AND: searchTerms.map(term => ({
+            OR: [
+              { student_firstname: { contains: term, mode: 'insensitive' as const } },
+              { student_lastname: { contains: term, mode: 'insensitive' as const } },
+            ],
+          })),
+        },
+        {
+          AND: [
+            { student_firstname: { contains: searchTerms[0], mode: 'insensitive' as const } },
+            searchTerms[1] ? { student_lastname: { contains: searchTerms[1], mode: 'insensitive' as const } } : {},
+          ],
+        },
+      ];
+    } else {
+      if (student_firstname) {
+        where.student_firstname = {
+          contains: student_firstname,
+          mode: 'insensitive' as const,
+        };
+      }
+      if (student_lastname) {
+        where.student_lastname = {
+          contains: student_lastname,
+          mode: 'insensitive' as const,
+        };
+      }
+      if (student_mail) {
+        where.student_mail = { contains: student_mail, mode: 'insensitive' as const };
+      }
+    }
+    if (french_level_uuid) {
+      where.french_level_uuid = french_level_uuid;
+    }
+    if (group_uuid) {
+      where.groups = { some: { group_uuid } };
+    }
+    if (nationality_uuid) {
+      where.nationalities = { some: { nationality_uuid } };
+    }
+    if (status_uuid) {
+      where.status_uuid = status_uuid;
+    }
+    if (financing_uuid) {
+      where.financing_uuid = financing_uuid;
+    }
+    if (orientation_uuid) {
+      where.orientation_uuid = orientation_uuid;
     }
 
-    if (student_lastname) {
-      where.student_lastname = {
-        contains: student_lastname,
-        mode: 'insensitive',
-      };
-    }
+    // Ajout du log pour debug
+    console.log('[DEBUG][GET /students] where =', JSON.stringify(where));
+    // Log des paramètres reçus pour debug
+    console.log('[DEBUG][GET /students] query params =', {
+      skip,
+      take,
+      orderBy,
+      student_firstname,
+      student_lastname,
+      student_mail,
+      french_level_uuid,
+      group_uuid,
+      nationality_uuid,
+      status_uuid,
+      financing_uuid,
+      orientation_uuid,
+      search,
+    });
 
-    if (student_mail) {
-      where.student_mail = { contains: student_mail, mode: 'insensitive' };
-    }
-
-    return this.studentService.findAll({
+    const page = skip ? Math.floor(Number(skip) / Number(take || 10)) + 1 : 1;
+    const pageSize = take ? Number(take) : 10;
+    const students = await this.studentService.findAll({
       skip: skip ? parseInt(skip) : undefined,
       take: take ? parseInt(take) : undefined,
       where,
@@ -124,6 +229,16 @@ export class StudentController {
         ? JSON.parse(orderBy)
         : { student_created_at: 'desc' as const },
     });
+    // Calcul du total réel
+    const total = await this.studentService.count(where);
+    const totalPages = Math.ceil(total / pageSize);
+    return {
+      students,
+      total,
+      page,
+      pageSize,
+      totalPages,
+    };
   }
 
   @Get(':student_uuid')
