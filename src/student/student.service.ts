@@ -94,6 +94,10 @@ export class StudentService {
     return updatedStudent;
   }
 
+  async count(where?: any): Promise<number> {
+    return this.studentRepository.count(where);
+  }
+
   // ✅ Tracking des changements organisé
   private async trackStudentChanges(
     previous: any,
