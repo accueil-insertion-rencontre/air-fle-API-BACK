@@ -29,6 +29,7 @@ export interface IPermissionService {
   getAllAvailablePermissions(): string[];
   getAllRolesWithPermissions(): { name: string; permissions: string[] }[];
   getResourcesForUser(userId: string): Promise<string[]>;
+  getAllRolesFromDb(): Promise<{ role_uuid: string; role_name: string }[]>;
 }
 
 export interface IAuditService {
