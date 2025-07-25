@@ -2,10 +2,11 @@ import { Injectable, Inject } from '@nestjs/common';
 import { IPermissionService } from '../interfaces/auth.interface';
 import { UserService } from '../../user/user.service';
 import { PERMISSIONS_CONFIG } from '../config/permissions.config';
+import { PrismaService } from '../../prisma/prisma.service';
 
 @Injectable()
 export class PermissionService implements IPermissionService {
-  constructor(private readonly userService: UserService) {}
+  constructor(private readonly userService: UserService, private readonly prisma: PrismaService) {}
 
   getPermissionsByRole(role: string): string[] {
     return PERMISSIONS_CONFIG[role] || [];
@@ -194,5 +195,10 @@ export class PermissionService implements IPermissionService {
     // mais pas ceux d'un autre teacher
 
     return true; // Pour l'instant, on autorise si la permission de base existe
+  }
+
+  async getAllRolesFromDb(): Promise<{ role_uuid: string; role_name: string }[]> {
+    // @ts-ignore: accès direct au prisma du module
+    return this.prisma.role.findMany({ select: { role_uuid: true, role_name: true } });
   }
 }
