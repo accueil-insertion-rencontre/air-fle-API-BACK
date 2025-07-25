@@ -351,11 +351,11 @@ export class AuthController {
 
   @Get('roles')
   @ApiOperation({
-    summary: 'Récupérer tous les rôles disponibles (admin uniquement)',
+    summary: 'Get all roles from database (admin only)',
   })
   @ApiResponse({
     status: 200,
-    description: 'Liste des rôles récupérée avec succès',
+    description: 'List of roles with UUIDs and names',
     schema: {
       type: 'object',
       properties: {
@@ -364,12 +364,8 @@ export class AuthController {
           items: {
             type: 'object',
             properties: {
-              name: { type: 'string', example: 'admin' },
-              permissions: {
-                type: 'array',
-                items: { type: 'string' },
-                example: ['user:read', 'user:write', 'admin:access'],
-              },
+              role_uuid: { type: 'string', example: '...' },
+              role_name: { type: 'string', example: 'Admin' },
             },
           },
         },
@@ -382,12 +378,11 @@ export class AuthController {
   @ApiBearerAuth()
   @HttpCode(HttpStatus.OK)
   async getAllRoles() {
-    const rolesWithPermissions =
-      this.permissionService.getAllRolesWithPermissions();
-
+    // Récupère les rôles depuis la base
+    const roles = await this.permissionService.getAllRolesFromDb();
     return {
-      roles: rolesWithPermissions,
-      total: rolesWithPermissions.length,
+      roles: roles.map(r => ({ role_uuid: r.role_uuid, role_name: r.role_name })),
+      total: roles.length,
     };
   }
 
