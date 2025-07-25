@@ -7,10 +7,12 @@ import {
   Param,
   Delete,
   UseGuards,
+  Query,
 } from '@nestjs/common';
 import { ContinuationService } from './continuation.service';
 import { CreateContinuationDto } from './dto/create-continuation.dto';
 import { UpdateContinuationDto } from './dto/update-continuation.dto';
+import { ContinuationStatsDto } from './dto/continuation-stats.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
@@ -21,15 +23,53 @@ import {
   ApiBearerAuth,
   ApiParam,
   ApiBody,
+  ApiQuery,
 } from '@nestjs/swagger';
 import { Prisma } from '@prisma/client';
 
-@Controller('continuation')
+@Controller('continuations') // 🔧 FIX: continuations au lieu de continuation
 @UseGuards(JwtAuthGuard, RolesGuard)
-@ApiTags('continuation')
+@ApiTags('continuations')
 @ApiBearerAuth()
 export class ContinuationController {
   constructor(private readonly continuationService: ContinuationService) {}
+
+  @Get()
+  @Roles('admin', 'teacher')
+  @ApiOperation({ summary: 'Récupérer toutes les continuations avec filtres optionnels' })
+  @ApiResponse({
+    status: 200,
+    description: 'Liste des continuations récupérée avec succès',
+  })
+  @ApiQuery({ name: 'student_uuid', required: false, description: 'UUID de l\'étudiant' })
+  @ApiQuery({ name: 'student_name', required: false, description: 'Nom de l\'étudiant' })
+  @ApiQuery({ name: 'date_from', required: false, description: 'Date de début (ISO)' })
+  @ApiQuery({ name: 'date_to', required: false, description: 'Date de fin (ISO)' })
+  findAll(
+    @Query('student_uuid') studentUuid?: string,
+    @Query('student_name') studentName?: string,
+    @Query('date_from') dateFrom?: string,
+    @Query('date_to') dateTo?: string,
+  ) {
+    return this.continuationService.findAllWithFilters({
+      student_uuid: studentUuid,
+      student_name: studentName,
+      date_from: dateFrom,
+      date_to: dateTo,
+    });
+  }
+
+  @Get('stats')
+  @Roles('admin', 'teacher')
+  @ApiOperation({ summary: 'Récupérer les statistiques des continuations' })
+  @ApiResponse({
+    status: 200,
+    description: 'Statistiques récupérées avec succès',
+    type: ContinuationStatsDto,
+  })
+  getStats(): Promise<ContinuationStatsDto> {
+    return this.continuationService.getStats();
+  }
 
   @Get('student/:studentId')
   @Roles('admin', 'teacher')
@@ -63,12 +103,13 @@ export class ContinuationController {
   @ApiResponse({ status: 400, description: 'Données invalides' })
   @ApiBody({ type: CreateContinuationDto })
   create(@Body() createContinuationDto: CreateContinuationDto) {
+    // 🔧 FIX: Mapping vers les vrais noms de champs Prisma
     const continuationData: Prisma.ContinuationCreateInput = {
-      continuation_temporality: createContinuationDto.temporality,
-      continuation_commentary: createContinuationDto.commentary,
+      continuation_temporality: createContinuationDto.continuation_temporality,
+      continuation_commentary: createContinuationDto.continuation_commentary,
       student: {
         connect: {
-          student_uuid: createContinuationDto.studentId,
+          student_uuid: createContinuationDto.student_uuid,
         },
       },
     };
@@ -90,13 +131,14 @@ export class ContinuationController {
     @Param('id') id: string,
     @Body() updateContinuationDto: UpdateContinuationDto,
   ) {
+    // 🔧 FIX: Mapping vers les vrais noms de champs Prisma
     const updateData: Prisma.ContinuationUpdateInput = {};
 
-    if (updateContinuationDto.temporality !== undefined) {
-      updateData.continuation_temporality = updateContinuationDto.temporality;
+    if (updateContinuationDto.continuation_temporality !== undefined) {
+      updateData.continuation_temporality = updateContinuationDto.continuation_temporality;
     }
-    if (updateContinuationDto.commentary !== undefined) {
-      updateData.continuation_commentary = updateContinuationDto.commentary;
+    if (updateContinuationDto.continuation_commentary !== undefined) {
+      updateData.continuation_commentary = updateContinuationDto.continuation_commentary;
     }
 
     return this.continuationService.update(id, updateData);

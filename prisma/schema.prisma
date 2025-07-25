@@ -253,10 +253,10 @@ model Exam {
 }
 
 model Continuation {
-  continuation_uuid        String    @id @default(uuid()) @map("continuation_uuid")
-  continuation_temporality DateTime? @map("continuation_temporality")
-  continuation_commentary  String?   @map("continuation_commentary") @db.VarChar(50)
-  student_uuid             String    @map("student_uuid")
+  continuation_uuid        String  @id @default(uuid()) @map("continuation_uuid")
+  continuation_temporality String? @map("continuation_temporality") @db.VarChar(50)
+  continuation_commentary  String? @map("continuation_commentary") @db.VarChar(50)
+  student_uuid             String  @map("student_uuid")
   
   // Relations
   student Student @relation(fields: [student_uuid], references: [student_uuid])
