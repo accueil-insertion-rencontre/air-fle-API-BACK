@@ -155,7 +155,7 @@ model Student {
   student_birthdate            DateTime  @map("student_birthdate") @db.Date
   student_place_of_birth       String?   @map("student_place_of_birth") @db.VarChar(50)
   student_mail                 String?   @map("student_mail") @db.VarChar(50)
-  student_phone                Int?      @map("student_phone")
+  student_phone                String?   @map("student_phone")
   student_date_test_initial    DateTime? @map("student_date_test_initial") @db.Date
   student_date_entry_france    DateTime? @map("student_date_entry_france") @db.Date
   student_commentary           String?   @map("student_commentary") @db.VarChar(256)
