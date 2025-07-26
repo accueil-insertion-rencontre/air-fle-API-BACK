@@ -4,13 +4,13 @@ import * as argon2 from 'argon2';
 const prisma = new PrismaClient();
 
 async function main() {
-  console.log(
-    '🚨 ATTENTION: Ce script crée des comptes par défaut avec des mots de passe prédéfinis.',
-  );
-  console.log(
-    '🔒 SÉCURITÉ: Changez immédiatement ces mots de passe en production !',
-  );
-  console.log('');
+  // console.log(
+  //   '🚨 ATTENTION: Ce script crée des comptes par défaut avec des mots de passe prédéfinis.',
+  // );
+  // console.log(
+  //   '🔒 SÉCURITÉ: Changez immédiatement ces mots de passe en production !',
+  // );
+  // console.log('');
 
   // Créer les rôles par défaut s'ils n'existent pas déjà
   let adminRole = await prisma.role.findFirst({
@@ -31,12 +31,12 @@ async function main() {
     });
   }
 
-  console.log('✅ Rôles créés:', { adminRole, teacherRole });
+  // console.log('✅ Rôles créés:', { adminRole, teacherRole });
 
   // === DONNÉES DE RÉFÉRENCE ===
 
   // 1. GENRES
-  console.log('📝 Création des genres...');
+  // console.log('📝 Création des genres...');
   const genders = [
     { gender_label: 'Homme' },
     { gender_label: 'Femme' },
@@ -56,7 +56,7 @@ async function main() {
   }
 
   // 2. NIVEAUX DE FRANÇAIS (CECR)
-  console.log('📚 Création des niveaux de français...');
+  // console.log('📚 Création des niveaux de français...');
   const frenchLevels = [
     {
       french_level_code: 'A0',
@@ -121,7 +121,7 @@ async function main() {
   }
 
   // 3. TYPES DE FINANCEMENT
-  console.log('💰 Création des types de financement...');
+  // console.log('💰 Création des types de financement...');
   const financings = [
     { financing_type: 'OFII' },
     { financing_type: 'OPCO' },
@@ -149,7 +149,7 @@ async function main() {
   }
 
   // 4. HANDICAPS
-  console.log('♿ Création des types de handicaps...');
+  // console.log('♿ Création des types de handicaps...');
   const disabilities = [
     {
       disability_label: 'Handicap moteur',
@@ -209,7 +209,7 @@ async function main() {
   }
 
   // 5. STATUTS ADMINISTRATIFS
-  console.log('📋 Création des statuts...');
+  // console.log('📋 Création des statuts...');
   const statuses = [
     { status_label: 'Actif' },
     { status_label: 'En attente' },
@@ -234,7 +234,7 @@ async function main() {
   }
 
   // 6. ORIENTATIONS
-  console.log('🎯 Création des orientations...');
+  // console.log('🎯 Création des orientations...');
   const orientations = [
     {
       orientation_type: 'Emploi direct',
@@ -290,7 +290,7 @@ async function main() {
   }
 
   // 7. RAISONS DE SORTIE
-  console.log('🚪 Création des raisons de sortie...');
+  // console.log('🚪 Création des raisons de sortie...');
   const exitReasons = [
     { exit_reason: 'Fin de formation' },
     { exit_reason: 'Emploi trouvé' },
@@ -318,7 +318,7 @@ async function main() {
   }
 
   // 8. NATIONALITÉS (Liste complète des pays)
-  console.log('🌍 Création des nationalités...');
+  // console.log('🌍 Création des nationalités...');
   const nationalities = [
     { nationality_label: 'Afghanistan' },
     { nationality_label: 'Afrique du Sud' },
@@ -539,10 +539,10 @@ async function main() {
     );
   }
 
-  console.log('✅ Toutes les données de référence ont été créées !');
+  // console.log('✅ Toutes les données de référence ont été créées !');
 
   // === UTILISATEURS PAR DÉFAUT ===
-  console.log('👥 Création des utilisateurs par défaut...');
+  // console.log('👥 Création des utilisateurs par défaut...');
 
   // Créer un utilisateur admin par défaut
   // ⚠️ SÉCURITÉ: Mot de passe temporaire - À CHANGER IMMÉDIATEMENT en production !
@@ -566,11 +566,11 @@ async function main() {
     },
   });
 
-  console.log('✅ Utilisateur admin créé:', {
-    id: adminUser.user_uuid,
-    email: adminUser.user_mail,
-  });
-  console.log('🔑 Mot de passe admin temporaire: Admin123');
+  // console.log('✅ Utilisateur admin créé:', {
+  //   id: adminUser.user_uuid,
+  //   email: adminUser.user_mail,
+  // });
+  // console.log('🔑 Mot de passe admin temporaire: Admin123');
 
   // Créer un utilisateur enseignant par défaut
   // ⚠️ SÉCURITÉ: Mot de passe temporaire - À CHANGER IMMÉDIATEMENT en production !
@@ -594,32 +594,32 @@ async function main() {
     },
   });
 
-  console.log('✅ Utilisateur enseignant créé:', {
-    id: teacherUser.user_uuid,
-    email: teacherUser.user_mail,
-  });
-  console.log('🔑 Mot de passe teacher temporaire: Teacher123');
+  // console.log('✅ Utilisateur enseignant créé:', {
+  //   id: teacherUser.user_uuid,
+  //   email: teacherUser.user_mail,
+  // });
+  // console.log('🔑 Mot de passe teacher temporaire: Teacher123');
 
-  console.log('');
-  console.log('🎉 SEED TERMINÉ AVEC SUCCÈS !');
-  console.log('📊 Données créées :');
-  console.log('   - Rôles: 2');
-  console.log('   - Genres: 4');
-  console.log('   - Niveaux de français: 13');
-  console.log('   - Types de financement: 12');
-  console.log('   - Handicaps: 11');
-  console.log('   - Statuts: 9');
-  console.log('   - Orientations: 10');
-  console.log('   - Raisons de sortie: 12');
-  console.log('   - Nationalités: 198');
-  console.log('   - Utilisateurs: 2');
-  console.log('');
-  console.log(
-    '🚨 IMPORTANT: Changez ces mots de passe dès la première connexion !',
-  );
-  console.log(
-    '🔒 Utilisez des mots de passe forts et uniques pour chaque environnement.',
-  );
+  // console.log('');
+  // console.log('🎉 SEED TERMINÉ AVEC SUCCÈS !');
+  // console.log('📊 Données créées :');
+  // console.log('   - Rôles: 2');
+  // console.log('   - Genres: 4');
+  // console.log('   - Niveaux de français: 13');
+  // console.log('   - Types de financement: 12');
+  // console.log('   - Handicaps: 11');
+  // console.log('   - Statuts: 9');
+  // console.log('   - Orientations: 10');
+  // console.log('   - Raisons de sortie: 12');
+  // console.log('   - Nationalités: 198');
+  // console.log('   - Utilisateurs: 2');
+  // console.log('');
+  // console.log(
+  //   '🚨 IMPORTANT: Changez ces mots de passe dès la première connexion !',
+  // );
+  // console.log(
+  //   '🔒 Utilisez des mots de passe forts et uniques pour chaque environnement.',
+  // );
 }
 
 main()

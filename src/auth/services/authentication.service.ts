@@ -39,7 +39,13 @@ export class AuthenticationService implements IAuthenticationService {
       try {
         isPasswordValid = await argon2.verify(user.user_password, password);
       } catch (error) {
-        console.error('Error validating user password:', error);
+        // Utiliser le service d'audit au lieu de console.error
+        await this.auditService.logAuthEvent(
+          null,
+          'password_verification_error',
+          `Erreur lors de la vérification du mot de passe: ${error.message}`,
+          'internal',
+        );
         return null;
       }
 
@@ -50,7 +56,13 @@ export class AuthenticationService implements IAuthenticationService {
       const { user_password: _, ...result } = user;
       return result;
     } catch (error) {
-      console.error('Error validating user:', error);
+      // Utiliser le service d'audit au lieu de console.error
+      await this.auditService.logAuthEvent(
+        null,
+        'user_validation_error',
+        `Erreur lors de la validation de l'utilisateur: ${error.message}`,
+        'internal',
+      );
       return null;
     }
   }

@@ -71,7 +71,9 @@ export type SecurityEvent =
   | 'password_reset_requested'
   | 'password_reset_success'
   | 'logout'
-  | 'token_blacklisted';
+  | 'token_blacklisted'
+  | 'password_verification_error'
+  | 'user_validation_error';
 
 // Configuration des permissions
 export interface PermissionConfig {

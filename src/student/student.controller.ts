@@ -200,24 +200,7 @@ export class StudentController {
       where.orientation_uuid = orientation_uuid;
     }
 
-    // Ajout du log pour debug
-    console.log('[DEBUG][GET /students] where =', JSON.stringify(where));
-    // Log des paramètres reçus pour debug
-    console.log('[DEBUG][GET /students] query params =', {
-      skip,
-      take,
-      orderBy,
-      student_firstname,
-      student_lastname,
-      student_mail,
-      french_level_uuid,
-      group_uuid,
-      nationality_uuid,
-      status_uuid,
-      financing_uuid,
-      orientation_uuid,
-      search,
-    });
+
 
     const page = skip ? Math.floor(Number(skip) / Number(take || 10)) + 1 : 1;
     const pageSize = take ? Number(take) : 10;
