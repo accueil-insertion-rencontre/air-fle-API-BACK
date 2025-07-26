@@ -17,9 +17,7 @@ export class StudentService {
   ) {}
 
   async create(data: any, createdByUserId?: string): Promise<Student> {
-
     this.validateStudentData(data);
-
 
     const prismaData = this.transformDtoToPrismaCreateInput(data);
 
@@ -58,8 +56,8 @@ export class StudentService {
 
   async update(
     params: {
-    where: any;
-    data: any;
+      where: any;
+      data: any;
     },
     updatedByUserId?: string,
   ): Promise<Student> {
@@ -94,6 +92,10 @@ export class StudentService {
     );
 
     return updatedStudent;
+  }
+
+  async count(where?: any): Promise<number> {
+    return this.studentRepository.count(where);
   }
 
   // ✅ Tracking des changements organisé
@@ -450,11 +452,15 @@ export class StudentService {
 
     // Relations optionnelles
     if (data.orientation_uuid) {
-      prismaData.orientation = { connect: { orientation_uuid: data.orientation_uuid } };
+      prismaData.orientation = {
+        connect: { orientation_uuid: data.orientation_uuid },
+      };
     }
 
     if (data.exit_reason_uuid) {
-      prismaData.exitReason = { connect: { exit_reason_uuid: data.exit_reason_uuid } };
+      prismaData.exitReason = {
+        connect: { exit_reason_uuid: data.exit_reason_uuid },
+      };
     }
 
     return prismaData;

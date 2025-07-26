@@ -1,13 +1,21 @@
-import { Injectable, BadRequestException, NotFoundException, Inject } from '@nestjs/common';
-import { 
-  IPasswordService, 
+import {
+  Injectable,
+  BadRequestException,
+  NotFoundException,
+  Inject,
+} from '@nestjs/common';
+import {
+  IPasswordService,
   IAuditService,
   ISecurityService,
-  ICacheService
+  ICacheService,
 } from '../interfaces/auth.interface';
 import { UserService } from '../../user/user.service';
 import { ChangePasswordDto } from '../dto/change-password.dto';
-import { ResetPasswordRequestDto, ResetPasswordConfirmDto } from '../dto/reset-password.dto';
+import {
+  ResetPasswordRequestDto,
+  ResetPasswordConfirmDto,
+} from '../dto/reset-password.dto';
 import { SECURITY_CONFIG } from '../config/permissions.config';
 import * as argon2 from 'argon2';
 import { randomBytes } from 'crypto';
@@ -17,11 +25,16 @@ export class PasswordService implements IPasswordService {
   constructor(
     private readonly userService: UserService,
     @Inject('IAuditService') private readonly auditService: IAuditService,
-    @Inject('ISecurityService') private readonly securityService: ISecurityService,
+    @Inject('ISecurityService')
+    private readonly securityService: ISecurityService,
     @Inject('ICacheService') private readonly cacheService: ICacheService,
   ) {}
 
-  async changePassword(userId: string, dto: ChangePasswordDto, ip: string): Promise<void> {
+  async changePassword(
+    userId: string,
+    dto: ChangePasswordDto,
+    ip: string,
+  ): Promise<void> {
     const { currentPassword, newPassword } = dto;
 
     try {
@@ -32,7 +45,10 @@ export class PasswordService implements IPasswordService {
       }
 
       // 2. Vérifier le mot de passe actuel
-      const isCurrentPasswordValid = await argon2.verify(user.user_password, currentPassword);
+      const isCurrentPasswordValid = await argon2.verify(
+        user.user_password,
+        currentPassword,
+      );
       if (!isCurrentPasswordValid) {
         await this.auditService.logAuthEvent(
           userId,
@@ -44,7 +60,10 @@ export class PasswordService implements IPasswordService {
       }
 
       // 3. Vérifier que le nouveau mot de passe est différent
-      const isSamePassword = await argon2.verify(user.user_password, newPassword);
+      const isSamePassword = await argon2.verify(
+        user.user_password,
+        newPassword,
+      );
       if (isSamePassword) {
         throw new BadRequestException(
           'Le nouveau mot de passe doit être différent du mot de passe actuel',
@@ -63,18 +82,25 @@ export class PasswordService implements IPasswordService {
         'Mot de passe modifié avec succès',
         ip,
       );
-
     } catch (error) {
-      if (error instanceof BadRequestException || error instanceof NotFoundException) {
+      if (
+        error instanceof BadRequestException ||
+        error instanceof NotFoundException
+      ) {
         throw error;
       }
-      
+
       console.error('Erreur lors du changement de mot de passe:', error);
-      throw new BadRequestException('Erreur lors du changement de mot de passe');
+      throw new BadRequestException(
+        'Erreur lors du changement de mot de passe',
+      );
     }
   }
 
-  async requestPasswordReset(dto: ResetPasswordRequestDto, ip: string): Promise<void> {
+  async requestPasswordReset(
+    dto: ResetPasswordRequestDto,
+    ip: string,
+  ): Promise<void> {
     const { email } = dto;
 
     try {
@@ -105,7 +131,7 @@ export class PasswordService implements IPasswordService {
       // 3. Générer un token de réinitialisation
       const resetToken = this.generateResetToken();
       const resetKey = `password_reset:${resetToken}`;
-      
+
       // 4. Stocker le token avec l'ID utilisateur dans Redis
       await this.cacheService.set(
         resetKey,
@@ -123,10 +149,9 @@ export class PasswordService implements IPasswordService {
 
       // TODO: Envoyer l'email avec le token de réinitialisation
       console.log(`Token de réinitialisation pour ${email}: ${resetToken}`);
-      
     } catch (error) {
       console.error('Erreur lors de la demande de réinitialisation:', error);
-      
+
       await this.auditService.logAuthEvent(
         null,
         'password_reset_requested',
@@ -136,7 +161,10 @@ export class PasswordService implements IPasswordService {
     }
   }
 
-  async confirmPasswordReset(dto: ResetPasswordConfirmDto, ip: string): Promise<void> {
+  async confirmPasswordReset(
+    dto: ResetPasswordConfirmDto,
+    ip: string,
+  ): Promise<void> {
     const { token, password: newPassword } = dto;
 
     try {
@@ -151,7 +179,9 @@ export class PasswordService implements IPasswordService {
           `Tentative d'utilisation de token invalide ou expiré: ${token.substring(0, 8)}...`,
           ip,
         );
-        throw new BadRequestException('Token de réinitialisation invalide ou expiré');
+        throw new BadRequestException(
+          'Token de réinitialisation invalide ou expiré',
+        );
       }
 
       // 2. Récupérer l'utilisateur
@@ -162,7 +192,10 @@ export class PasswordService implements IPasswordService {
       }
 
       // 3. Vérifier que le nouveau mot de passe est différent de l'ancien
-      const isSamePassword = await argon2.verify(user.user_password, newPassword);
+      const isSamePassword = await argon2.verify(
+        user.user_password,
+        newPassword,
+      );
       if (isSamePassword) {
         throw new BadRequestException(
           'Le nouveau mot de passe doit être différent du mot de passe actuel',
@@ -184,14 +217,21 @@ export class PasswordService implements IPasswordService {
         'Mot de passe réinitialisé avec succès',
         ip,
       );
-
     } catch (error) {
-      if (error instanceof BadRequestException || error instanceof NotFoundException) {
+      if (
+        error instanceof BadRequestException ||
+        error instanceof NotFoundException
+      ) {
         throw error;
       }
-      
-      console.error('Erreur lors de la confirmation de réinitialisation:', error);
-      throw new BadRequestException('Erreur lors de la réinitialisation du mot de passe');
+
+      console.error(
+        'Erreur lors de la confirmation de réinitialisation:',
+        error,
+      );
+      throw new BadRequestException(
+        'Erreur lors de la réinitialisation du mot de passe',
+      );
     }
   }
 
@@ -218,4 +258,4 @@ export class PasswordService implements IPasswordService {
       );
     }
   }
-} 
+}

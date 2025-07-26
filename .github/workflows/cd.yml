@@ -36,38 +36,9 @@ jobs:
       - name: Build application
         run: npm run build
 
-  # Job 2: Build et Push Docker Image
-  docker-build:
-    needs: test-and-build
-    runs-on: ubuntu-latest
-    outputs:
-      image-tag: ${{ env.DOCKER_REGISTRY }}/${{ secrets.DOCKER_USERNAME }}/${{ env.IMAGE_NAME }}:latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
-      - name: Login to Docker Registry
-        uses: docker/login-action@v3
-        with:
-          registry: ${{ env.DOCKER_REGISTRY }}
-          username: ${{ secrets.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_PASSWORD }}
-
-      - name: Build and push Docker image
-        uses: docker/build-push-action@v5
-        with:
-          context: .
-          file: ./Dockerfile.prod
-          platforms: linux/amd64
-          push: true
-          tags: ${{ env.DOCKER_REGISTRY }}/${{ secrets.DOCKER_USERNAME }}/${{ env.IMAGE_NAME }}:latest
-
-  # Job 3: Deploy to VPS
+  # Job 2: Deploy to VPS
   deploy-to-vps:
-    needs: [test-and-build, docker-build]
+    needs: test-and-build
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main'
     steps:
@@ -82,13 +53,13 @@ jobs:
             echo "Starting deployment..."
             
             # Pull latest image
-            docker pull ${{ needs.docker-build.outputs.image-tag }}
+            docker pull ${{ env.DOCKER_REGISTRY }}/${{ secrets.DOCKER_USERNAME }}/${{ env.IMAGE_NAME }}:latest
             
             # Stop existing containers
             docker-compose -f docker-compose.prod.yml down || true
             
             # Update environment variables
-            export IMAGE_TAG=${{ needs.docker-build.outputs.image-tag }}
+            export IMAGE_TAG=${{ env.DOCKER_REGISTRY }}/${{ secrets.DOCKER_USERNAME }}/${{ env.IMAGE_NAME }}:latest
             export DATABASE_URL=${{ secrets.DATABASE_URL }}
             export JWT_SECRET=${{ secrets.JWT_SECRET }}
             export REDIS_URL=${{ secrets.REDIS_URL }}
@@ -104,9 +75,9 @@ jobs:
             
             echo "Deployment completed!"
 
-  # Job 4: Notification GitHub Issue
+  # Job 3: Notification GitHub Issue
   notify-completion:
-    needs: [test-and-build, docker-build, deploy-to-vps]
+    needs: [test-and-build, deploy-to-vps]
     runs-on: ubuntu-latest
     if: always()
     steps:
@@ -128,7 +99,6 @@ jobs:
               
               **Failed Jobs:**
               - Test & Build: ${{ needs.test-and-build.result }}
-              - Docker Build: ${{ needs.docker-build.result }}
               - Deploy to VPS: ${{ needs.deploy-to-vps.result }}
               
               Please check the workflow logs for details.`,
@@ -142,7 +112,7 @@ jobs:
           script: |
             const message = `## CD Pipeline Success!
             
-            **Image deployed:** \`${{ needs.docker-build.outputs.image-tag }}\`
+            **Image deployed:** \`${{ env.DOCKER_REGISTRY }}/${{ secrets.DOCKER_USERNAME }}/${{ env.IMAGE_NAME }}:latest\`
             **Commit:** ${context.sha.substring(0, 7)}
             **Branch:** ${context.ref}
             

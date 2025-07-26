@@ -1,7 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { Group, Prisma } from '@prisma/client';
-import { IGroupRepository, GroupWithRelations } from '../interfaces/group.interface';
+import {
+  IGroupRepository,
+  GroupWithRelations,
+} from '../interfaces/group.interface';
 
 @Injectable()
 export class GroupRepository implements IGroupRepository {
@@ -69,4 +72,4 @@ export class GroupRepository implements IGroupRepository {
       where: { group_uuid: id },
     });
   }
-} 
+}

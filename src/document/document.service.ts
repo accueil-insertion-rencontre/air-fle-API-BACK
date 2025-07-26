@@ -1,16 +1,26 @@
 import { Injectable, Inject } from '@nestjs/common';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
-import { IStudentDataProvider, ILearnerHistoryProvider, STUDENT_DATA_PROVIDER, LEARNER_HISTORY_PROVIDER } from './interfaces/document-generator.interface';
-import { CertificateGenerator, CertificateData } from './generators/certificate-generator';
+import {
+  IStudentDataProvider,
+  ILearnerHistoryProvider,
+  STUDENT_DATA_PROVIDER,
+  LEARNER_HISTORY_PROVIDER,
+} from './interfaces/document-generator.interface';
+import {
+  CertificateGenerator,
+  CertificateData,
+} from './generators/certificate-generator';
 
 @Injectable()
 export class DocumentService {
   private readonly certificateGenerator: CertificateGenerator;
 
   constructor(
-    @Inject(STUDENT_DATA_PROVIDER) private readonly studentDataProvider: IStudentDataProvider,
-    @Inject(LEARNER_HISTORY_PROVIDER) private readonly learnerHistoryProvider: ILearnerHistoryProvider,
+    @Inject(STUDENT_DATA_PROVIDER)
+    private readonly studentDataProvider: IStudentDataProvider,
+    @Inject(LEARNER_HISTORY_PROVIDER)
+    private readonly learnerHistoryProvider: ILearnerHistoryProvider,
   ) {
     this.certificateGenerator = new CertificateGenerator();
   }
@@ -27,10 +37,13 @@ export class DocumentService {
    * Récupère et agrège les données nécessaires pour le certificat
    */
   async getCertificateData(student_uuid: string): Promise<CertificateData> {
-    const studentInfo = await this.studentDataProvider.getBasicInfo(student_uuid);
-    const attendanceHistory = await this.learnerHistoryProvider.getAttendanceHistory(student_uuid);
+    const studentInfo =
+      await this.studentDataProvider.getBasicInfo(student_uuid);
+    const attendanceHistory =
+      await this.learnerHistoryProvider.getAttendanceHistory(student_uuid);
 
-    const { startDate, endDate } = this.calculateFormationPeriod(attendanceHistory);
+    const { startDate, endDate } =
+      this.calculateFormationPeriod(attendanceHistory);
 
     return {
       studentName: `${studentInfo.student_firstname} ${studentInfo.student_lastname}`,
@@ -45,22 +58,25 @@ export class DocumentService {
   /**
    * Calcule la période de formation basée sur l'historique
    */
-  private calculateFormationPeriod(attendanceHistory: any[]): { startDate: Date; endDate: Date } {
+  private calculateFormationPeriod(attendanceHistory: any[]): {
+    startDate: Date;
+    endDate: Date;
+  } {
     if (attendanceHistory.length === 0) {
       const today = new Date();
       return {
         startDate: new Date(today.getFullYear(), today.getMonth() - 1, 1),
-        endDate: today
+        endDate: today,
       };
     }
 
     const dates = attendanceHistory
-      .map(h => new Date(h.learner_history_date))
+      .map((h) => new Date(h.learner_history_date))
       .sort((a, b) => a.getTime() - b.getTime());
 
     return {
       startDate: dates[0],
-      endDate: dates[dates.length - 1]
+      endDate: dates[dates.length - 1],
     };
   }
-} 
+}

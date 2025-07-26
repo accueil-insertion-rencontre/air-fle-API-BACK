@@ -15,8 +15,10 @@ import {
 @Injectable()
 export class GroupService implements IGroupBusinessService {
   constructor(
-    @Inject(GROUP_REPOSITORY) private readonly groupRepository: IGroupRepository,
-    @Inject(GROUP_STUDENT_MANAGER) private readonly studentManager: IGroupStudentManager,
+    @Inject(GROUP_REPOSITORY)
+    private readonly groupRepository: IGroupRepository,
+    @Inject(GROUP_STUDENT_MANAGER)
+    private readonly studentManager: IGroupStudentManager,
   ) {}
 
   async findAll(filters?: GroupFilters): Promise<GroupWithRelations[]> {
@@ -107,4 +109,4 @@ export class GroupService implements IGroupBusinessService {
     await this.findById(groupId);
     return this.studentManager.getStudentsByGroup(groupId);
   }
-} 
+}

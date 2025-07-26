@@ -47,7 +47,9 @@ export class FrenchLevelRepository {
     });
   }
 
-  async delete(where: Prisma.FrenchLevelWhereUniqueInput): Promise<FrenchLevel> {
+  async delete(
+    where: Prisma.FrenchLevelWhereUniqueInput,
+  ): Promise<FrenchLevel> {
     return this.prisma.frenchLevel.delete({
       where,
     });
@@ -69,5 +71,4 @@ export class FrenchLevelRepository {
       where,
     });
   }
-} 
- 
+}

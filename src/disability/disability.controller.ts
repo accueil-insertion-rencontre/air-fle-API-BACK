@@ -90,7 +90,8 @@ export class DisabilityController {
       prismaData.disability_label = updateDisabilityDto.disability_label;
     }
     if (updateDisabilityDto.disability_description !== undefined) {
-      prismaData.disability_description = updateDisabilityDto.disability_description;
+      prismaData.disability_description =
+        updateDisabilityDto.disability_description;
     }
 
     return this.disabilityService.update(id, prismaData);

@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { FrenchLevel, Prisma } from '@prisma/client';
 import { FrenchLevelRepository } from './french-level.repository';
 
@@ -12,9 +16,9 @@ export class FrenchLevelService {
     orderByCode?: boolean;
   }): Promise<FrenchLevel[]> {
     const { skip, take, orderByCode = true } = params || {};
-    
+
     // ✅ Tri par code par défaut
-    const orderBy = orderByCode 
+    const orderBy = orderByCode
       ? { french_level_code: 'asc' as const }
       : { french_level_description: 'asc' as const };
 
@@ -60,13 +64,19 @@ export class FrenchLevelService {
     // ✅ Validation métier
     if (data.french_level_code || data.french_level_description) {
       this.validateFrenchLevelData({
-        french_level_code: (data.french_level_code as string) || existingLevel.french_level_code,
-        french_level_description: (data.french_level_description as string) || existingLevel.french_level_description
+        french_level_code:
+          (data.french_level_code as string) || existingLevel.french_level_code,
+        french_level_description:
+          (data.french_level_description as string) ||
+          existingLevel.french_level_description,
       });
     }
 
     // ✅ Vérification unicité si code modifié
-    if (data.french_level_code && data.french_level_code !== existingLevel.french_level_code) {
+    if (
+      data.french_level_code &&
+      data.french_level_code !== existingLevel.french_level_code
+    ) {
       await this.checkCodeUniqueness(data.french_level_code as string);
     }
 
@@ -95,8 +105,8 @@ export class FrenchLevelService {
   // ✅ MÉTHODES PRIVÉES - LOGIQUE MÉTIER
   // ===============================
 
-  private validateFrenchLevelData(data: { 
-    french_level_code: string; 
+  private validateFrenchLevelData(data: {
+    french_level_code: string;
     french_level_description: string;
   }): void {
     // ✅ Validation du code
@@ -105,43 +115,58 @@ export class FrenchLevelService {
     }
 
     if (data.french_level_code.length > 50) {
-      throw new BadRequestException('Le code ne peut pas dépasser 50 caractères');
+      throw new BadRequestException(
+        'Le code ne peut pas dépasser 50 caractères',
+      );
     }
 
     // ✅ Validation de la description
-    if (!data.french_level_description || data.french_level_description.trim().length === 0) {
+    if (
+      !data.french_level_description ||
+      data.french_level_description.trim().length === 0
+    ) {
       throw new BadRequestException('La description du niveau est obligatoire');
     }
 
     if (data.french_level_description.length > 255) {
-      throw new BadRequestException('La description ne peut pas dépasser 255 caractères');
+      throw new BadRequestException(
+        'La description ne peut pas dépasser 255 caractères',
+      );
     }
 
     // ✅ Validation format du code (lettres et chiffres uniquement)
     if (!/^[A-Za-z0-9]+$/.test(data.french_level_code.trim())) {
-      throw new BadRequestException('Le code ne peut contenir que des lettres et des chiffres');
+      throw new BadRequestException(
+        'Le code ne peut contenir que des lettres et des chiffres',
+      );
     }
   }
 
   private async checkCodeUniqueness(code: string): Promise<void> {
     const normalizedCode = code.trim().toUpperCase();
-    const existingLevel = await this.frenchLevelRepository.findByCode(normalizedCode);
+    const existingLevel =
+      await this.frenchLevelRepository.findByCode(normalizedCode);
     if (existingLevel) {
-      throw new BadRequestException(`Le niveau "${normalizedCode}" existe déjà`);
+      throw new BadRequestException(
+        `Le niveau "${normalizedCode}" existe déjà`,
+      );
     }
   }
 
   private normalizeLevelData(data: any): any {
     const normalized = { ...data };
-    
+
     if (data.french_level_code) {
-      normalized.french_level_code = data.french_level_code.trim().toUpperCase();
+      normalized.french_level_code = data.french_level_code
+        .trim()
+        .toUpperCase();
     }
-    
+
     if (data.french_level_description) {
-      normalized.french_level_description = data.french_level_description.trim();
+      normalized.french_level_description =
+        data.french_level_description.trim();
     }
-    
+
     return normalized;
   }
 }

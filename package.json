@@ -22,7 +22,8 @@
     "test:debug": "vitest run --inspect-brk",
     "test:e2e": "vitest run --config ./vitest.config.ts",
     "test:e2e:watch": "vitest --config ./vitest.config.ts",
-    "seed": "ts-node src/seed.ts"
+    "seed": "ts-node src/seed.ts",
+    "fixtures:students": "ts-node prisma/student.fixtures.ts"
   },
   "dependencies": {
     "@nestjs/cache-manager": "^3.0.1",

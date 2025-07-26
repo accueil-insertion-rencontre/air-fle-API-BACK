@@ -48,7 +48,9 @@ export class NationalityController {
   })
   @ApiResponse({ status: 404, description: 'Nationalité non trouvée' })
   @ApiParam({ name: 'nationality_uuid', description: 'UUID de la nationalité' })
-  async findOne(@Param('nationality_uuid') nationality_uuid: string): Promise<Nationality | null> {
+  async findOne(
+    @Param('nationality_uuid') nationality_uuid: string,
+  ): Promise<Nationality | null> {
     return this.nationalityService.findOne(nationality_uuid);
   }
 
@@ -96,7 +98,9 @@ export class NationalityController {
   })
   @ApiResponse({ status: 404, description: 'Nationalité non trouvée' })
   @ApiParam({ name: 'nationality_uuid', description: 'UUID de la nationalité' })
-  async delete(@Param('nationality_uuid') nationality_uuid: string): Promise<Nationality> {
+  async delete(
+    @Param('nationality_uuid') nationality_uuid: string,
+  ): Promise<Nationality> {
     return this.nationalityService.delete(nationality_uuid);
   }
 }

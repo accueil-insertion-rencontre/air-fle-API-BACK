@@ -17,4 +17,4 @@ export class JwtTokenAdapter implements ITokenService {
   decode(token: string): any {
     return this.jwtService.decode(token);
   }
-} 
+}

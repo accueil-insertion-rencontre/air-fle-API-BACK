@@ -1,11 +1,17 @@
-import { Injectable, NestMiddleware, HttpException, HttpStatus, Inject } from '@nestjs/common';
+import {
+  Injectable,
+  NestMiddleware,
+  HttpException,
+  HttpStatus,
+  Inject,
+} from '@nestjs/common';
 import { Request, Response, NextFunction } from 'express';
 import { ICacheService } from '../interfaces/auth.interface';
 
 interface RateLimitOptions {
-  windowMs: number;    // Fenêtre de temps en millisecondes
+  windowMs: number; // Fenêtre de temps en millisecondes
   maxRequests: number; // Nombre maximum de requêtes par fenêtre
-  message?: string;    // Message d'erreur personnalisé
+  message?: string; // Message d'erreur personnalisé
   skipSuccessfulRequests?: boolean; // Ne compter que les requêtes échouées
 }
 
@@ -30,7 +36,8 @@ export class RateLimitMiddleware implements NestMiddleware {
     '/auth/reset-password/confirm': {
       windowMs: 15 * 60 * 1000, // 15 minutes
       maxRequests: 5,
-      message: 'Trop de tentatives de réinitialisation. Réessayez dans 15 minutes.',
+      message:
+        'Trop de tentatives de réinitialisation. Réessayez dans 15 minutes.',
     },
     default: {
       windowMs: 15 * 60 * 1000, // 15 minutes
@@ -46,14 +53,14 @@ export class RateLimitMiddleware implements NestMiddleware {
 
     try {
       const canProceed = await this.checkRateLimit(ip, endpoint, config);
-      
+
       if (!canProceed) {
         const resetTime = await this.getRemainingTime(ip, endpoint);
-        
+
         res.setHeader('X-RateLimit-Limit', config.maxRequests.toString());
         res.setHeader('X-RateLimit-Remaining', '0');
         res.setHeader('X-RateLimit-Reset', resetTime.toString());
-        
+
         throw new HttpException(
           {
             statusCode: HttpStatus.TOO_MANY_REQUESTS,
@@ -88,29 +95,29 @@ export class RateLimitMiddleware implements NestMiddleware {
   ): Promise<boolean> {
     const key = `rate_limit:${endpoint}:${ip}`;
     const windowStart = Date.now() - config.windowMs;
-    
+
     // Récupérer les timestamps des requêtes dans la fenêtre
     const requests = await this.cacheService.get(key);
     let timestamps: number[] = requests ? JSON.parse(requests) : [];
-    
+
     // Filtrer les requêtes dans la fenêtre de temps
-    timestamps = timestamps.filter(timestamp => timestamp > windowStart);
-    
+    timestamps = timestamps.filter((timestamp) => timestamp > windowStart);
+
     // Vérifier si on dépasse la limite
     if (timestamps.length >= config.maxRequests) {
       return false;
     }
-    
+
     // Ajouter la nouvelle requête
     timestamps.push(Date.now());
-    
+
     // Sauvegarder avec expiration
     await this.cacheService.set(
       key,
       JSON.stringify(timestamps),
       Math.ceil(config.windowMs / 1000),
     );
-    
+
     return true;
   }
 
@@ -121,60 +128,67 @@ export class RateLimitMiddleware implements NestMiddleware {
   ): Promise<number> {
     const key = `rate_limit:${endpoint}:${ip}`;
     const windowStart = Date.now() - config.windowMs;
-    
+
     const requests = await this.cacheService.get(key);
     const timestamps: number[] = requests ? JSON.parse(requests) : [];
-    
-    const validRequests = timestamps.filter(timestamp => timestamp > windowStart);
+
+    const validRequests = timestamps.filter(
+      (timestamp) => timestamp > windowStart,
+    );
     return Math.max(0, config.maxRequests - validRequests.length);
   }
 
-  private async getRemainingTime(ip: string, endpoint: string): Promise<number> {
+  private async getRemainingTime(
+    ip: string,
+    endpoint: string,
+  ): Promise<number> {
     const key = `rate_limit:${endpoint}:${ip}`;
     const requests = await this.cacheService.get(key);
-    
+
     if (!requests) {
       return 0;
     }
-    
+
     const timestamps: number[] = JSON.parse(requests);
     if (timestamps.length === 0) {
       return 0;
     }
-    
+
     const oldestRequest = Math.min(...timestamps);
     const config = this.configs[endpoint] || this.configs.default;
-    
-    return Math.max(0, (oldestRequest + config.windowMs) - Date.now());
+
+    return Math.max(0, oldestRequest + config.windowMs - Date.now());
   }
 
   private getClientIP(req: Request): string {
     return (
-      req.headers['x-forwarded-for'] as string ||
-      req.headers['x-real-ip'] as string ||
+      (req.headers['x-forwarded-for'] as string) ||
+      (req.headers['x-real-ip'] as string) ||
       req.connection.remoteAddress ||
       req.socket.remoteAddress ||
       'unknown'
-    ).split(',')[0].trim();
+    )
+      .split(',')[0]
+      .trim();
   }
 
   private getEndpointKey(req: Request): string {
     const path = req.path;
     const method = req.method;
-    
+
     // Correspondance exacte pour les endpoints sensibles
     const sensitiveEndpoints = [
       '/auth/login',
       '/auth/reset-password/request',
       '/auth/reset-password/confirm',
     ];
-    
+
     for (const endpoint of sensitiveEndpoints) {
       if (path === endpoint && method === 'POST') {
         return endpoint;
       }
     }
-    
+
     return 'default';
   }
-} 
+}

@@ -7,14 +7,13 @@ import {
   Param,
   Delete,
   Request,
-  Query,
   UseGuards,
   ForbiddenException,
   NotFoundException,
 } from '@nestjs/common';
 import { TaskService } from './task.service';
 import { SubtaskService, SubtaskWithRelations } from './subtask.service';
-import { Task, Subtask } from '@prisma/client';
+import { Task } from '@prisma/client';
 import { CreateTaskDto } from './dto/create-task.dto';
 import { UpdateTaskDto } from './dto/update-task.dto';
 import { CreateSubtaskDto } from './dto/create-subtask.dto';

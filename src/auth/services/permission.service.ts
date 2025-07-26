@@ -2,12 +2,11 @@ import { Injectable, Inject } from '@nestjs/common';
 import { IPermissionService } from '../interfaces/auth.interface';
 import { UserService } from '../../user/user.service';
 import { PERMISSIONS_CONFIG } from '../config/permissions.config';
+import { PrismaService } from '../../prisma/prisma.service';
 
 @Injectable()
 export class PermissionService implements IPermissionService {
-  constructor(
-    private readonly userService: UserService,
-  ) {}
+  constructor(private readonly userService: UserService, private readonly prisma: PrismaService) {}
 
   getPermissionsByRole(role: string): string[] {
     return PERMISSIONS_CONFIG[role] || [];
@@ -22,7 +21,10 @@ export class PermissionService implements IPermissionService {
 
       return this.getPermissionsByRole(user.role.role_name);
     } catch (error) {
-      console.error('Erreur lors de la récupération des permissions utilisateur:', error);
+      console.error(
+        'Erreur lors de la récupération des permissions utilisateur:',
+        error,
+      );
       return [];
     }
   }
@@ -41,24 +43,26 @@ export class PermissionService implements IPermissionService {
 
   getAllAvailablePermissions(): string[] {
     const allPermissions = new Set<string>();
-    
-    Object.values(PERMISSIONS_CONFIG).forEach(permissions => {
-      permissions.forEach(permission => allPermissions.add(permission));
+
+    Object.values(PERMISSIONS_CONFIG).forEach((permissions) => {
+      permissions.forEach((permission) => allPermissions.add(permission));
     });
 
     return Array.from(allPermissions).sort();
   }
 
   getAllRolesWithPermissions(): { name: string; permissions: string[] }[] {
-    return Object.entries(PERMISSIONS_CONFIG).map(([roleName, permissions]) => ({
-      name: roleName,
-      permissions: permissions.sort(),
-    }));
+    return Object.entries(PERMISSIONS_CONFIG).map(
+      ([roleName, permissions]) => ({
+        name: roleName,
+        permissions: permissions.sort(),
+      }),
+    );
   }
 
   getRolesByPermission(permission: string): string[] {
     const roles: string[] = [];
-    
+
     Object.entries(PERMISSIONS_CONFIG).forEach(([role, permissions]) => {
       if (permissions.includes(permission)) {
         roles.push(role);
@@ -68,22 +72,38 @@ export class PermissionService implements IPermissionService {
     return roles;
   }
 
-  async hasAnyPermission(userId: string, permissions: string[]): Promise<boolean> {
+  async hasAnyPermission(
+    userId: string,
+    permissions: string[],
+  ): Promise<boolean> {
     try {
       const userPermissions = await this.getUserPermissions(userId);
-      return permissions.some(permission => userPermissions.includes(permission));
+      return permissions.some((permission) =>
+        userPermissions.includes(permission),
+      );
     } catch (error) {
-      console.error('Erreur lors de la vérification des permissions multiples:', error);
+      console.error(
+        'Erreur lors de la vérification des permissions multiples:',
+        error,
+      );
       return false;
     }
   }
 
-  async hasAllPermissions(userId: string, permissions: string[]): Promise<boolean> {
+  async hasAllPermissions(
+    userId: string,
+    permissions: string[],
+  ): Promise<boolean> {
     try {
       const userPermissions = await this.getUserPermissions(userId);
-      return permissions.every(permission => userPermissions.includes(permission));
+      return permissions.every((permission) =>
+        userPermissions.includes(permission),
+      );
     } catch (error) {
-      console.error('Erreur lors de la vérification des permissions complètes:', error);
+      console.error(
+        'Erreur lors de la vérification des permissions complètes:',
+        error,
+      );
       return false;
     }
   }
@@ -94,7 +114,9 @@ export class PermissionService implements IPermissionService {
     return allPermissions.includes(permission);
   }
 
-  parsePermission(permission: string): { resource: string; action: string } | null {
+  parsePermission(
+    permission: string,
+  ): { resource: string; action: string } | null {
     const parts = permission.split(':');
     if (parts.length !== 2) {
       return null;
@@ -102,20 +124,22 @@ export class PermissionService implements IPermissionService {
 
     return {
       resource: parts[0],
-      action: parts[1]
+      action: parts[1],
     };
   }
 
   getPermissionsByResource(resource: string): string[] {
     const allPermissions = this.getAllAvailablePermissions();
-    return allPermissions.filter(permission => permission.startsWith(`${resource}:`));
+    return allPermissions.filter((permission) =>
+      permission.startsWith(`${resource}:`),
+    );
   }
 
   getResourcesForUser(userId: string): Promise<string[]> {
-    return this.getUserPermissions(userId).then(permissions => {
+    return this.getUserPermissions(userId).then((permissions) => {
       const resources = new Set<string>();
-      
-      permissions.forEach(permission => {
+
+      permissions.forEach((permission) => {
         const parsed = this.parsePermission(permission);
         if (parsed) {
           resources.add(parsed.resource);
@@ -131,7 +155,7 @@ export class PermissionService implements IPermissionService {
     const hierarchy = ['user', 'teacher', 'admin'];
     const index1 = hierarchy.indexOf(role1);
     const index2 = hierarchy.indexOf(role2);
-    
+
     return index1 > index2;
   }
 
@@ -140,20 +164,20 @@ export class PermissionService implements IPermissionService {
     if (managerRole === 'admin') {
       return true;
     }
-    
+
     // Un teacher peut gérer les users
     if (managerRole === 'teacher' && targetRole === 'user') {
       return true;
     }
-    
+
     return false;
   }
 
   // Méthodes pour permissions contextuelles
   async hasPermissionOnResource(
-    userId: string, 
-    permission: string, 
-    resourceId?: string
+    userId: string,
+    permission: string,
+    resourceId?: string,
   ): Promise<boolean> {
     // Vérifier d'abord la permission de base
     const hasBasePermission = await this.hasPermission(userId, permission);
@@ -169,7 +193,12 @@ export class PermissionService implements IPermissionService {
     // TODO: Implémenter la logique de permissions contextuelles
     // Par exemple, un teacher peut modifier ses propres étudiants
     // mais pas ceux d'un autre teacher
-    
+
     return true; // Pour l'instant, on autorise si la permission de base existe
   }
-} 
+
+  async getAllRolesFromDb(): Promise<{ role_uuid: string; role_name: string }[]> {
+    // @ts-ignore: accès direct au prisma du module
+    return this.prisma.role.findMany({ select: { role_uuid: true, role_name: true } });
+  }
+}

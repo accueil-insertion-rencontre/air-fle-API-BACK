@@ -10,14 +10,12 @@ import * as argon2 from 'argon2';
 
 @Injectable()
 export class UserService {
-  constructor(
-    private readonly userRepository: UserRepository,
-  ) {}
+  constructor(private readonly userRepository: UserRepository) {}
 
   async findByEmail(email: string) {
     const user = await this.userRepository.findByEmail(email);
     if (!user) return null;
-    
+
     const { user_password, ...userWithoutPassword } = user;
     return userWithoutPassword;
   }
@@ -33,7 +31,7 @@ export class UserService {
     orderBy?: Prisma.UserOrderByWithRelationInput;
   }) {
     const { skip, take, where, orderBy } = params || {};
-    
+
     const [users, total] = await Promise.all([
       this.userRepository.findManyWithoutPasswords({
         skip,
@@ -79,7 +77,9 @@ export class UserService {
       user_lastname: data.user_lastname,
       user_mail: data.user_mail,
       user_password: hashedPassword,
-      user_birthdate: data.user_birthdate ? new Date(data.user_birthdate) : null,
+      user_birthdate: data.user_birthdate
+        ? new Date(data.user_birthdate)
+        : null,
       user_isactive: data.user_isactive ?? true,
       role: {
         connect: {
@@ -121,13 +121,19 @@ export class UserService {
       if (data.user_lastname) updateData.user_lastname = data.user_lastname;
       if (data.user_mail) {
         // Vérifier l'unicité de l'email
-        const emailExists = await this.userRepository.emailExists(data.user_mail, id);
+        const emailExists = await this.userRepository.emailExists(
+          data.user_mail,
+          id,
+        );
         if (emailExists) {
-          throw new ConflictException('Un utilisateur avec cet email existe déjà');
+          throw new ConflictException(
+            'Un utilisateur avec cet email existe déjà',
+          );
         }
         updateData.user_mail = data.user_mail;
       }
-      if (data.user_birthdate) updateData.user_birthdate = new Date(data.user_birthdate);
+      if (data.user_birthdate)
+        updateData.user_birthdate = new Date(data.user_birthdate);
 
       // Si le mot de passe est fourni, le hasher avec argon2
       if (data.user_password) {
@@ -147,7 +153,10 @@ export class UserService {
       const { user_password, ...result } = updatedUser;
       return result;
     } catch (error) {
-      if (error instanceof NotFoundException || error instanceof ConflictException) {
+      if (
+        error instanceof NotFoundException ||
+        error instanceof ConflictException
+      ) {
         throw error;
       }
       if (error.code === 'P2025') {

@@ -15,7 +15,6 @@ import { SessionService } from './session.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
-import { Session } from '@prisma/client';
 import {
   ApiTags,
   ApiOperation,

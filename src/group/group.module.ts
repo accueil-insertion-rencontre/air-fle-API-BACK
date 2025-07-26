@@ -4,7 +4,10 @@ import { GroupService } from './group.service';
 import { GroupRepository } from './repositories/group.repository';
 import { GroupStudentManagerService } from './services/group-student-manager.service';
 import { PrismaModule } from '../prisma/prisma.module';
-import { GROUP_REPOSITORY, GROUP_STUDENT_MANAGER } from './interfaces/group.interface';
+import {
+  GROUP_REPOSITORY,
+  GROUP_STUDENT_MANAGER,
+} from './interfaces/group.interface';
 
 @Module({
   imports: [PrismaModule],

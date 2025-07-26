@@ -119,10 +119,7 @@ export const PERMISSIONS_CONFIG: PermissionConfig = {
     'absence:write',
     'absence:delete',
   ],
-  user: [
-    'self:read',
-    'self:write',
-  ],
+  user: ['self:read', 'self:write'],
 };
 
 // Constantes de sécurité
@@ -131,4 +128,4 @@ export const SECURITY_CONFIG = {
   LOCK_TIME: 15 * 60, // 15 minutes en secondes
   RESET_TOKEN_EXPIRY: 24 * 60 * 60, // 24 heures en secondes
   JWT_EXPIRY: '1d',
-} as const; 
+} as const;

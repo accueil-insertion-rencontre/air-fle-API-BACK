@@ -26,7 +26,7 @@ export class UserRepository {
 
   async findMany(params: any): Promise<any[]> {
     const { skip, take, where, orderBy, include } = params;
-    
+
     return await this.prisma.user.findMany({
       skip,
       take,
@@ -82,15 +82,15 @@ export class UserRepository {
   async findWithoutPassword(id: string): Promise<any> {
     const user = await this.findById(id);
     if (!user) return null;
-    
+
     const { user_password, ...userWithoutPassword } = user;
     return userWithoutPassword;
   }
 
   async findManyWithoutPasswords(params: any): Promise<any[]> {
     const users = await this.findMany(params);
-    
-    return users.map(user => {
+
+    return users.map((user) => {
       const { user_password, ...userWithoutPassword } = user;
       return userWithoutPassword;
     });
@@ -98,12 +98,12 @@ export class UserRepository {
 
   async emailExists(email: string, excludeId?: string): Promise<boolean> {
     const where: any = { user_mail: email };
-    
+
     if (excludeId) {
       where.user_uuid = { not: excludeId };
     }
-    
+
     const count = await this.prisma.user.count({ where });
     return count > 0;
   }
-} 
+}

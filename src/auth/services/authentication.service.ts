@@ -1,11 +1,11 @@
 import { Injectable, UnauthorizedException, Inject } from '@nestjs/common';
-import { 
-  IAuthenticationService, 
-  ITokenService, 
+import {
+  IAuthenticationService,
+  ITokenService,
   ISecurityService,
   IAuditService,
   IPermissionService,
-  AuthResult 
+  AuthResult,
 } from '../interfaces/auth.interface';
 import { LoginDto } from '../dto/login.dto';
 import { UserService } from '../../user/user.service';
@@ -16,9 +16,11 @@ export class AuthenticationService implements IAuthenticationService {
   constructor(
     @Inject('ITokenService') private readonly tokenService: ITokenService,
     private readonly userService: UserService,
-    @Inject('ISecurityService') private readonly securityService: ISecurityService,
+    @Inject('ISecurityService')
+    private readonly securityService: ISecurityService,
     @Inject('IAuditService') private readonly auditService: IAuditService,
-    @Inject('IPermissionService') private readonly permissionService: IPermissionService,
+    @Inject('IPermissionService')
+    private readonly permissionService: IPermissionService,
   ) {}
 
   async validateUser(email: string, password: string): Promise<any> {
@@ -76,14 +78,14 @@ export class AuthenticationService implements IAuthenticationService {
       if (!user) {
         // Incrémenter les tentatives pour cette IP
         await this.securityService.incrementLoginAttempt(ip);
-        
+
         await this.auditService.logAuthEvent(
           null,
           'login_failed',
           `Tentative de connexion échouée pour ${email}`,
           ip,
         );
-        
+
         return {
           success: false,
           message: 'Email ou mot de passe invalide',
@@ -91,8 +93,10 @@ export class AuthenticationService implements IAuthenticationService {
       }
 
       // 3. Générer le token
-      const permissions = this.permissionService.getPermissionsByRole(user.role?.role_name);
-      
+      const permissions = this.permissionService.getPermissionsByRole(
+        user.role?.role_name,
+      );
+
       const payload = {
         sub: user.user_uuid,
         email: user.user_mail,
@@ -125,7 +129,7 @@ export class AuthenticationService implements IAuthenticationService {
       };
     } catch (error) {
       console.error('Erreur lors de la connexion:', error);
-      
+
       await this.auditService.logAuthEvent(
         null,
         'login_failed',
@@ -157,4 +161,4 @@ export class AuthenticationService implements IAuthenticationService {
       throw error;
     }
   }
-} 
+}

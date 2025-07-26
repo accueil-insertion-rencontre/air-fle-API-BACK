@@ -28,7 +28,7 @@ export interface IGroupRepository {
     take?: number;
     where?: Prisma.GroupWhereInput;
   }): Promise<GroupWithRelations[]>;
-  
+
   findOne(id: string): Promise<GroupWithRelations | null>;
   create(data: Prisma.GroupCreateInput): Promise<Group>;
   update(id: string, data: Prisma.GroupUpdateInput): Promise<Group>;
@@ -67,4 +67,4 @@ export interface CreateGroupRequest {
 export interface UpdateGroupRequest {
   group_label?: string;
   session_uuid?: string;
-} 
+}

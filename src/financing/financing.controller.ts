@@ -32,11 +32,20 @@ import { Prisma } from '@prisma/client';
 @ApiTags('financings')
 @ApiBearerAuth()
 export class FinancingController {
-  constructor(@Inject(FinancingService) private readonly financingService: FinancingService) {}
+  constructor(
+    @Inject(FinancingService)
+    private readonly financingService: FinancingService,
+  ) {}
 
   @Post()
   @Roles('admin', 'teacher')
-  @UsePipes(new ValidationPipe({ transform: true, whitelist: true, forbidNonWhitelisted: true }))
+  @UsePipes(
+    new ValidationPipe({
+      transform: true,
+      whitelist: true,
+      forbidNonWhitelisted: true,
+    }),
+  )
   @ApiOperation({ summary: 'Créer un nouveau financement' })
   @ApiResponse({ status: 201, description: 'Financement créé avec succès' })
   @ApiResponse({ status: 400, description: 'Données invalides' })

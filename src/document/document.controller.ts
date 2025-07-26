@@ -40,12 +40,13 @@ export class DocumentController {
   @Roles('admin', 'teacher')
   @ApiOperation({
     summary: 'Générer un certificat de formation PDF',
-    description: 'Génère et retourne un certificat de formation au format PDF pour un étudiant',
+    description:
+      'Génère et retourne un certificat de formation au format PDF pour un étudiant',
   })
-  @ApiParam({ 
-    name: 'student_uuid', 
-    description: 'UUID de l\'étudiant',
-    example: 'uuid-student-123'
+  @ApiParam({
+    name: 'student_uuid',
+    description: "UUID de l'étudiant",
+    example: 'uuid-student-123',
   })
   @ApiResponse({
     status: HttpStatus.OK,
@@ -68,11 +69,12 @@ export class DocumentController {
     @Res() res: Response,
   ): Promise<void> {
     // Génération du PDF
-    const pdfBuffer = await this.documentService.generateCertificate(student_uuid);
+    const pdfBuffer =
+      await this.documentService.generateCertificate(student_uuid);
 
     // Configuration des headers pour téléchargement PDF
     const filename = `certificat-formation-${student_uuid}-${new Date().toISOString().split('T')[0]}.pdf`;
-    
+
     res.set({
       'Content-Type': 'application/pdf',
       'Content-Disposition': `attachment; filename="${filename}"`,
@@ -91,11 +93,12 @@ export class DocumentController {
   @Roles('admin', 'teacher')
   @ApiOperation({
     summary: 'Prévisualiser un certificat de formation PDF',
-    description: 'Affiche le certificat dans le navigateur sans forcer le téléchargement',
+    description:
+      'Affiche le certificat dans le navigateur sans forcer le téléchargement',
   })
-  @ApiParam({ 
-    name: 'student_uuid', 
-    description: 'UUID de l\'étudiant'
+  @ApiParam({
+    name: 'student_uuid',
+    description: "UUID de l'étudiant",
   })
   @ApiResponse({
     status: HttpStatus.OK,
@@ -106,7 +109,8 @@ export class DocumentController {
     @Res() res: Response,
   ): Promise<void> {
     // Génération du PDF
-    const pdfBuffer = await this.documentService.generateCertificate(student_uuid);
+    const pdfBuffer =
+      await this.documentService.generateCertificate(student_uuid);
 
     // Configuration des headers pour affichage dans le navigateur
     res.set({
@@ -126,11 +130,12 @@ export class DocumentController {
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
     summary: 'Prévisualiser un certificat avec token dans URL',
-    description: 'Permet la prévisualisation via window.open avec token en query param',
+    description:
+      'Permet la prévisualisation via window.open avec token en query param',
   })
-  @ApiParam({ 
-    name: 'student_uuid', 
-    description: 'UUID de l\'étudiant'
+  @ApiParam({
+    name: 'student_uuid',
+    description: "UUID de l'étudiant",
   })
   async previewCertificateWithToken(
     @Param('student_uuid') student_uuid: string,
@@ -140,18 +145,19 @@ export class DocumentController {
     try {
       // Vérification manuelle du token JWT
       const decoded = this.jwtService.verify(token);
-      
+
       // Vérification des rôles (remplace les guards)
-      if (!decoded.roles?.some(role => ['admin', 'teacher'].includes(role))) {
+      if (!decoded.roles?.some((role) => ['admin', 'teacher'].includes(role))) {
         res.status(HttpStatus.FORBIDDEN).json({
           statusCode: 403,
-          message: 'Accès interdit - rôle insuffisant'
+          message: 'Accès interdit - rôle insuffisant',
         });
         return;
       }
 
       // Génération du PDF
-      const pdfBuffer = await this.documentService.generateCertificate(student_uuid);
+      const pdfBuffer =
+        await this.documentService.generateCertificate(student_uuid);
 
       // Configuration des headers pour affichage dans le navigateur
       res.set({
@@ -162,11 +168,10 @@ export class DocumentController {
 
       // Envoi du PDF
       res.send(pdfBuffer);
-
     } catch (error) {
       res.status(HttpStatus.UNAUTHORIZED).json({
         statusCode: 401,
-        message: 'Token invalide ou expiré'
+        message: 'Token invalide ou expiré',
       });
     }
   }
@@ -179,11 +184,12 @@ export class DocumentController {
   @Roles('admin', 'teacher')
   @ApiOperation({
     summary: 'Récupérer les données du certificat',
-    description: 'Récupère les données qui seront dans le certificat sans générer le PDF',
+    description:
+      'Récupère les données qui seront dans le certificat sans générer le PDF',
   })
-  @ApiParam({ 
-    name: 'student_uuid', 
-    description: 'UUID de l\'étudiant'
+  @ApiParam({
+    name: 'student_uuid',
+    description: "UUID de l'étudiant",
   })
   @ApiResponse({
     status: HttpStatus.OK,
@@ -192,4 +198,4 @@ export class DocumentController {
   async getCertificateData(@Param('student_uuid') student_uuid: string) {
     return await this.documentService.getCertificateData(student_uuid);
   }
-} 
+}
