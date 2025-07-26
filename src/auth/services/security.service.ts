@@ -101,7 +101,7 @@ export class SecurityService implements ISecurityService {
   async cleanupExpiredTokens(): Promise<void> {
     // Méthode pour nettoyer les tokens expirés en arrière-plan
     // TODO: Implémenter selon les besoins
-    console.log('Nettoyage des tokens expirés...');
+
   }
 
   // Validation des IPs

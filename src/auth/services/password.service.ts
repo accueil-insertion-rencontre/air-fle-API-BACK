@@ -148,7 +148,7 @@ export class PasswordService implements IPasswordService {
       );
 
       // TODO: Envoyer l'email avec le token de réinitialisation
-      console.log(`Token de réinitialisation pour ${email}: ${resetToken}`);
+  
     } catch (error) {
       console.error('Erreur lors de la demande de réinitialisation:', error);
 

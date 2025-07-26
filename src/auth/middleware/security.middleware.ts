@@ -17,7 +17,7 @@ export class SecurityMiddleware implements NestMiddleware {
     // Content Security Policy
     res.setHeader(
       'Content-Security-Policy',
-      "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' https:; connect-src 'self'; frame-ancestors 'none';",
+      "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' https:; connect-src 'self' http://api-dev:3000 http://localhost:3000; frame-ancestors 'none';",
     );
 
     // HSTS (HTTP Strict Transport Security) - seulement en production

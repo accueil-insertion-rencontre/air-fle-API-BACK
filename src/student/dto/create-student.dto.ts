@@ -64,11 +64,12 @@ export class CreateStudentDto {
 
   @ApiProperty({
     description: 'Numéro de téléphone',
-    example: 123456789,
+    example: '07533982997',
     required: false,
   })
   @IsOptional()
-  student_phone?: number;
+  @IsString()
+  student_phone?: string;
 
   @ApiProperty({
     description: 'Date du test initial',

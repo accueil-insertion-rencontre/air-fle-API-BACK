@@ -27,9 +27,9 @@ export class AuditService implements IAuditService {
       // });
 
       // Pour l'instant, on log en console (à remplacer par une vraie table d'audit)
-      console.log(
-        `[AUTH_AUDIT] ${new Date().toISOString()} | ${event} | User: ${userId || 'anonymous'} | IP: ${ip} | ${details}`,
-      );
+      // console.log(
+      //   `[AUTH_AUDIT] ${new Date().toISOString()} | ${event} | User: ${userId || 'anonymous'} | IP: ${ip} | ${details}`,
+      // );
     } catch (error) {
       console.error("Erreur lors de l'enregistrement de l'audit:", error);
       // Ne pas faire échouer l'opération principale à cause d'un problème d'audit
@@ -193,7 +193,7 @@ export class AuditService implements IAuditService {
       //
       // return result.count;
 
-      console.log(`Nettoyage des logs de plus de ${retentionDays} jours`);
+  
       return 0;
     } catch (error) {
       console.error('Erreur lors du nettoyage des logs:', error);

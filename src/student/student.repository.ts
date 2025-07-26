@@ -135,6 +135,11 @@ export class StudentRepository {
       financing: true,
       orientation: true,
       exitReason: true,
+      nationalities: {
+        include: {
+          nationality: true,
+        },
+      },
     };
   }
 
@@ -143,6 +148,11 @@ export class StudentRepository {
       gender: true,
       frenchLevel: true,
       status: true,
+      nationalities: {
+        include: {
+          nationality: true,
+        },
+      },
     };
   }
 
