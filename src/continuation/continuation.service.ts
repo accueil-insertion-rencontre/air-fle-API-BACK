@@ -2,6 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { Prisma, Continuation } from '@prisma/client';
 import { LearnerHistoryService } from '../learner-history/learner-history.service';
+import { ContinuationStatsDto } from './dto/continuation-stats.dto';
 
 // Type pour une continuation avec ses relations
 type ContinuationWithRelations = Prisma.ContinuationGetPayload<{
@@ -10,6 +11,14 @@ type ContinuationWithRelations = Prisma.ContinuationGetPayload<{
   };
 }>;
 
+// Interface pour les filtres
+interface ContinuationFilters {
+  student_uuid?: string;
+  student_name?: string;
+  date_from?: string;
+  date_to?: string;
+}
+
 @Injectable()
 export class ContinuationService {
   constructor(
@@ -17,11 +26,90 @@ export class ContinuationService {
     private learnerHistoryService: LearnerHistoryService,
   ) {}
 
+  async findAllWithFilters(filters: ContinuationFilters): Promise<ContinuationWithRelations[]> {
+    const where: any = {};
+
+    // Filtre par UUID d'étudiant
+    if (filters.student_uuid) {
+      where.student_uuid = filters.student_uuid;
+    }
+
+    // Filtre par nom d'étudiant (recherche insensible à la casse)
+    if (filters.student_name) {
+      where.student = {
+        OR: [
+          {
+            student_firstname: {
+              contains: filters.student_name,
+              mode: 'insensitive',
+            },
+          },
+          {
+            student_lastname: {
+              contains: filters.student_name,
+              mode: 'insensitive',
+            },
+          },
+        ],
+      };
+    }
+
+    // Note: les filtres date_from et date_to ne s'appliquent plus à continuation_temporality
+    // puisque c'est maintenant un string de temporalité ("3 mois", "6 mois", etc.)
+
+    return this.prisma.continuation.findMany({
+      where,
+      include: {
+        student: true,
+      },
+      orderBy: {
+        continuation_temporality: 'desc',
+      },
+    });
+  }
+
+  async getStats(): Promise<ContinuationStatsDto> {
+    // Nombre total de continuations
+    const totalContinuations = await this.prisma.continuation.count();
+
+    // Continuations avec temporalité définie
+    const continuationsWithTemporality = await this.prisma.continuation.count({
+      where: {
+        continuation_temporality: {
+          not: null,
+        },
+      },
+    });
+
+    const continuationsWithoutTemporality = totalContinuations - continuationsWithTemporality;
+
+    // Note: "recent_continuations" ne s'applique plus puisque continuation_temporality 
+    // est maintenant un string ("3 mois", "6 mois") et non une date
+    // On peut compter les continuations par type de temporalité
+    const shortTermContinuations = await this.prisma.continuation.count({
+      where: {
+        continuation_temporality: {
+          in: ['3 mois', '6 mois'],
+        },
+      },
+    });
+
+    return {
+      total_continuations: totalContinuations,
+      continuations_with_date: continuationsWithTemporality,
+      continuations_without_date: continuationsWithoutTemporality,
+      recent_continuations: shortTermContinuations, // Réinterprété comme "continuations court terme"
+    };
+  }
+
   async findAll(studentId: string): Promise<ContinuationWithRelations[]> {
     return this.prisma.continuation.findMany({
       where: { student_uuid: studentId },
       include: {
         student: true,
+      },
+      orderBy: {
+        continuation_temporality: 'desc',
       },
     });
   }
