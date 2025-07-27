@@ -23,6 +23,8 @@
     "test:e2e": "vitest run --config ./vitest.config.ts",
     "test:e2e:watch": "vitest --config ./vitest.config.ts",
     "seed": "ts-node src/seed.ts",
+    "seed:reference-data": "ts-node scripts/seed-reference-data.ts",
+    "create-admin": "ts-node scripts/create-admin.ts",
     "fixtures:students": "ts-node prisma/student.fixtures.ts"
   },
   "dependencies": {

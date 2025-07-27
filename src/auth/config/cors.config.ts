@@ -11,6 +11,7 @@ export const corsConfig: CorsOptions = {
       'http://localhost:3000', // Frontend React/Vue local
       'http://localhost:4200', // Frontend Angular local
       'http://localhost:8080', // Frontend Vue local alternatif
+      'http://api-dev:3000', // API Docker service
       'https://your-app.com', // Domaine de production
       'https://admin.your-app.com', // Interface admin
     ];

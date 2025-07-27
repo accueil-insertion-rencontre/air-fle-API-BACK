@@ -108,14 +108,14 @@ async function main() {
   }
 
   // Log des entités associées
-  console.log('session:', session);
-  console.log('group:', groupsArr[0]);
-  console.log('gender:', genders[0]);
-  console.log('frenchLevel:', frenchLevels[0]);
-  console.log('financing:', financings[0]);
-  console.log('status:', statuses[0]);
-  console.log('orientation:', orientationsArr[0]);
-  console.log('nationality:', nationalitiesArr[0]);
+      // console.log('session:', session);
+    // console.log('group:', groupsArr[0]);
+    // console.log('gender:', genders[0]);
+    // console.log('frenchLevel:', frenchLevels[0]);
+    // console.log('financing:', financings[0]);
+    // console.log('status:', statuses[0]);
+    // console.log('orientation:', orientationsArr[0]);
+    // console.log('nationality:', nationalitiesArr[0]);
 
   // Création de 3000 étudiants différents
   for (let i = 1; i <= 3000; i++) {
@@ -142,7 +142,7 @@ async function main() {
         },
       });
       if (i % 100 === 0) {
-        console.log(`Créés : ${i} étudiants`);
+        // console.log(`Créés : ${i} étudiants`);
       }
     } catch (e) {
       console.error(`Erreur à l'étudiant ${i}:`, e);

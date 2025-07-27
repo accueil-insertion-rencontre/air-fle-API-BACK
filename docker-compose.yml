@@ -1,6 +1,38 @@
 version: '3.8'
 
 services:
+  # Reverse Proxy
+  nginx:
+    image: nginx:alpine
+    container_name: nginx-proxy
+    ports:
+      - "8080:80"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf
+    depends_on:
+      - api-dev
+      - air-fle-front-container
+    networks:
+      - airfle-dev-network
+    restart: unless-stopped
+
+  # Frontend Angular
+  air-fle-front-container:
+    build:
+      context: ../air-fle-front
+      dockerfile: Dockerfile
+    container_name: air-fle-front-container
+    expose:
+      - "80"
+    volumes:
+      - ../air-fle-front/src:/app/src
+      - ../air-fle-front/angular.json:/app/angular.json
+      - ../air-fle-front/package.json:/app/package.json
+      - /app/node_modules
+    networks:
+      - airfle-dev-network
+    restart: unless-stopped
+
   postgres-dev:
     image: postgres:15-alpine
     container_name: postgres-dev
@@ -45,8 +77,8 @@ services:
       dockerfile: Dockerfile
       target: dev
     container_name: api-dev
-    ports:
-      - "3000:3000"
+    expose:
+      - "3000"
     environment:
       - DATABASE_URL=${DATABASE_URL:-postgresql://postgres:postgres@postgres-dev:5432/airfle?schema=public}
       - REDIS_URL=redis://redis-dev:6379

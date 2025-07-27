@@ -2,6 +2,7 @@ import {
   Injectable,
   NotFoundException,
   BadRequestException,
+  Logger,
 } from '@nestjs/common';
 import { LearnerHistoryService } from '../learner-history/learner-history.service';
 import { StudentRepository } from './student.repository';
@@ -11,24 +12,80 @@ type Student = any;
 
 @Injectable()
 export class StudentService {
+  private readonly logger = new Logger(StudentService.name);
+
   constructor(
     private readonly studentRepository: StudentRepository,
     private readonly learnerHistoryService: LearnerHistoryService,
   ) {}
 
   async create(data: any, createdByUserId?: string): Promise<Student> {
+    try {
     this.validateStudentData(data);
 
     const prismaData = this.transformDtoToPrismaCreateInput(data);
 
+      // Créer l'étudiant d'abord
     const student = await this.studentRepository.create(
       prismaData,
       this.studentRepository.getStandardIncludes(),
     );
 
+      // Assigner la nationalité si fournie
+      if (data.nationality_uuid) {
+        await this.studentRepository.updateStudentNationalities(
+          student.student_uuid,
+          [data.nationality_uuid],
+        );
+        
+        // Récupérer l'étudiant avec les nationalités mises à jour
+        const studentWithNationalities = await this.studentRepository.findUnique({
+          where: { student_uuid: student.student_uuid },
+          include: this.studentRepository.getStandardIncludes(),
+        });
+        
+        if (studentWithNationalities) {
+          await this.recordStudentCreation(studentWithNationalities, createdByUserId);
+          
+          this.logger.log(
+            JSON.stringify({
+              event: 'student_created',
+              uuid: studentWithNationalities.student_uuid,
+              email: studentWithNationalities.student_mail ?? null,
+              createdBy: createdByUserId ?? 'system',
+              timestamp: new Date().toISOString(),
+            }),
+          );
+
+          return studentWithNationalities;
+        }
+      }
+
     await this.recordStudentCreation(student, createdByUserId);
+      
+      this.logger.log(
+        JSON.stringify({
+          event: 'student_created',
+          uuid: student.student_uuid,
+          email: student.student_mail ?? null,
+          createdBy: createdByUserId ?? 'system',
+          timestamp: new Date().toISOString(),
+        }),
+      );
 
     return student;
+    } catch (error) {
+      this.logger.error(
+        JSON.stringify({
+          event: 'student_creation_failed',
+          message: error.message,
+          stack: error.stack,
+          createdBy: createdByUserId ?? 'system',
+          timestamp: new Date().toISOString(),
+        }),
+      );
+      throw error;
+    }
   }
 
   async findAll(params?: {
@@ -37,21 +94,77 @@ export class StudentService {
     where?: any;
     orderBy?: any;
   }): Promise<Student[]> {
+    try {
     const { skip, take, where, orderBy } = params || {};
-    return this.studentRepository.findMany({
+      const students = await this.studentRepository.findMany({
       skip,
       take,
       where,
       orderBy,
       include: this.studentRepository.getListIncludes(), // ✅ Includes spécialisés pour liste
     });
+      
+      this.logger.log(
+        JSON.stringify({
+          event: 'students_listed',
+          count: students.length,
+          filters: where ? JSON.stringify(where) : 'none',
+          timestamp: new Date().toISOString(),
+        }),
+      );
+      
+      return students;
+    } catch (error) {
+      this.logger.error(
+        JSON.stringify({
+          event: 'students_list_failed',
+          message: error.message,
+          stack: error.stack,
+          timestamp: new Date().toISOString(),
+        }),
+      );
+      throw error;
+    }
   }
 
   async findOne(studentWhereUniqueInput: any): Promise<Student | null> {
-    return this.studentRepository.findUnique({
+    try {
+      const student = await this.studentRepository.findUnique({
       where: studentWhereUniqueInput,
       include: this.studentRepository.getDetailIncludes(), // ✅ Includes spécialisés pour détail
     });
+      
+      if (student) {
+        this.logger.log(
+          JSON.stringify({
+            event: 'student_retrieved',
+            uuid: student.student_uuid,
+            timestamp: new Date().toISOString(),
+          }),
+        );
+      } else {
+        this.logger.warn(
+          JSON.stringify({
+            event: 'student_not_found',
+            search_criteria: JSON.stringify(studentWhereUniqueInput),
+            timestamp: new Date().toISOString(),
+          }),
+        );
+      }
+      
+      return student;
+    } catch (error) {
+      this.logger.error(
+        JSON.stringify({
+          event: 'student_retrieval_failed',
+          search_criteria: JSON.stringify(studentWhereUniqueInput),
+          message: error.message,
+          stack: error.stack,
+          timestamp: new Date().toISOString(),
+        }),
+      );
+      throw error;
+    }
   }
 
   async update(
@@ -61,6 +174,7 @@ export class StudentService {
     },
     updatedByUserId?: string,
   ): Promise<Student> {
+    try {
     const { where, data } = params;
 
     // ✅ 1. Validation
@@ -73,6 +187,13 @@ export class StudentService {
     });
 
     if (!currentStudent) {
+        this.logger.warn(
+          JSON.stringify({
+            event: 'student_update_not_found',
+            search_criteria: JSON.stringify(where),
+            timestamp: new Date().toISOString(),
+          }),
+        );
       throw new NotFoundException('Étudiant non trouvé');
     }
 
@@ -90,12 +211,57 @@ export class StudentService {
       data,
       updatedByUserId,
     );
+      
+      this.logger.log(
+        JSON.stringify({
+          event: 'student_updated',
+          uuid: updatedStudent.student_uuid,
+          updatedBy: updatedByUserId ?? 'system',
+          timestamp: new Date().toISOString(),
+        }),
+      );
 
     return updatedStudent;
+    } catch (error) {
+      this.logger.error(
+        JSON.stringify({
+          event: 'student_update_failed',
+          search_criteria: JSON.stringify(params.where),
+          message: error.message,
+          stack: error.stack,
+          updatedBy: updatedByUserId ?? 'system',
+          timestamp: new Date().toISOString(),
+        }),
+      );
+      throw error;
+    }
   }
 
   async count(where?: any): Promise<number> {
-    return this.studentRepository.count(where);
+    try {
+      const count = await this.studentRepository.count(where);
+      
+      this.logger.log(
+        JSON.stringify({
+          event: 'students_counted',
+          count,
+          filters: where ? JSON.stringify(where) : 'none',
+          timestamp: new Date().toISOString(),
+        }),
+      );
+      
+      return count;
+    } catch (error) {
+      this.logger.error(
+        JSON.stringify({
+          event: 'students_count_failed',
+          message: error.message,
+          stack: error.stack,
+          timestamp: new Date().toISOString(),
+        }),
+      );
+      throw error;
+    }
   }
 
   // ✅ Tracking des changements organisé
@@ -298,6 +464,16 @@ export class StudentService {
     // ✅ Historique délégué
     await this.recordStudentDeletion(student, deletedByUserId);
 
+    this.logger.log(
+      JSON.stringify({
+        event: 'student_deleted',
+        uuid: student.student_uuid,
+        email: student.student_mail ?? null,
+        deletedBy: deletedByUserId ?? 'system',
+        timestamp: new Date().toISOString(),
+      }),
+    );
+
     return this.studentRepository.delete(where);
   }
 
@@ -306,6 +482,7 @@ export class StudentService {
     disabilityIds: string[],
     updatedByUserId?: string,
   ): Promise<void> {
+    try {
     // Récupérer les handicaps actuels
     const currentDisabilities =
       await this.studentRepository.findStudentDisabilities(studentId);
@@ -323,6 +500,29 @@ export class StudentService {
       disabilityIds,
       updatedByUserId,
     );
+      
+      this.logger.log(
+        JSON.stringify({
+          event: 'student_disabilities_updated',
+          student_uuid: studentId,
+          disabilities_count: disabilityIds.length,
+          updatedBy: updatedByUserId ?? 'system',
+          timestamp: new Date().toISOString(),
+        }),
+      );
+    } catch (error) {
+      this.logger.error(
+        JSON.stringify({
+          event: 'student_disabilities_update_failed',
+          student_uuid: studentId,
+          message: error.message,
+          stack: error.stack,
+          updatedBy: updatedByUserId ?? 'system',
+          timestamp: new Date().toISOString(),
+        }),
+      );
+      throw error;
+    }
   }
 
   // ===============================

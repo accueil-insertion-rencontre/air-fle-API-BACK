@@ -114,6 +114,36 @@ export class ContinuationService {
     });
   }
 
+  async findAllGeneral(params?: {
+    skip?: number;
+    take?: number;
+    where?: Prisma.ContinuationWhereInput;
+    orderBy?: Prisma.ContinuationOrderByWithRelationInput;
+  }): Promise<{
+    data: any[];
+    meta: { total: number; skip: number; take: number };
+  }> {
+    const { skip = 0, take = 10, where = {}, orderBy = { continuation_uuid: 'desc' } as Prisma.ContinuationOrderByWithRelationInput } = params || {};
+
+    const [data, total] = await Promise.all([
+      this.prisma.continuation.findMany({
+        skip,
+        take,
+        where,
+        orderBy,
+        include: {
+          student: true,
+        },
+      }),
+      this.prisma.continuation.count({ where }),
+    ]);
+
+    return {
+      data,
+      meta: { total, skip, take },
+    };
+  }
+
   async findOne(id: string): Promise<ContinuationWithRelations | null> {
     return this.prisma.continuation.findUnique({
       where: { continuation_uuid: id },
