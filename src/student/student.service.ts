@@ -21,15 +21,15 @@ export class StudentService {
 
   async create(data: any, createdByUserId?: string): Promise<Student> {
     try {
-      this.validateStudentData(data);
+    this.validateStudentData(data);
 
-      const prismaData = this.transformDtoToPrismaCreateInput(data);
+    const prismaData = this.transformDtoToPrismaCreateInput(data);
 
       // Créer l'étudiant d'abord
-      const student = await this.studentRepository.create(
-        prismaData,
-        this.studentRepository.getStandardIncludes(),
-      );
+    const student = await this.studentRepository.create(
+      prismaData,
+      this.studentRepository.getStandardIncludes(),
+    );
 
       // Assigner la nationalité si fournie
       if (data.nationality_uuid) {
@@ -61,7 +61,7 @@ export class StudentService {
         }
       }
 
-      await this.recordStudentCreation(student, createdByUserId);
+    await this.recordStudentCreation(student, createdByUserId);
       
       this.logger.log(
         JSON.stringify({
@@ -73,7 +73,7 @@ export class StudentService {
         }),
       );
 
-      return student;
+    return student;
     } catch (error) {
       this.logger.error(
         JSON.stringify({
@@ -95,14 +95,14 @@ export class StudentService {
     orderBy?: any;
   }): Promise<Student[]> {
     try {
-      const { skip, take, where, orderBy } = params || {};
+    const { skip, take, where, orderBy } = params || {};
       const students = await this.studentRepository.findMany({
-        skip,
-        take,
-        where,
-        orderBy,
-        include: this.studentRepository.getListIncludes(), // ✅ Includes spécialisés pour liste
-      });
+      skip,
+      take,
+      where,
+      orderBy,
+      include: this.studentRepository.getListIncludes(), // ✅ Includes spécialisés pour liste
+    });
       
       this.logger.log(
         JSON.stringify({
@@ -130,9 +130,9 @@ export class StudentService {
   async findOne(studentWhereUniqueInput: any): Promise<Student | null> {
     try {
       const student = await this.studentRepository.findUnique({
-        where: studentWhereUniqueInput,
-        include: this.studentRepository.getDetailIncludes(), // ✅ Includes spécialisés pour détail
-      });
+      where: studentWhereUniqueInput,
+      include: this.studentRepository.getDetailIncludes(), // ✅ Includes spécialisés pour détail
+    });
       
       if (student) {
         this.logger.log(
@@ -175,18 +175,18 @@ export class StudentService {
     updatedByUserId?: string,
   ): Promise<Student> {
     try {
-      const { where, data } = params;
+    const { where, data } = params;
 
-      // ✅ 1. Validation
-      this.validateStudentData(data);
+    // ✅ 1. Validation
+    this.validateStudentData(data);
 
-      // ✅ 2. Récupération état actuel
-      const currentStudent = await this.studentRepository.findUnique({
-        where,
-        include: this.studentRepository.getStandardIncludes(),
-      });
+    // ✅ 2. Récupération état actuel
+    const currentStudent = await this.studentRepository.findUnique({
+      where,
+      include: this.studentRepository.getStandardIncludes(),
+    });
 
-      if (!currentStudent) {
+    if (!currentStudent) {
         this.logger.warn(
           JSON.stringify({
             event: 'student_update_not_found',
@@ -194,23 +194,23 @@ export class StudentService {
             timestamp: new Date().toISOString(),
           }),
         );
-        throw new NotFoundException('Étudiant non trouvé');
-      }
+      throw new NotFoundException('Étudiant non trouvé');
+    }
 
-      // ✅ 3. Mise à jour
-      const updatedStudent = await this.studentRepository.update({
-        data,
-        where,
-        include: this.studentRepository.getStandardIncludes(),
-      });
+    // ✅ 3. Mise à jour
+    const updatedStudent = await this.studentRepository.update({
+      data,
+      where,
+      include: this.studentRepository.getStandardIncludes(),
+    });
 
-      // ✅ 4. Tracking des changements
-      await this.trackStudentChanges(
-        currentStudent,
-        updatedStudent,
-        data,
-        updatedByUserId,
-      );
+    // ✅ 4. Tracking des changements
+    await this.trackStudentChanges(
+      currentStudent,
+      updatedStudent,
+      data,
+      updatedByUserId,
+    );
       
       this.logger.log(
         JSON.stringify({
@@ -221,7 +221,7 @@ export class StudentService {
         }),
       );
 
-      return updatedStudent;
+    return updatedStudent;
     } catch (error) {
       this.logger.error(
         JSON.stringify({
@@ -483,23 +483,23 @@ export class StudentService {
     updatedByUserId?: string,
   ): Promise<void> {
     try {
-      // Récupérer les handicaps actuels
-      const currentDisabilities =
-        await this.studentRepository.findStudentDisabilities(studentId);
+    // Récupérer les handicaps actuels
+    const currentDisabilities =
+      await this.studentRepository.findStudentDisabilities(studentId);
 
-      // ✅ Mise à jour via repository
-      await this.studentRepository.updateStudentDisabilities(
-        studentId,
-        disabilityIds,
-      );
+    // ✅ Mise à jour via repository
+    await this.studentRepository.updateStudentDisabilities(
+      studentId,
+      disabilityIds,
+    );
 
-      // ✅ Historique délégué
-      await this.recordDisabilityChange(
-        studentId,
-        currentDisabilities.map((d) => d.disability),
-        disabilityIds,
-        updatedByUserId,
-      );
+    // ✅ Historique délégué
+    await this.recordDisabilityChange(
+      studentId,
+      currentDisabilities.map((d) => d.disability),
+      disabilityIds,
+      updatedByUserId,
+    );
       
       this.logger.log(
         JSON.stringify({

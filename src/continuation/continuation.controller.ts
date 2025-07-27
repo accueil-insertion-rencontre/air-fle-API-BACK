@@ -7,6 +7,7 @@ import {
   Param,
   Delete,
   UseGuards,
+  Query,
 } from '@nestjs/common';
 import { ContinuationService } from './continuation.service';
 import { CreateContinuationDto } from './dto/create-continuation.dto';
@@ -30,6 +31,24 @@ import { Prisma } from '@prisma/client';
 @ApiBearerAuth()
 export class ContinuationController {
   constructor(private readonly continuationService: ContinuationService) {}
+
+  @Get()
+  @Roles('admin', 'teacher')
+  @ApiOperation({ summary: 'Récupérer toutes les continuations' })
+  @ApiResponse({
+    status: 200,
+    description: 'Liste des continuations récupérée avec succès',
+  })
+  findAll(
+    @Query('skip') skip?: string,
+    @Query('take') take?: string,
+  ) {
+    const params = {
+      skip: skip ? parseInt(skip, 10) : undefined,
+      take: take ? parseInt(take, 10) : undefined,
+    };
+    return this.continuationService.findAllGeneral(params);
+  }
 
   @Get('student/:studentId')
   @Roles('admin', 'teacher')
